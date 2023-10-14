@@ -10,6 +10,7 @@ class Player():#味方クラス(1人)
         self.speed = speed
         self.job = job#1が魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
                       #3がヒーラー(ランダムで味方を回復する人),4はスカウト(攻撃した相手を困惑させて攻撃できなくする)
+        self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
         if self.job == 2:
             self.at*=2
 class Enemy():#敵のクラス(1人)
@@ -21,6 +22,7 @@ class Enemy():#敵のクラス(1人)
         self.speed = speed
         self.job = job#1が魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
                       #3がヒーラー(ランダムで味方n人を回復する人),4はスカウト(攻撃した相手を困惑させて攻撃できなくする)
+        self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
         if self.job == 2:
             self.at*=2
 #========================================================================================================    ソート
@@ -52,65 +54,72 @@ def plyHpSort(plys):
 def enyTurn(enys,plys,end):#敵ターン関数
     plyHpSort(plys)
     for eny in enys:
-        time.sleep(0.2)
-        print("---相手のターン-------------")
-        #print("i",i,len(enys)-1)
-        print(eny.name,"の攻撃")#←攻撃↓
-        damage = max(eny.at-plys[0].df,0)
-        plys[0].hp -= damage
-        print("残りの",plys[0].name,"のhpは",plys[0].hp)
-        print(eny.name,"は",plys[0].name,"に",damage,"ダメージを負わせた！")
-        if plys[0].hp <= 0:
-            plys.pop(0)
-        if len(plys) == 0:
-            print("敵チームの勝利")
-            end = 1
-            break
+        if eny.confusion == False:#錯乱中か
+            time.sleep(0.2)
+            print("---相手のターン-------------")
+            #print("i",i,len(enys)-1)
+            print(eny.name,"の攻撃")#←攻撃↓
+            damage = max(eny.at-plys[0].df,0)
+            plys[0].hp -= damage
+            print("残りの",plys[0].name,"のhpは",plys[0].hp)
+            print(eny.name,"は",plys[0].name,"に",damage,"ダメージを負わせた！")
+            if eny.job == 4:#錯乱用
+                print(eny.name,"は",plys[0].name,"を錯乱させた！")
+                plys[0].confusion = True
+            if plys[0].hp <= 0:#死亡用
+                plys.pop(0)
+            if len(plys) == 0:
+                print("敵チームの勝利")
+                end = 1
+                break
     return enys,plys,end
 #==============================================================================
 def plyTurn(enys,plys,end):#味方ターン関数
     enyHpSort(enys)
     for ply in plys:
         if ply.hp >= 1:
-            time.sleep(0.5)
-            #--------味方のターン---------------
-            print("---味方のターン-------------")
-            print(ply.name,"の攻撃")
-            damage = max(ply.at-enys[0].df,0)
-            enys[0].hp -= damage
-            print(ply.name,"は",enys[0].name,"に",damage,"ダメージを負わせた！")
-            print("残りの",enys[0].name,"のhpは",enys[0].hp)
-            if enys[0].hp <= 0:
-                enys.pop(0)
-            if len(enys) == 0:
-                print("味方チームの勝利")
-                end = 1
-                break
+            if ply.confusion == False:#錯乱中か
+                time.sleep(0.5)
+                #--------味方のターン---------------
+                print("---味方のターン-------------")
+                print(ply.name,"の攻撃")
+                damage = max(ply.at-enys[0].df,0)
+                enys[0].hp -= damage
+                print(ply.name,"は",enys[0].name,"に",damage,"ダメージを負わせた！")
+                print("残りの",enys[0].name,"のhpは",enys[0].hp)
+                if ply.job == 4:#錯乱用
+                    print(ply.name,"は",enys[0].name,"を錯乱させた！")
+                    enys[0].confusion = True
+                if enys[0].hp <= 0:
+                    enys.pop(0)
+                if len(enys) == 0:#死亡用
+                    print("味方チームの勝利")
+                    end = 1
+                    break
     return enys,plys,end
 #========================================================================================================   メイン関数 
 def main():
     end = 0#Whileの強制終了
     turnCount = 0#ターン数
     plys = []#プレイヤーをまとめた配列
-    ply1 = Player(150,60,30,"自分",15,1)
-    ply2 = Player(90,70,30,"猫",20,4)
-    ply3 = Player(200,50,40,"巨人",5,2)
-    ply4 = Player(120,40,20,"自分のクローン",10,3)
+    ply1 = Player(150,60,30,"自分",15,1)#1
+    ply2 = Player(90,70,30,"猫",20,4)#4
+    ply3 = Player(200,50,40,"巨人",5,2)#2
+    ply4 = Player(120,40,20,"自分のクローン",10,3)#3
     plys.append(ply1)
     plys.append(ply2)
     plys.append(ply3)
     plys.append(ply4)
     enys = []#敵をまとめた配列
-    eny1 = Enemy(200,50,30,"鬼",5,3)
-    eny2 = Enemy(200,70,10,"青鬼",10,1)
-    eny3 = Enemy(50,30,40,"ネズミ",20,2)
-    eny4 = Enemy(80,20,10,"チビ",15,4)
+    eny1 = Enemy(200,50,30,"鬼",5,3)#3
+    eny2 = Enemy(200,70,10,"青鬼",10,4)#4
+    eny3 = Enemy(50,30,40,"ネズミ",20,2)#2
+    eny4 = Enemy(80,20,10,"チビ",15,1)#1
     enys.append(eny1)
     enys.append(eny2)
     enys.append(eny3)
     enys.append(eny4)
     while end == 0:
-        plyHeal = random.randint(0,len(plys))
         turnCount += 1
         time.sleep(0.25)
         print("ターンの境目--------------------------------------------",turnCount,"ターン目")
@@ -120,9 +129,9 @@ def main():
         for ply in plys:
             print("ply",ply.name,ply.hp,ply.at)#見える化用
             if ply.job == 2:#Job用,3は回復
+                plyHeal = random.randint(0,len(plys)-1)
                 plys[plyHeal].hp += 50
                 print(plys[plyHeal].name,"が50Hp回復した")
-
 
         #敵ターン-----
         enySort(enys)
