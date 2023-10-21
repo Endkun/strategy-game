@@ -22,6 +22,13 @@ class Enemy():#敵のクラス(1人)
         self.speed = speed
         self.job = job#1が魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
                       #3がヒーラー(ランダムで味方n人を回復する人),4はスカウト(攻撃した相手を困惑させて攻撃できなくする)
+
+                      """魔法使いの新要素
+                         魔法使いにも選択ができるように
+                         1.n体への同時攻撃
+                         2.全員を少量回復
+                         3.１人を回復
+                         4.自分又は味方の誰かを防御して無効化"""
         self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
         if self.job == 2:
             self.at*=2
@@ -73,36 +80,66 @@ def enyTurn(enys,plys,end):#敵ターン関数
                 end = 1
                 break
     return enys,plys,end
-#==============================================================================
+#==============================================================================#↑敵関数　↓味方関数
 def plyTurn(enys,plys,end):#味方ターン関数
     enyHpSort(enys)
     for ply in plys:
         if ply.hp >= 1:
             if ply.confusion == False:#錯乱中か
-                time.sleep(0.5)
-                #--------味方のターン---------------
+                time.sleep(0.2)
+                #--------味方のターン------------------------
+                #-プレイヤー操作--------------------
                 print("---味方のターン-------------")
+                print("操作:",ply.name)
+                for i in range(len(enys)):
+                    print("敵",enys[i].name,"番号:",i)
+                choice = input("どの敵を倒しますか？")
+                print(choice)
+                choice = int(choice)
+                #-攻撃-----------------------------
+                print(" ")
                 print(ply.name,"の攻撃")
-                damage = max(ply.at-enys[0].df,0)
-                enys[0].hp -= damage
-                print(ply.name,"は",enys[0].name,"に",damage,"ダメージを負わせた！")
-                print("残りの",enys[0].name,"のhpは",enys[0].hp)
+                damage = max(ply.at-enys[choice].df,0)
+                enys[choice].hp -= damage
+                print(ply.name,"は",enys[choice].name,"に",damage,"ダメージを負わせた！")
+                print("残りの",enys[choice].name,"のhpは",enys[choice].hp)
                 if ply.job == 4:#錯乱用
-                    print(ply.name,"は",enys[0].name,"を錯乱させた！")
-                    enys[0].confusion = True
-                if enys[0].hp <= 0:
-                    enys.pop(0)
+                    print(ply.name,"は",enys[choice].name,"を錯乱させた！")
+                    enys[choice].confusion = True
+                if enys[choice].hp <= 0:
+                    enys.pop(choice)
                 if len(enys) == 0:#死亡用
                     print("味方チームの勝利")
                     end = 1
                     break
     return enys,plys,end
+def plyMagicTurn(enys,ply,end):
+    print("---味方のターン-------------")
+    if ply.hp >= 1:
+        if ply.confusion == False:#錯乱中か
+            for eny in enys:
+                time.sleep(0.5)
+                damage = max(ply.at*0.4-eny.df,0)
+                eny.hp -= damage
+                print(ply.name,"は",eny.name,"に",damage,"ダメージを負わせた！")
+                print("残りの",eny.name,"のhpは",eny.hp)
+                if eny.hp <= 0:
+                    enys.remove(eny)
+                if len(enys) == 0:#死亡用
+                    print("味方チームの勝利")
+                    end = 1
+                    break
+            return enys,ply,end
+    
+
+
+
 #========================================================================================================   メイン関数 
 def main():
     end = 0#Whileの強制終了
     turnCount = 0#ターン数
     plys = []#プレイヤーをまとめた配列
-    ply1 = Player(150,60,30,"自分",15,1)#1
+    ply1 = Player(150,60,30,"自分",15,0)#1
     ply2 = Player(90,70,30,"猫",20,4)#4
     ply3 = Player(200,50,40,"巨人",5,2)#2
     ply4 = Player(120,40,20,"自分のクローン",10,3)#3
@@ -137,8 +174,14 @@ def main():
         enySort(enys)
         enys,plys,end = enyTurn(enys,plys,end)
         #味方ターン---
-        plySort(plys)
-        enys,plys,end = plyTurn(enys,plys,end)
+        for ply in plys:
+            plySort(plys)
+            if ply.job == 1:
+                enys,ply,end = plyMagicTurn(enys,ply,end)
+                break
+            else:
+                enys,plys,end = plyTurn(enys,plys,end)
+                break
 
 
 
