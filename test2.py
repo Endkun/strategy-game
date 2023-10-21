@@ -8,6 +8,7 @@ class Player():#味方クラス(1人)
         self.df = df
         self.name = name
         self.speed = speed
+        self.defend = 0
         self.job = job#1が魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
                       #3がヒーラー(ランダムで味方を回復する人),4はスカウト(攻撃した相手を困惑させて攻撃できなくする)
         self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
@@ -23,12 +24,12 @@ class Enemy():#敵のクラス(1人)
         self.job = job#1が魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
                       #3がヒーラー(ランダムで味方n人を回復する人),4はスカウト(攻撃した相手を困惑させて攻撃できなくする)
 
-                      """魔法使いの新要素
-                         魔法使いにも選択ができるように
-                         1.n体への同時攻撃
-                         2.全員を少量回復
-                         3.１人を回復
-                         4.自分又は味方の誰かを防御して無効化"""
+                         #魔法使いの新要素
+                         #魔法使いにも選択ができるように
+                         #1.n体への同時攻撃
+                         #2.全員を少量回復
+                         #3.１人を回復
+                         #4.自分又は味方の誰かを防御して無効化
         self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
         if self.job == 2:
             self.at*=2
@@ -66,19 +67,23 @@ def enyTurn(enys,plys,end):#敵ターン関数
             print("---相手のターン-------------")
             #print("i",i,len(enys)-1)
             print(eny.name,"の攻撃")#←攻撃↓
-            damage = max(eny.at-plys[0].df,0)
-            plys[0].hp -= damage
-            print("残りの",plys[0].name,"のhpは",plys[0].hp)
-            print(eny.name,"は",plys[0].name,"に",damage,"ダメージを負わせた！")
-            if eny.job == 4:#錯乱用
-                print(eny.name,"は",plys[0].name,"を錯乱させた！")
-                plys[0].confusion = True
-            if plys[0].hp <= 0:#死亡用
-                plys.pop(0)
-            if len(plys) == 0:
-                print("敵チームの勝利")
-                end = 1
-                break
+            if plys[0].defend == 1:
+                plys[0].defend = 0
+                print(plys[0].name,"には攻撃は聞かなかったようだ...")
+            else:
+                damage = max(eny.at-plys[0].df,0)
+                plys[0].hp -= damage
+                print("残りの",plys[0].name,"のhpは",plys[0].hp)
+                print(eny.name,"は",plys[0].name,"に",damage,"ダメージを負わせた！")
+                if eny.job == 4:#錯乱用
+                    print(eny.name,"は",plys[0].name,"を錯乱させた！")
+                    plys[0].confusion = True
+                if plys[0].hp <= 0:#死亡用
+                    plys.pop(0)
+                if len(plys) == 0:
+                    print("敵チームの勝利")
+                    end = 1
+                    break
     return enys,plys,end
 #==============================================================================#↑敵関数　↓味方関数
 def plyTurn(enys,plys,end):#味方ターン関数
@@ -91,45 +96,84 @@ def plyTurn(enys,plys,end):#味方ターン関数
                 #-プレイヤー操作--------------------
                 print("---味方のターン-------------")
                 print("操作:",ply.name)
-                for i in range(len(enys)):
-                    print("敵",enys[i].name,"番号:",i)
-                choice = input("どの敵を倒しますか？")
-                print(choice)
-                choice = int(choice)
-                #-攻撃-----------------------------
-                print(" ")
-                print(ply.name,"の攻撃")
-                damage = max(ply.at-enys[choice].df,0)
-                enys[choice].hp -= damage
-                print(ply.name,"は",enys[choice].name,"に",damage,"ダメージを負わせた！")
-                print("残りの",enys[choice].name,"のhpは",enys[choice].hp)
-                if ply.job == 4:#錯乱用
-                    print(ply.name,"は",enys[choice].name,"を錯乱させた！")
-                    enys[choice].confusion = True
-                if enys[choice].hp <= 0:
-                    enys.pop(choice)
-                if len(enys) == 0:#死亡用
-                    print("味方チームの勝利")
-                    end = 1
-                    break
+                #---------------------------------------------魔法使い
+                if ply.job == 1:
+                    print("複数攻撃","番号:",1)#ランダムで1~全員の敵へ攻撃(但し攻撃力は半分になる)
+                    print("全員回復","番号:",2)#全員を20ずつ回復
+                    print("味方回復","番号:",3)#選択された味方を50回復
+                    print("防御陣形","番号:",4)#自分又は選択された味方の被ダメージを無効化する
+                    choice = input("何の魔法を使いますか？")
+                    #print(choice)
+                    choice = int(choice)
+                    if choice == 1:#複数攻撃
+                        for eny in enys:
+                            damage = max(ply.at-eny.df,0)
+                            eny.hp -= damage
+                            print(ply.name,"は",eny.name,"に",damage,"ダメージを負わせた！")
+                            print("残りの",eny.name,"のhpは",eny.hp)
+                            if eny.hp <= 0:
+                                enys.remove(eny)
+                    if choice == 2:#全員回復
+                        for ply in plys:
+                            ply.hp += 20
+                            print(ply.name,"は20HP回復した")
+                    if choice == 3:#特定回復or個人回復
+                        for plyi in range(len(plys)):
+                            print("味方:",plys[plyi].name,"番号:",plyi)
+                        players = input("誰を回復しますか")
+                        print(plys[int(players)].name,"は50HP回復した")
+                        plys[int(players)].hp += 50
+                    if choice == 4:
+                        for plyi in range(len(plys)):
+                            print("味方:",plys[plyi].name,"番号:",plyi)
+                        players = input("誰を防御しますか")
+                        plys[int(players)].defend = 1
+
+
+
+
+
+                #---------------------------------------------その他味方
+                else:
+                    for i in range(len(enys)):
+                        print("敵",enys[i].name,"番号:",i)
+                    choice = input("どの敵を倒しますか？")
+                    #print(choice)
+                    choice = int(choice)
+                    #-攻撃-----------------------------
+                    print(" ")
+                    print(ply.name,"の攻撃")
+                    damage = max(ply.at-enys[choice].df,0)
+                    enys[choice].hp -= damage
+                    print(ply.name,"は",enys[choice].name,"に",damage,"ダメージを負わせた！")
+                    print("残りの",enys[choice].name,"のhpは",enys[choice].hp)
+                    if ply.job == 4:#錯乱用
+                        print(ply.name,"は",enys[choice].name,"を錯乱させた！")
+                        enys[choice].confusion = True
+                    if enys[choice].hp <= 0:
+                        enys.pop(choice)
+                    if len(enys) == 0:#死亡用
+                        print("味方チームの勝利")
+                        end = 1
+                        break
     return enys,plys,end
-def plyMagicTurn(enys,ply,end):
+"""def plyMagicTurn(enys,ply,end):
     print("---味方のターン-------------")
     if ply.hp >= 1:
         if ply.confusion == False:#錯乱中か
             for eny in enys:
-                time.sleep(0.5)
-                damage = max(ply.at*0.4-eny.df,0)
-                eny.hp -= damage
-                print(ply.name,"は",eny.name,"に",damage,"ダメージを負わせた！")
-                print("残りの",eny.name,"のhpは",eny.hp)
-                if eny.hp <= 0:
-                    enys.remove(eny)
-                if len(enys) == 0:#死亡用
-                    print("味方チームの勝利")
-                    end = 1
-                    break
-            return enys,ply,end
+                time.sleep(0.5)"""
+            #    damage = max(ply.at*0.4-eny.df,0)
+            #    eny.hp -= damage
+            #    print(ply.name,"は",eny.name,"に",damage,"ダメージを負わせた！")
+            #    print("残りの",eny.name,"のhpは",eny.hp)
+            #    if eny.hp <= 0:
+            #        enys.remove(eny)
+            #    if len(enys) == 0:#死亡用
+            #        print("味方チームの勝利")
+            #        end = 1
+            #        break
+            #return enys,ply,end
     
 
 
@@ -139,7 +183,7 @@ def main():
     end = 0#Whileの強制終了
     turnCount = 0#ターン数
     plys = []#プレイヤーをまとめた配列
-    ply1 = Player(150,60,30,"自分",15,0)#1
+    ply1 = Player(150,60,30,"自分",15,1)#1
     ply2 = Player(90,70,30,"猫",20,4)#4
     ply3 = Player(200,50,40,"巨人",5,2)#2
     ply4 = Player(120,40,20,"自分のクローン",10,3)#3
@@ -176,12 +220,8 @@ def main():
         #味方ターン---
         for ply in plys:
             plySort(plys)
-            if ply.job == 1:
-                enys,ply,end = plyMagicTurn(enys,ply,end)
-                break
-            else:
-                enys,plys,end = plyTurn(enys,plys,end)
-                break
+            enys,plys,end = plyTurn(enys,plys,end)
+            break
 
 
 
