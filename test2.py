@@ -1,3 +1,5 @@
+#一人から始まって、順々増えていく
+#味方を手に入れるには、普段より小し強い敵を倒すと手に入れられる。
 import time
 import random
 #========================================================================================================    敵味方クラス
@@ -102,6 +104,7 @@ def enyTurn(enys,plys,end):#敵ターン関数
                         print(eny.name,"は",plys[0].name,"の",plys[0].items[rob],"を盗んだ！")
                         plys[0].items[rob] = ""
                 if plys[0].hp <= 0:#死亡用
+                    print(plys[0].name,"は死んでしまった！")
                     plys.pop(0)
                 if len(plys) == 0:
                     print("敵チームの勝利")
@@ -195,6 +198,7 @@ def plyTurn(enys,plys,end):#味方ターン関数
                     #    rob = random.randint(0,2)                        
                     #    print(ply.name,"は",enys[choice].name,"の",enys[choice].items[rob],"を盗んだ！")
                     if enys[choice].hp <= 0:
+                        print(enys[choice].name,"を倒した！")
                         enys.pop(choice)
                     if len(enys) == 0:#死亡用
                         print("味方チームの勝利")
@@ -221,31 +225,13 @@ def plyTurn(enys,plys,end):#味方ターン関数
             #        break
             #return enys,ply,end
     
+#---------------------------------------------------------------------------------------1バトル
 
-
-
-#========================================================================================================   メイン関数 
-def main():
+def battleseen(enys,plys):
     end = 0#Whileの強制終了
     turnCount = 0#ターン数
-    plys = []#プレイヤーをまとめた配列
-    ply1 = Player(150,60,30,"自分",15,1)#1
-    ply2 = Player(90,70,30,"猫",20,4)#4
-    ply3 = Player(200,50,40,"巨人",5,2)#2
-    ply4 = Player(120,40,20,"自分のクローン",10,5)#3
-    plys.append(ply1)
-    plys.append(ply2)
-    plys.append(ply3)
-    plys.append(ply4)
-    enys = []#敵をまとめた配列
-    eny1 = Enemy(200,50,30,"鬼",5,3)#3
-    eny2 = Enemy(200,70,10,"青鬼",10,4)#4
-    eny3 = Enemy(50,30,40,"ネズミ",20,2)#2
-    eny4 = Enemy(80,20,10,"チビ",15,5)#1
-    enys.append(eny1)
-    enys.append(eny2)
-    enys.append(eny3)
-    enys.append(eny4)
+    for eny in enys:
+        print(eny.name,"が現れた！")
     while end == 0:
         turnCount += 1
         time.sleep(0.25)
@@ -268,7 +254,31 @@ def main():
             plySort(plys)
             enys,plys,end = plyTurn(enys,plys,end)
             break
+#========================================================================================================   メイン関数 
+def main():
 
+    #---------------------------------------↓味方
+    plys = []#プレイヤーをまとめた配列
+    ply1 = Player(150,60,30,"自分",15,0)#1(0にしてもいい)
+    ply2 = Player(90,70,30,"猫",20,4)#4
+    ply3 = Player(200,50,40,"巨人",5,2)#2
+    ply4 = Player(120,40,20,"自分のクローン",10,5)#3
+    plys.append(ply1)
+    #plys.append(ply2)
+    #plys.append(ply3)
+    #plys.append(ply4)
+    plys = [ply1]
+    #---------------------------------------↓敵
+
+    #eny1 = Enemy(200,50,30,"鬼",5,3)#3
+    #eny2 = Enemy(200,70,10,"青鬼",10,4)#4
+    #eny3 = Enemy(50,30,40,"ネズミ",20,2)#2
+    #eny4 = Enemy(80,20,10,"チビ",15,1)#1
+    eny1 = Enemy(60,30,20,"スライム",15,0)#0(0は特殊スキルなし)
+    eny2 = Enemy(100,40,0,"スケルトン",20,0)
+    eny3 = Enemy(80,40,30,"ニワトリ",40,0)
+    enys = [eny1,eny2,eny3]#敵をまとめた配列
+    battleseen(enys,plys)
 
 
             
