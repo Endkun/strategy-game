@@ -35,6 +35,7 @@ class Player():#味方クラス(1人)
 class Enemy():#敵のクラス(1人)
     def __init__(self,hp,at,df,name,speed,job): 
         self.hp = hp
+        self.oldhp = hp
         self.at = at
         self.df = df
         self.name = name
@@ -277,8 +278,25 @@ def main():
     eny1 = Enemy(60,30,20,"スライム",15,0)#0(0は特殊スキルなし)
     eny2 = Enemy(100,40,0,"スケルトン",20,0)
     eny3 = Enemy(80,40,30,"ニワトリ",40,0)
-    enys = [eny1,eny2,eny3]#敵をまとめた配列
-    battleseen(enys,plys)
+    eny4 = Enemy(50,40,10,"リチウムスライム",10,0)
+    eny5 = Enemy(60,50,20,"純金スライム",30,0)
+    eny6 = Enemy(80,40,0,"ゾンビ",20,0)
+    eny7 = Enemy(100,40,0,"スケルトンチーフ",40,2)#小小ボス
+    eny8 = Enemy(50,50,20,"スケルトンガード",20,3)
+    kouho = [[eny1],
+              [eny3],
+              [eny6],
+              [eny2,eny6],
+              [eny2,eny8],
+              [eny1,eny4],
+              [eny7,eny8],#小小ボス,味方が１人手に入る
+              [eny1,eny4,eny5],
+              [eny6,eny8,eny2]]
+    for i in kouho:
+        for j in i:
+            j.hp = j.oldhp
+        enys = i
+        battleseen(enys,plys)
 
 
             
