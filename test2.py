@@ -1,5 +1,6 @@
 #一人から始まって、順々増えていく
 #味方を手に入れるには、普段より小し強い敵を倒すと手に入れられる。
+#反撃ができるようにする。(戦士などといった近接型のみ)
 import time
 import random
 #========================================================================================================    敵味方クラス
@@ -7,30 +8,29 @@ class Player():#味方クラス(1人)
     def __init__(self,hp,at,df,name,speed,job):
         self.hp = hp
         self.at = at
+        self.oldat = at
         self.df = df
         self.name = name
         self.speed = speed
         self.defend = 0
         #--------------------------------------------------------------------ジョブ
-        self.job = job#1が魔法使い(選択肢による),2が格闘家(１発ダメージ２倍),
-                      #3がヒーラー(味方を回復する人),4はスカウト(攻撃した相手を困惑させて攻撃できなくする)
-                      #5はジョーカー(強化アイテムを盗め、弱体化させることができる)
+        self.job = job
         #---------------------------------------------------------------------アイテム 1つめは武器 2つめ+はその他アイテム
-        if job == 1:#勇者の杖は魔法を使えて、無くすと魔法が使えなくなる。20攻撃力上昇 
+        if job == "魔法使い":#勇者の杖は魔法を使えて、無くすと魔法が使えなくなる。20攻撃力上昇 
             self.items = ["勇者の杖","強化石"]
         
-        elif job == 2:#ロングソードは攻撃力2倍、プロテインはスカウトの攻撃を無効化&30回復
-            self.items = ["ロングソード","プロテイン"]#プロテインは２回のみ
+        elif job == "戦士":#ロングソードは攻撃力2倍、プロテインはスカウトの攻撃を無効化&30回復
+            self.items = ["ロングソード","薬草"]#プロテインは２回のみ
         
-        elif job == 3:#剣はアタックポイントが上昇する。薬草は50回復する
+        elif job == "ヒーラー":#剣はアタックポイントが上昇する。薬草は50回復する
             self.items = ["剣","薬草"]
-        elif job == 4:#透明薬は相手に攻撃されなくなる＆攻撃したら反撃ができなくなる
+        elif job == "スカウト":#透明薬は相手に攻撃されなくなる＆攻撃したら反撃ができなくなる
             self.items = ["剣","透明薬"]#透明薬は２回のみ
-        elif job == 5:
+        elif job == "ジョーカー":
             self.items = ["ナイフ","姿隠しのマスク"]#姿隠しのマスクを使えば敵のアイテムを盗める(が盗まれたら使えなくなる)
         #-----------------------------------------------------------------is錯乱
         self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
-        if self.job == 2:
+        if self.job == "戦士":
             self.at*=2
 class Enemy():#敵のクラス(1人)
     def __init__(self,hp,at,df,name,speed,job): 
@@ -40,7 +40,7 @@ class Enemy():#敵のクラス(1人)
         self.df = df
         self.name = name
         self.speed = speed
-        self.job = job#1が魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
+        self.job = job#If魔法使い(ランダムでn体を同時攻撃),2が格闘家(１発ダメージ２倍),
                          #魔法使いの新要素
                          #魔法使いにも選択ができるように
                          #1.n体への同時攻撃
@@ -48,7 +48,7 @@ class Enemy():#敵のクラス(1人)
                          #3.１人を回復
                          #4.自分又は味方の誰かを防御して無効化
         self.confusion = False#錯乱(Trueの場合ターンが終わるまで攻撃ができなくなる)
-        if self.job == 2:
+        if self.job == "戦士":
             self.at*=2
 #========================================================================================================    ソート
 def enySort(enys):
@@ -92,10 +92,10 @@ def enyTurn(enys,plys,end):#敵ターン関数
                 plys[0].hp -= damage
                 print("残りの",plys[0].name,"のhpは",plys[0].hp)
                 print(eny.name,"は",plys[0].name,"に",damage,"ダメージを負わせた！")
-                if eny.job == 4:#錯乱用
+                if eny.job == "スカウト":#錯乱用
                     print(eny.name,"は",plys[0].name,"を錯乱させた！")
                     plys[0].confusion = True
-                if eny.job == 5:#盗む用
+                if eny.job == "ジョーカー":#盗む用
                     rob = random.randint(0,1)
                     if plys[0].items[0] == "" and plys[0].items[1] == "":
                         print(plys[0].name,"は何も持っていなかった...")
@@ -126,7 +126,7 @@ def plyTurn(enys,plys,end):#味方ターン関数
                 print("---味方のターン-------------")
                 print("操作:",ply.name)
                 #---------------------------------------------魔法使い
-                if ply.job == 1:
+                if ply.job == "魔法使い":
                     if ply.items[1] == "強化石":
                         oldat = ply.at
                         ply.at += 20
@@ -169,13 +169,13 @@ def plyTurn(enys,plys,end):#味方ターン関数
                 else:#役職ごとにアイテム効果編成
                     oldat = ply.at
                     oldsp = ply.speed
-                    if ply.job == 2:
+                    if ply.job == "戦士":
                         if ply.items[0] == "ロングソード":
                             ply.at *= 2
-                    if ply.job == 3 or ply.job == 4:
+                    if ply.job == "ヒーラー" or ply.job == "スカウト":
                         if ply.items[0] == "剣":
                             ply.at += 10
-                    if ply.job == 4:
+                    if ply.job == "ジョーカー":
                         if ply.items[0] == "ナイフ":
                             ply.at += 5
                             ply.speed += 10
@@ -192,7 +192,7 @@ def plyTurn(enys,plys,end):#味方ターン関数
                     enys[choice].hp -= damage
                     print(ply.name,"は",enys[choice].name,"に",damage,"ダメージを負わせた！")
                     print("残りの",enys[choice].name,"のhpは",enys[choice].hp)
-                    if ply.job == 4:#錯乱用
+                    if ply.job == "スカウト":#錯乱用
                         print(ply.name,"は",enys[choice].name,"を錯乱させた！")
                         enys[choice].confusion = True
                     #if ply.job == 5:#盗む用
@@ -241,13 +241,18 @@ def battleseen(enys,plys):
         for eny in enys:
             print("eny",eny.name,eny.hp,eny.at)#見える化用
         for ply in plys:
+            ply.at = ply.oldat
             print("ply",ply.name,ply.hp,ply.at)#見える化用
-            if ply.job == 3:#Job用,3は回復
+            if ply.job == "ヒーラー":#Job用,3は回復
                 plyHeal = random.randint(0,len(plys)-1)
                 plys[plyHeal].hp += 50
                 print(plys[plyHeal].name,"が50Hp回復した")
-
+        if len(plys) == 0:
+            print("Congratauions!")
+            end = 1
+            break
         #敵ターン-----
+        
         enySort(enys)
         enys,plys,end = enyTurn(enys,plys,end)
         #味方ターン---
@@ -257,13 +262,12 @@ def battleseen(enys,plys):
             break
 #========================================================================================================   メイン関数 
 def main():
-
     #---------------------------------------↓味方
     plys = []#プレイヤーをまとめた配列
-    ply1 = Player(150,60,30,"自分",15,0)#1(0にしてもいい)
-    ply2 = Player(90,70,30,"猫",20,4)#4
-    ply3 = Player(200,50,40,"巨人",5,2)#2
-    ply4 = Player(120,40,20,"自分のクローン",10,5)#3
+    ply1 = Player(150,60,30,"自分",15,"戦士")
+    ply2 = Player(90,70,30,"猫",20,"戦士")
+    ply3 = Player(200,50,40,"巨人",5,"戦士")
+    ply4 = Player(120,40,20,"自分のクローン",10,"戦士")
     plys.append(ply1)
     #plys.append(ply2)
     #plys.append(ply3)
