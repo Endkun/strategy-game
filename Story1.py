@@ -3,7 +3,38 @@ from pygame.locals import *
 import sys
 import random
 import time
-def main():
+class Slime:
+    def __init__(self,x,y,SlimeType):#-----------------------------------------------------------初期化
+        self.Slx = -1
+        self.Sly = -1
+        self.tick = 0
+        self.slimeType = SlimeType
+        if self.slimeType == 1:
+            self.sl = pygame.image.load("slime1.png").convert_alpha()      #青スライム
+        if self.slimeType == 2:
+            self.sl = pygame.image.load("slime2.png").convert_alpha()      #黄緑スライム
+    def firstAnimation(self):#-----------------------------------------------------------最初のアニメーション
+        self.tick += 1   
+        if self.slimeType == 1:
+            if self.tick == 800:
+                self.Slx = 2
+                self.Sly = 2
+            if self.tick == 1000:
+                self.Sly = 3
+            if self.tick == 1300:
+                self.Slx = 3
+        if self.slimeType == 2:
+            if self.tick == 1000:
+                self.Slx = 2
+                self.Sly = 2
+            if self.tick == 1300:
+                self.Sly = 3
+            if self.tick == 1500:
+                self.Slx = 1
+    def draw(self,screen):#-----------------------------------------------------------描画
+        screen.blit(self.sl,Rect(self.Slx*100,self.Sly*100,50,50)) 
+
+def main():#-----------------------------------------------------------メイン
     pygame.init()        
     font = pygame.font.SysFont("yumincho", 40)                       # Pygameの初期化
     screen = pygame.display.set_mode((500, 900))  # 800
@@ -12,20 +43,16 @@ def main():
     pl1 = pygame.image.load("player1.png").convert_alpha()       #プレイヤー
     pl2 = pygame.image.load("player2.png").convert_alpha()       #プレイヤー
     cat = pygame.image.load("cat.png").convert_alpha()       #プレイヤー
-    sl1 = pygame.image.load("slime1.png").convert_alpha()      #青スライム
-    sl2 = pygame.image.load("slime2.png").convert_alpha()      #黄緑スライム
     tx = 0#タイル用x,y
     ty = 0
     px1 = 2#プレイヤー用xy
     py1 = 5
     px2 = 3#プレイヤー2用xy
-    py2 = 5
+    py2 = 4
     cx = 1#猫用xy
-    cy = 5
-    ex1 = 1#敵1用xy
-    ey1 = 3
-    ex2 = 3#敵2用xy
-    ey2 = 3
+    cy = 4
+    slime1 = Slime(0,0,1)
+    slime2 = Slime(0,1,2)
     mapchip = [
         ["0","0","0","0","0"],
         ["0","0","0","0","0"],
@@ -51,9 +78,12 @@ def main():
         screen.blit(Story2,[10,170])   
         screen.blit(pl1 ,Rect(px1*100,py1*100,50,50))      
         screen.blit(pl2 ,Rect(px2*100,py2*100,50,50))    
-        screen.blit(cat ,Rect(cx*100,cy*100,50,50))     
-        screen.blit(sl1 ,Rect(ex1*100,ey1*100,50,50)) 
-        screen.blit(sl2 ,Rect(ex2*100,ey2*100,50,50))                          
+        screen.blit(cat ,Rect(cx*100,cy*100,50,50))
+        slime1.firstAnimation()     
+        slime2.firstAnimation()
+        slime1.draw(screen)
+        slime2.draw(screen)
+                          
         pygame.display.update()                                    
         # イベント処理
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
