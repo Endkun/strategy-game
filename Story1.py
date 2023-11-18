@@ -9,7 +9,7 @@ class Character():
         self.y = y
         self.font2 = font2
         self.tick = 0
-        self.isBUTTONDOWN = False
+        self.isBUTTONDOWN = "down"
         self.Image = Image#イメージ画像
         self.Team = Team#チーム   味方チーム、敵チーム、モブチームOnly
         self.Name = Name#名前
@@ -55,7 +55,7 @@ class Character():
                 if self.tick == 650:
                     self.y += 4
     def button(self,screen,mapchip):#移動ボタン用
-        if self.isBUTTONDOWN == True:
+        if self.isBUTTONDOWN == "MoveLighton":#プレイヤーはx=2,y=5
             if mapchip[self.y-1][self.x] == "1": #上
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
             if mapchip[self.y+1][self.x] == "1": #下  
@@ -64,7 +64,9 @@ class Character():
                 pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
             if mapchip[self.y][self.x-1] == "1": #左
                 pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10) 
-        if self.tick >= 700:
+        if self.tick == 700:
+            self.isBUTTONDOWN = "isnotpushed"
+        if self.isBUTTONDOWN == "isnotpushed":
             pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
             txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [190, 720])# 文字列の表示位置
@@ -74,13 +76,18 @@ class Character():
                 pygame.quit()             # Pygameの終了(ないと終われない)
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
-                if self.tick >= 700:
-                    if self.isBUTTONDOWN == False:
-                        btn = event.button
-                        x, y = event.pos
-                        if x > 150 and x < 350:
-                            if y > 700 and y < 800:
-                                self.isBUTTONDOWN = True   
+                if self.isBUTTONDOWN == "isnotpushed":
+                    x, y = event.pos
+                    if x > 150 and x < 350:
+                        if y > 700 and y < 800:
+                            self.isBUTTONDOWN = "MoveLighton"
+                if self.isBUTTONDOWN == "MoveLighton":
+                    x, y = event.pos
+                    print(self.y*100)
+                    if self.y*100-100 < y < self.y*100:
+                            self.y -= 1  
+                    elif self.y*100 < y < self.y*100+200:
+                            self.y += 1  
     def draw(self,screen):#-----------------------------------------------------------描画
         screen.blit(self.Image,Rect(self.x*100,self.y*100,50,50))
  
