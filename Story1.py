@@ -7,6 +7,7 @@ class Character():
     def __init__(self,x,y,CharacterType,Image,Team,Name,font2):#-----------------------------------------------------------初期化
         self.x = x
         self.y = y
+        self.action = "Move" #取り敢えず"Move"は動く "Fight"は戦う 
         self.font2 = font2
         self.tick = 0
         self.isBUTTONDOWN = "down"
@@ -14,10 +15,10 @@ class Character():
         self.Team = Team#チーム   味方チーム、敵チーム、モブチームOnly
         self.Name = Name#名前
         self.CharacterType = CharacterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
-        self.cantMoveUp = False
-        self.cantMoveDown = False
-        self.cantMoveRight = False
-        self.cantMoveLeft = False
+        self.canMoveUp = False
+        self.canMoveDown = False
+        self.canMoveRight = False
+        self.canMoveLeft = False
     def firstAnimation(self):#-----------------------------------------------------------最初のアニメーション
         self.tick += 1
         if self.CharacterType == "Slime":   
@@ -42,8 +43,6 @@ class Character():
                 if self.tick == 400:
                     self.x = 2
                     self.y = 2
-                if self.tick == 600:
-                    self.y = 3
         if self.CharacterType == "Player":
             if self.Name == "Mikata1":
                 if self.tick == 300:
@@ -59,41 +58,52 @@ class Character():
                 if self.tick == 650:
                     self.y += 4
     def button(self,screen,mapchip):#移動ボタン用
-        #-----------------------------------------------------------------------------------------動ける所の検出
-        if self.isBUTTONDOWN == "MoveLighton":#プレイヤーはx=2,y=5
-            if mapchip[self.y-1][self.x] == "1": #上
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-            if mapchip[self.y+1][self.x] == "1": #下  
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
-            if mapchip[self.y][self.x+1] == "1": #右
-                pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-            if mapchip[self.y][self.x-1] == "1": #左
-                pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-        #------------------------------------------------------------------------------------------禁止用
-        if self.isBUTTONDOWN == "MoveLighton":
-            if mapchip[self.y-1][self.x] == "1": #上
-                self.cantMoveUp = True
+    #----------------------------------------------------------------------------------------------------------移動アクション
+        if self.action == "Move":#1は動く
+            #-----------------------------------------------------------------------------------------動ける所の検出
+            if self.isBUTTONDOWN == "MoveLighton":#プレイヤーはx=2,y=5
+                if mapchip[self.y-1][self.x] == "1": #上
+                    pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
+                if mapchip[self.y+1][self.x] == "1": #下  
+                    pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+                if mapchip[self.y][self.x+1] == "1": #右
+                    pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
+                if mapchip[self.y][self.x-1] == "1": #左
+                    pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
+            #------------------------------------------------------------------------------------------禁止用
+            if self.isBUTTONDOWN == "MoveLighton":
+                if mapchip[self.y-1][self.x] == "1": #上
+                    self.canMoveUp = True
+                else:
+                    self.canMoveUp = False
+                if mapchip[self.y+1][self.x] == "1": #下  
+                    self.canMoveDown = True
+                else:
+                    self.canMoveDown = False
+                if mapchip[self.y][self.x+1] == "1": #右
+                    self.canMoveRight = True
+                else:
+                    self.canMoveRight = False
+                if mapchip[self.y][self.x-1] == "1": #左
+                    self.canMoveLeft = True
+                else:
+                    self.canMoveLeft = False
+            #-----------------------------------------------------------------------------------------ボタン・フラグ管理
+            if self.tick == 700:
+                self.isBUTTONDOWN = "isnotpushed"
+            if self.isBUTTONDOWN == "isnotpushed":
+                pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
+                txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
+                screen.blit(txt, [190, 720])# 文字列の表示位置
+#----------------------------------------------------------------------------------------------------------戦うアクション
+        if self.action == "Fight":#--------------------------------------------------戦う
+            if mapchip[self.y-1][self.x] == "5" or mapchip[self.y+1][self.x] == "5" or mapchip[self.y][self.x+1] == "5" or mapchip[self.y][self.x-1] == "5":
+                pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
+                txt = self.font2.render("戦う", True, (0,0,0))   # 描画する文字列の設定
+                screen.blit(txt, [200, 720])# 文字列の表示位置
             else:
-                self.cantMoveUp = False
-            if mapchip[self.y+1][self.x] == "1": #下  
-                self.cantMoveDown = True
-            else:
-                self.cantMoveDown = False
-            if mapchip[self.y][self.x+1] == "1": #右
-                self.cantMoveRight = True
-            else:
-                self.cantMoveRight = False
-            if mapchip[self.y][self.x-1] == "1": #左
-                self.cantMoveLeft = True
-            else:
-                self.cantMoveLeft = False
-        #-----------------------------------------------------------------------------------------移動の細かな操作
-        if self.tick == 700:
-            self.isBUTTONDOWN = "isnotpushed"
-        if self.isBUTTONDOWN == "isnotpushed":
-            pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
-            txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [190, 720])# 文字列の表示位置
+                self.action = "Move"
+                self.isBUTTONDOWN = "isnotpushed"
         #-----------------------------------------------------------------------------------------イベント処理
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
@@ -107,21 +117,34 @@ class Character():
                 if self.isBUTTONDOWN == "MoveLighton":
                     x, y = event.pos
                     print(self.x*100)
-                    if self.cantMoveUp == True:
+                    if self.canMoveUp == True:
                         if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
                                 self.y -= 1  
-                    if self.cantMoveDown == True:
+                                self.action = "Fight"
+                                self.isBUTTONDOWN = "Moved"
+                    if self.canMoveDown == True:
                         if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
                                 self.y += 1  
-                    if self.cantMoveLeft == True:
+                                self.action = "Fight"
+                                self.isBUTTONDOWN = "Moved"
+                    if self.canMoveLeft == True:
                         if self.x*100-100 < x < self.x*100:
                             self.x -= 1
-                    if self.cantMoveRight == True:
+                            self.action = "Fight"
+                            self.isBUTTONDOWN = "Moved"
+                    if self.canMoveRight == True:
                         if self.x*100+100 < x < self.x*100+200:
                             self.x += 1    
+                            self.action = "Fight"
+                            self.isBUTTONDOWN = "Moved"
                     print(self.x*100,x,self.x*100-100)
+    def place(self):#----------------------------------------------------------------アクション
+        if self.CharacterType == "Goutou":
+            if self.Name == "Yakuza Sumiyoshi":
+                self.y = 3
     def draw(self,screen):#-----------------------------------------------------------描画
         screen.blit(self.Image,Rect(self.x*100,self.y*100,50,50))
+        
  
 
 def main():#-----------------------------------------------------------メイン
@@ -189,7 +212,7 @@ def main():#-----------------------------------------------------------メイン
         if tick < 500:
             Story = font.render("喫茶店でくつろいでいたら", True, (0,0,255)) # 描画する文字列を画像にする
             Story2 = font.render("突然強盗が入ってきた！", True, (0,0,255)) # 描画する文字列を画像にする
-        if tick >= 500:
+        if tick > 500:
             Story = font.render("強盗だ！金を出せ！", True, (0,0,0)) # 描画する文字列を画像にする
             Story2 = font.render("打たれたくないなら金だ！", True, (0,0,0)) # 描画する文字列を画像にする
         screen.blit(Story, [70,40])
