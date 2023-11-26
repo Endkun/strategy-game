@@ -101,12 +101,18 @@ class Character():
 
     def moveCheck(self):
         #動けるかのチェック
+        #print("@104 self.shui=",self.shui)
         if self.shui["up"]==[] or self.shui["down"]==[] or self.shui["right"]==[] or self.shui["left"]==[]:
             self.canMove=True
         else:
             self.canMove=False
         #周囲に敵がいるかのチェック
-
+        teki="c2"
+        if teki in self.shui["up"] or teki in self.shui["down"] or teki in self.shui["right"] or teki in self.shui["left"]:
+            self.canFight=True
+        else:
+            self.canFight=False
+        #print("@115 self.canFight=",self.canFight)
 
     #------------------------------------------------------------周囲のチェック
     def check(self,mapchip,characters):
@@ -196,11 +202,13 @@ class Character():
         self.moveCheck()
         #print("@197 self.canMove=",self.canMove)   
         if self.canMove:
-            pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
+            pygame.draw.rect(screen, (255,255,255), Rect(50,800,120,40))
             txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [50, 800])# 文字列の表示位置
         if self.canFight:
-            pass
+            pygame.draw.rect(screen, (255,255,255), Rect(200,800,120,40))
+            txt = self.font2.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(txt, [200, 800])# 文字列の表示位置
         if self.canHeal:
             pass
 
@@ -285,12 +293,12 @@ def main():#-----------------------------------------------------------メイン
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
 
     #instance
-    player1 = Character(2,5,"Player",Pl1,"味方","Player",font2)
-    girl = Character(3,4,"Player",Pl2,"モブ","girl",font2)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2)
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font2)
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2)
+    player1 = Character(2,5,"Player",Pl1,"味方","Player",font)
+    girl = Character(3,4,"Player",Pl2,"モブ","girl",font)
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font)
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font)
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font)
 
     characters=[player1,slime1,slime2,goutou,cat,girl]
 
@@ -314,6 +322,7 @@ def main():#-----------------------------------------------------------メイン
     # for ch in characters:
     #     print("ch.name=",ch.name," ch.x=",ch.x,"ch.y=",ch.y)
     #ct=0
+
 
     #battle 　
     while True:
