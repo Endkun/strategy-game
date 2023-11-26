@@ -84,7 +84,7 @@ class Character():
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
-        self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、外枠の壁は"waku"
+        self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
         self.image = image#イメージ画像
@@ -121,20 +121,16 @@ class Character():
         else:
             self.canHeal=False   
 
-
-
-
-
-
-
     #------------------------------------------------------------周囲のチェック
     def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
         new_x = self.x + delta_x
         new_y = self.y + delta_y
-        map_width = 5
-        map_height =6
+        map_w1 = 1
+        map_h1 =3
+        map_w2 = 4
+        map_h2 =6
 
-        if not (0 <= new_x < map_width and 0 <= new_y < map_height):  # 範囲外のチェック
+        if not (map_w1 <= new_x < map_w2 and map_h1 <= new_y < map_h2):  # 範囲外のチェック
             self.shui[direction].append("w1")
         elif int(mapchip[new_y][new_x]) > 1:  # 壁や建造物のチェック
             self.shui[direction].append("w2")
@@ -154,91 +150,7 @@ class Character():
         for direction, dx, dy in directions:
             self.check_direction(direction, dx, dy, mapchip, characters)
 
-
-
-
-
-
-    # def check(self,mapchip,characters):
-    #     #上下左右の周囲を見渡して以下のようなデータを作成する
-    #     # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-
-    #     self.shui={"up":[],"down":[], "right":[],"left":[]}  #リセット
-    #     #上方向のチェック
-    #     new_y=self.y-1
-    #     new_x=self.x
-    #     if new_y<0:#範囲外かのチェック
-    #         self.shui["up"].append("w1")
-    #     else:    
-    #         #print("@109 newy=",new_y,"new_x=",new_x)
-    #         if int(mapchip[new_y][new_x]) > 1:#壁など建造物があるかのチェック
-    #             self.shui["up"].append("w2")
-    #         for ch in characters:#キャラクターがいるかのチェック
-    #             if new_x==ch.x and new_y==ch.y:
-    #                 if ch.team=="味方":
-    #                     self.shui["up"].append("c1")
-    #                 elif ch.team=="敵":   
-    #                     self.shui["up"].append("c2")
-    #                 elif ch.team=="モブ":   
-    #                     self.shui["up"].append("c3")
-
-    #     #下方向のチェック
-    #     new_y=self.y+1
-    #     new_x=self.x
-    #     if new_y>=5:
-    #         self.shui["down"].append("w1")
-    #     else:    
-    #         #print("@122 newy=",new_y,"new_x=",new_x)
-    #         if int(mapchip[new_y][new_x]) > 1:#壁など建造物があるかのチェック
-    #             self.shui["down"].append("w2")
-    #         for ch in characters:#キャラクターがいるかのチェック
-    #             if new_x==ch.x and new_y==ch.y:
-    #                 if ch.team=="味方":
-    #                     self.shui["down"].append("c1")
-    #                 elif ch.team=="敵":   
-    #                     self.shui["down"].append("c2")
-    #                 elif ch.team=="モブ":   
-    #                     self.shui["down"].append("c3")
-
-    #     #右方向のチェック
-    #     new_y=self.y
-    #     new_x=self.x+1
-    #     if new_x>=5:
-    #         self.shui["right"].append("w1")
-    #     else:    
-    #         #print("@134 newy=",new_y,"new_x=",new_x)
-    #         if int(mapchip[new_y][new_x]) > 1:#壁など建造物があるかのチェック
-    #             self.shui["right"].append("w2")
-    #         for ch in characters:#キャラクターがいるかのチェック
-    #             if new_x==ch.x and new_y==ch.y:
-    #                 if ch.team=="味方":
-    #                     self.shui["right"].append("c1")
-    #                 elif ch.team=="敵":   
-    #                     self.shui["right"].append("c2")
-    #                 elif ch.team=="モブ":   
-    #                     self.shui["right"].append("c3")
-
-    #     #左方向のチェック
-    #     new_y=self.y
-    #     new_x=self.x-1
-    #     if new_x<0:
-    #         self.shui["left"].append("w1")
-    #     else:    
-    #         #print("@147 newy=",new_y,"new_x=",new_x)
-    #         if int(mapchip[new_y][new_x]) > 1:#壁など建造物があるかのチェック
-    #             self.shui["left"].append("w2")
-    #         for ch in characters:#キャラクターがいるかのチェック
-    #             if new_x==ch.x and new_y==ch.y:
-    #                 if ch.team=="味方":
-    #                     self.shui["left"].append("c1")
-    #                 elif ch.team=="敵":   
-    #                     self.shui["left"].append("c2")
-    #                 elif ch.team=="モブ":   
-    #                     self.shui["left"].append("c3")
-
-        #print("@148 self.shui=",self.shui)
-
-    def draw_button(self,screen): 
+    def draw_button(self,screen): #---------------------------ボタン描画
         #print("@195 self.canMove=",self.canMove)   
         self.moveCheck()
         #print("@197 self.canMove=",self.canMove)   
@@ -273,6 +185,26 @@ class Character():
                 print("p239 self.button=",self.button)        
 
 
+    def player_mouse2(self):
+        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
+            if event.type == QUIT:        # 閉じるボタンが押されたら終了
+                pygame.quit()             # Pygameの終了(ないと終われない)
+                sys.exit()                # 終了（ないとエラーで終了することになる）
+            elif event.type == MOUSEBUTTONDOWN:
+                x_pos, y_pos = event.pos
+                new_x=int(x_pos/100)
+                new_y=int(y_pos/100)
+                print("@195 new_x=",new_x," new_y=",new_y)
+                if self.shui["up"]==[]     and new_y-self.y== -1 and self.x-new_x== 0:
+                        self.y -= 1
+                elif self.shui["down"]==[] and new_y-self.y== 1 and self.x-new_x== 0:
+                        self.y += 1
+                elif self.shui["left"]==[] and self.y-new_y== 0 and new_x-self.x== -1:
+                        self.x -= 1
+                elif self.shui["right"]==[] and self.y-new_y== 0 and new_x-self.x== 1:
+                        self.x += 1
+
+
 
     def update(self,screen,backGround,characters):#移動ボタン用
         if self.button=="":
@@ -280,7 +212,9 @@ class Character():
             self.player_mouse()          
             self.draw_button(screen)
         elif self.button=="move":
+            self.check(backGround.mapchip,characters)
             self.draw_point(screen)
+            self.player_mouse2()          
 
     def draw_point(self, screen): #動ける場所に黄色いガイド点を描く
         #print("@250 self.shui=",self.shui)     
