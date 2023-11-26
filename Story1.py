@@ -96,6 +96,7 @@ class Character():
         self.canFight = False
         self.canHeal = False
         self.canMove=False
+        self.mode = "first"
 
 
     def moveCheck(self):
@@ -200,9 +201,6 @@ class Character():
 
         #print("@148 self.shui=",self.shui)
 
-    def update(self,backGround,characters):#移動ボタン用
-        self.check(backGround.mapchip,characters)
-
     def draw_button(self,screen): 
         #print("@195 self.canMove=",self.canMove)   
         self.moveCheck()
@@ -238,6 +236,27 @@ class Character():
                 print("p239 self.button=",self.button)        
 
 
+
+    def update(self,screen,backGround,characters):#移動ボタン用
+        if self.button=="":
+            self.check(backGround.mapchip,characters)
+            self.player_mouse()          
+            self.draw_button(screen)
+        elif self.button=="move":
+            self.draw_point(screen)
+
+    def draw_point(self, screen): #動ける場所に黄色いガイドのる点を描く
+        #print("@250 self.shui=",self.shui)     
+        if self.shui["up"] == []:
+            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
+        if self.shui["down"] == []:
+            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+        if self.shui["right"] == []:
+            pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
+        if self.shui["left"] == []:
+            pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
+
+
     def place(self):#---------------------------------------------アクション
         if self.type == "Goutou":
             if self.name == "Yakuza Sumiyoshi":
@@ -254,7 +273,7 @@ class Character():
                     self.x = 2
                     self.y = 2
                 if self.tick == 200:
-                    self.y = 5
+                    self.y = 4
                 if self.tick == 400:
                     self.x = 1
             if self.name == "GreenSlime":
@@ -339,9 +358,7 @@ def main():#-----------------------------------------------------------メイン
 
         #---------プレイヤー-------------------
         for player in players:
-            player.update(backGround,characters)
-            player.draw_button(screen)
-            player.player_mouse()          
+            player.update(screen,backGround,characters)
         #---------描画---------
         for ch in characters:
             ch.draw(screen)
