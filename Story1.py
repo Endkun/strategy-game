@@ -81,20 +81,18 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
 
 class Character():
     def __init__(self,x,y,type,image,team,name,font2,pocket):#-----------------------------------------------------------初期化
+        self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、外枠の壁は"waku"
-        self.pocket=pocket
-
-        self.action = ["move"] #取り敢えず"Move"は動く "Fight"は戦う 
-        self.font2 = font2
-        self.tick = 0
-        self.isBUTTONDOWN = "down"
+        self.pocket=pocket#持ち物
+        self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
-        self.name = name#名前
+        self.font2 = font2
+
+        self.tick = 0
         self.button=""
-        self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
         self.canFight = False
         self.canHeal = False
         self.canMove=False
