@@ -80,10 +80,11 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
         ck.tick(60) #1秒間で30フレームになるように33msecのwait                           
 
 class Character():
-    def __init__(self,x,y,type,image,team,name,font2):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,type,image,team,name,font2,pocket):#-----------------------------------------------------------初期化
         self.x = x      #キャラの座標
         self.y = y
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、外枠の壁は"waku"
+        self.pocket=pocket
 
         self.action = ["move"] #取り敢えず"Move"は動く "Fight"は戦う 
         self.font2 = font2
@@ -106,6 +107,7 @@ class Character():
             self.canMove=True
         else:
             self.canMove=False
+
         #周囲に敵がいるかのチェック
         teki="c2"
         if teki in self.shui["up"] or teki in self.shui["down"] or teki in self.shui["right"] or teki in self.shui["left"]:
@@ -113,6 +115,12 @@ class Character():
         else:
             self.canFight=False
         #print("@115 self.canFight=",self.canFight)
+
+        #薬草を持っているかのチェック
+        if "薬草" in self.pocket:
+            self.canHeal=True
+        else:
+            self.canHeal=False   
 
     #------------------------------------------------------------周囲のチェック
     def check(self,mapchip,characters):
@@ -204,14 +212,15 @@ class Character():
         if self.canMove:
             pygame.draw.rect(screen, (255,255,255), Rect(50,800,120,40))
             txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [50, 800])# 文字列の表示位置
+            screen.blit(txt, [80, 805])# 文字列の表示位置
         if self.canFight:
             pygame.draw.rect(screen, (255,255,255), Rect(200,800,120,40))
             txt = self.font2.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [200, 800])# 文字列の表示位置
+            screen.blit(txt, [230, 805])# 文字列の表示位置
         if self.canHeal:
-            pass
-
+            pygame.draw.rect(screen, (255,255,255), Rect(350,800,120,40))
+            txt = self.font2.render("回復", True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(txt, [380, 805])# 文字列の表示位置
 
     def player_mouse(self):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -220,13 +229,15 @@ class Character():
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
                 x_pos, y_pos = event.pos
+                self.button=""
                 if 800< y_pos < 830:
-                    if 50<x_pos<150:
+                    if 50<x_pos<150 and self.canMove:
                         self.button="move"
-                    elif 200<x_pos<300:
+                    elif 200<x_pos<300 and self.canFight:
                         self.button="fight"
-                    elif 350<x_pos<500:
-                        self.button="heal"
+                    elif 350<x_pos<500 and self.canHeal:
+                        self.button="heal" 
+                print("p239 self.button=",self.button)        
 
 
     def place(self):#---------------------------------------------アクション
@@ -293,12 +304,12 @@ def main():#-----------------------------------------------------------メイン
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
 
     #instance
-    player1 = Character(2,5,"Player",Pl1,"味方","Player",font)
-    girl = Character(3,4,"Player",Pl2,"モブ","girl",font)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font)
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font)
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font)
+    player1 = Character(2,5,"Player",Pl1,"味方","Player",font,["剣","薬草"])
+    girl = Character(3,4,"Player",Pl2,"モブ","girl",font,["薬草"])
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font,["薬草"])
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font,["薬草"])
+    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"])
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font,[])
 
     characters=[player1,slime1,slime2,goutou,cat,girl]
 
