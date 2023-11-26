@@ -31,10 +31,10 @@ class BackGround():
         screen.fill((255,255,255))
         for i in range(5):
             for j in range(9):
-                for enemy in enemys:
-                    if enemy.x == i and enemy.y == j:
-                        if self.mapchip[j][i] == "1":
-                            self.mapchip[j][i] = "5"
+                # for enemy in enemys:
+                #     if enemy.x == i and enemy.y == j:
+                #         if self.mapchip[j][i] == "1":
+                #             self.mapchip[j][i] = "5"
                 mapnum = int(self.mapchip[j][i])            
                 screen.blit(self.tiles[mapnum] ,Rect(tx+i*100,ty+j*100,50,50))            
 
@@ -80,7 +80,7 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
         ck.tick(60) #1秒間で30フレームになるように33msecのwait                           
 
 class Character():
-    def __init__(self,x,y,CharacterType,Image,Team,name,font2):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,type,image,team,name,font2):#-----------------------------------------------------------初期化
         self.x = x      #キャラの座標
         self.y = y
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、外枠の壁は"waku"
@@ -89,14 +89,13 @@ class Character():
         self.font2 = font2
         self.tick = 0
         self.isBUTTONDOWN = "down"
-        self.Image = Image#イメージ画像
-        self.Team = Team#チーム   味方チーム、敵チーム、モブチームOnly
+        self.image = image#イメージ画像
+        self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
         self.name = name#名前
-        self.CharacterType = CharacterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
-        self.canMoveUp = False
-        self.canMoveDown = False
-        self.canMoveRight = False
-        self.canMoveLeft = False
+        self.button=""
+        self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
+        self.canFight = False
+        self.canHeal = False
         self.canMove=False
 
 
@@ -106,13 +105,14 @@ class Character():
             self.canMove=True
         else:
             self.canMove=False
-        print("@109 self.canMove=",self.canMove)    
         #周囲に敵がいるかのチェック
 
 
     #------------------------------------------------------------周囲のチェック
     def check(self,mapchip,characters):
-        #print("------@103 self.name=",self.name)
+        #上下左右の周囲を見渡して以下のようなデータを作成する
+        # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
+
         self.shui={"up":[],"down":[], "right":[],"left":[]}  #リセット
         #上方向のチェック
         new_y=self.y-1
@@ -125,11 +125,11 @@ class Character():
                 self.shui["up"].append("w2")
             for ch in characters:#キャラクターがいるかのチェック
                 if new_x==ch.x and new_y==ch.y:
-                    if ch.Team=="味方":
+                    if ch.team=="味方":
                         self.shui["up"].append("c1")
-                    elif ch.Team=="敵":   
+                    elif ch.team=="敵":   
                         self.shui["up"].append("c2")
-                    elif ch.Team=="モブ":   
+                    elif ch.team=="モブ":   
                         self.shui["up"].append("c3")
 
         #下方向のチェック
@@ -143,11 +143,11 @@ class Character():
                 self.shui["down"].append("w2")
             for ch in characters:#キャラクターがいるかのチェック
                 if new_x==ch.x and new_y==ch.y:
-                    if ch.Team=="味方":
+                    if ch.team=="味方":
                         self.shui["down"].append("c1")
-                    elif ch.Team=="敵":   
+                    elif ch.team=="敵":   
                         self.shui["down"].append("c2")
-                    elif ch.Team=="モブ":   
+                    elif ch.team=="モブ":   
                         self.shui["down"].append("c3")
 
         #右方向のチェック
@@ -161,11 +161,11 @@ class Character():
                 self.shui["right"].append("w2")
             for ch in characters:#キャラクターがいるかのチェック
                 if new_x==ch.x and new_y==ch.y:
-                    if ch.Team=="味方":
+                    if ch.team=="味方":
                         self.shui["right"].append("c1")
-                    elif ch.Team=="敵":   
+                    elif ch.team=="敵":   
                         self.shui["right"].append("c2")
-                    elif ch.Team=="モブ":   
+                    elif ch.team=="モブ":   
                         self.shui["right"].append("c3")
 
         #左方向のチェック
@@ -179,122 +179,67 @@ class Character():
                 self.shui["left"].append("w2")
             for ch in characters:#キャラクターがいるかのチェック
                 if new_x==ch.x and new_y==ch.y:
-                    if ch.Team=="味方":
+                    if ch.team=="味方":
                         self.shui["left"].append("c1")
-                    elif ch.Team=="敵":   
+                    elif ch.team=="敵":   
                         self.shui["left"].append("c2")
-                    elif ch.Team=="モブ":   
+                    elif ch.team=="モブ":   
                         self.shui["left"].append("c3")
 
-        print("@148 self.shui=",self.shui)
+        #print("@148 self.shui=",self.shui)
 
     def update(self,backGround,characters):#移動ボタン用
         self.check(backGround.mapchip,characters)
 
     def draw_button(self,screen): 
-        print("@195 self.canMove=",self.canMove)   
+        #print("@195 self.canMove=",self.canMove)   
         self.moveCheck()
-        print("@197 self.canMove=",self.canMove)   
+        #print("@197 self.canMove=",self.canMove)   
         if self.canMove:
             pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
             txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [190, 720])# 文字列の表示位置
+            screen.blit(txt, [50, 800])# 文字列の表示位置
+        if self.canFight:
+            pass
+        if self.canHeal:
+            pass
 
 
-    #---------------------------------------------------------------------------------------------------移動アクション
-        #if "move" in self.action :
-            #print("@53 move")
-            # #----------------------------------------------------------------------------動ける所の描画
-            # if self.isBUTTONDOWN == "MoveLighton":#プレイヤーはx=2,y=5
-            #     if backGround.mapchip[self.y-1][self.x] == "1": #上
-            #         pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-            #     if backGround.mapchip[self.y+1][self.x] == "1": #下  
-            #         pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
-            #     if backGround.mapchip[self.y][self.x+1] == "1": #右
-            #         pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-            #     if backGround.mapchip[self.y][self.x-1] == "1": #左
-            #         pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-            #------------------------------------------------------------------------------------------動ける所の検出
-            # if backGround.mapchip[self.y-1][self.x] == "1": #上
-            #     self.canMoveUp = True
-            # else:
-            #     self.canMoveUp = False
-
-            # if backGround.mapchip[self.y+1][self.x] == "1": #下  
-            #     self.canMoveDown = True
-            # else:
-            #     self.canMoveDown = False
-
-            # if backGround.mapchip[self.y][self.x+1] == "1": #右
-            #     self.canMoveRight = True
-            # else:
-            #     self.canMoveRight = False
-
-            # if backGround.mapchip[self.y][self.x-1] == "1": #左
-            #     self.canMoveLeft = True
-            # else:
-            #     self.canMoveLeft = False
-            #-----------------------------------------------------------------------------------------ボタン・フラグ管理
-            # if self.canMoveUp or self.canMoveDown or self.canMoveRight or self.canMoveLeft:
-            #     pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
-            #     txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
-            #     screen.blit(txt, [190, 720])# 文字列の表示位置
-#----------------------------------------------------------------------------------------------------------戦うアクション
-        # if "fight" in self.action: #--------------------------------------------------戦う
-        #     print("@101 fight")
-
-        #     if backGround.mapchip[self.y-1][self.x] == "5" or backGround.mapchip[self.y+1][self.x] == "5" or backGround.mapchip[self.y][self.x+1] == "5" or backGround.mapchip[self.y][self.x-1] == "5":
-        #         pygame.draw.rect(screen, (255,255,255), Rect(150,700,200,100))
-        #         txt = self.font2.render("戦う", True, (0,0,0))   # 描画する文字列の設定
-        #         screen.blit(txt, [200, 720])# 文字列の表示位置
-        #     else:
-        #         self.action = "move"
-        #         self.isBUTTONDOWN = "isnotpushed"
-        #-----------------------------------------------------------------------------------------イベント処理
+    def player_mouse(self):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
-                x, y = event.pos
-                if 150 < x < 350 and 700 < y < 800:
-                        self.isBUTTONDOWN = "MoveLighton"
-                if self.isBUTTONDOWN == "MoveLighton":
-                    if self.canMoveUp == True:
-                        if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
-                                self.y -= 1  
-                                self.isBUTTONDOWN = "Moved"
-                    if self.canMoveDown == True:
-                        if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
-                                self.y += 1  
-                                self.isBUTTONDOWN = "Moved"
-                    if self.canMoveLeft == True:
-                        if self.x*100-100 < x < self.x*100:
-                            self.x -= 1
-                            self.isBUTTONDOWN = "Moved"
-                    if self.canMoveRight == True:
-                        if self.x*100+100 < x < self.x*100+200:
-                            self.x += 1    
-                            self.isBUTTONDOWN = "Moved"
+                x_pos, y_pos = event.pos
+                if 800< y_pos < 830:
+                    if 50<x_pos<150:
+                        self.button="move"
+                    elif 200<x_pos<300:
+                        self.button="fight"
+                    elif 350<x_pos<500:
+                        self.button="heal"
+
+
     def place(self):#---------------------------------------------アクション
-        if self.CharacterType == "Goutou":
+        if self.type == "Goutou":
             if self.name == "Yakuza Sumiyoshi":
                 self.y = 3
     def draw(self,screen):#--------------------------------------------描画
-        screen.blit(self.Image,Rect(self.x*100,self.y*100,50,50))
+        screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
 
 
     def firstAnimation(self):#----------------------------最初のアニメーション
         self.tick += 1
-        if self.CharacterType == "Slime":   
+        if self.type == "Slime":   
             if self.name == "BlueSlime":
                 if self.tick == 120:
                     self.x = 2
                     self.y = 2
                 if self.tick == 200:
-                    self.y = 3
+                    self.y = 5
                 if self.tick == 400:
-                    self.x = 3
+                    self.x = 1
             if self.name == "GreenSlime":
                 if self.tick == 200:
                     self.x = 2
@@ -303,19 +248,19 @@ class Character():
                     self.y = 3
                 if self.tick == 500:
                     self.x = 1
-        if self.CharacterType == "Goutou":
+        if self.type == "Goutou":
             if self.name == "Yakuza Sumiyoshi":
                 if self.tick == 400:
                     self.x = 2
                     self.y = 2
-        if self.CharacterType == "Player":
+        if self.type == "Player":
             if self.name == "girl":
                 if self.tick == 300:
                     self.y += 1
                 if self.tick == 400:
                     #self.y += 4
                     self.y += 0
-        if self.CharacterType == "Animal":
+        if self.type == "Animal":
             if self.name == "Cat":
                 if self.tick == 400:
                     self.y += 1
@@ -354,11 +299,11 @@ def main():#-----------------------------------------------------------メイン
     mobs=[]
     enemys=[]
     for ch in characters:
-        if ch.Team=="味方":
+        if ch.team=="味方":
             players.append(ch)
-        elif ch.Team=="敵":
+        elif ch.team=="敵":
             enemys.append(ch)
-        elif ch.Team=="モブ":
+        elif ch.team=="モブ":
             mobs.append(ch)
 
     backGround=BackGround()
@@ -378,6 +323,7 @@ def main():#-----------------------------------------------------------メイン
         for player in players:
             player.update(backGround,characters)
             player.draw_button(screen)
+            player.player_mouse()          
         #---------描画---------
         for ch in characters:
             ch.draw(screen)
