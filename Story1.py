@@ -80,10 +80,12 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
         ck.tick(60) #1秒間で30フレームになるように33msecのwait                           
 
 class Character():
-    def __init__(self,x,y,type,image,team,name,font2,pocket):#-----------------------------------------------------------初期化
+    number=0
+    def __init__(self,x,y,id,type,image,team,name,font2,pocket):#-----------------------------------------------------------初期化
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
+        self.id=id
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
@@ -92,34 +94,37 @@ class Character():
         self.font2 = font2
 
         self.tick = 0
-        self.button=""
+        self.mode="init"
         self.canFight = False
         self.canHeal = False
         self.canMove=False
-        self.mode = "first"
+        #self.mode = "first"
 
+        self.energyOrg=2#1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
+        self.energy=self.energyOrg
 
     def moveCheck(self):
         #動けるかのチェック
-        #print("@104 self.shui=",self.shui)
-        if self.shui["up"]==[] or self.shui["down"]==[] or self.shui["right"]==[] or self.shui["left"]==[]:
-            self.canMove=True
-        else:
-            self.canMove=False
+        if self.energy>0:
+            #print("@104 self.shui=",self.shui)
+            if self.shui["up"]==[] or self.shui["down"]==[] or self.shui["right"]==[] or self.shui["left"]==[]:
+                self.canMove=True
+            else:
+                self.canMove=False
 
-        #周囲に敵がいるかのチェック
-        teki="c2"
-        if teki in self.shui["up"] or teki in self.shui["down"] or teki in self.shui["right"] or teki in self.shui["left"]:
-            self.canFight=True
-        else:
-            self.canFight=False
-        #print("@115 self.canFight=",self.canFight)
+            #周囲に敵がいるかのチェック
+            teki="c2"
+            if teki in self.shui["up"] or teki in self.shui["down"] or teki in self.shui["right"] or teki in self.shui["left"]:
+                self.canFight=True
+            else:
+                self.canFight=False
+            #print("@115 self.canFight=",self.canFight)
 
-        #薬草を持っているかのチェック
-        if "薬草" in self.pocket:
-            self.canHeal=True
-        else:
-            self.canHeal=False   
+            #薬草を持っているかのチェック
+            if "薬草" in self.pocket:
+                self.canHeal=True
+            else:
+                self.canHeal=False   
 
     #------------------------------------------------------------周囲のチェック
     def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
@@ -174,15 +179,15 @@ class Character():
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
                 x_pos, y_pos = event.pos
-                self.button=""
+                self.mode=""
                 if 800< y_pos < 830:
                     if 50<x_pos<150 and self.canMove:
-                        self.button="move"
+                        self.mode="move"
                     elif 200<x_pos<300 and self.canFight:
-                        self.button="fight"
+                        self.mode="fight"
                     elif 350<x_pos<500 and self.canHeal:
-                        self.button="heal" 
-                print("p239 self.button=",self.button)        
+                        self.mode="heal" 
+                print("p239 self.mode=",self.mode)        
 
 
     def player_mouse2(self):
@@ -195,26 +200,45 @@ class Character():
                 new_x=int(x_pos/100)
                 new_y=int(y_pos/100)
                 print("@195 new_x=",new_x," new_y=",new_y)
+                moved=False
                 if self.shui["up"]==[]     and new_y-self.y== -1 and self.x-new_x== 0:
                         self.y -= 1
+                        moved=True
                 elif self.shui["down"]==[] and new_y-self.y== 1 and self.x-new_x== 0:
                         self.y += 1
+                        moved=True
                 elif self.shui["left"]==[] and self.y-new_y== 0 and new_x-self.x== -1:
                         self.x -= 1
+                        moved=True
                 elif self.shui["right"]==[] and self.y-new_y== 0 and new_x-self.x== 1:
                         self.x += 1
+                        moved=True
+                if moved==True:
+                    self.mode="init"
+                    self.energy-=1
+                            
 
 
 
-    def update(self,screen,backGround,characters):#移動ボタン用
-        if self.button=="":
+    def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
+        if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
+            return
+        if self.mode=="init":#初期化モード
+            print("init self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.player_mouse()          
             self.draw_button(screen)
-        elif self.button=="move":
+        elif self.mode=="move":#移動モード
+            print("move self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.draw_point(screen)
-            self.player_mouse2()          
+            self.player_mouse2()      
+        elif self.mode=="heal":#移動モード
+            print("heal self.energy=",self.energy)
+            pass
+        elif self.mode=="fight":
+            print("fihght self.energy=",self.energy)
+            pass    
 
     def draw_point(self, screen): #動ける場所に黄色いガイド点を描く
         #print("@250 self.shui=",self.shui)     
@@ -291,16 +315,17 @@ def main():#-----------------------------------------------------------メイン
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
 
+    Db=[
+        (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"]),
+        (3,4,1,"Player",Pl2,"モブ","girl",font,["薬草"]),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"]),
+        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"]),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"]),
+        (1,4,5,"Animal",Cat,"モブ","Cat",font,[]),
+    ]
+
     #instance
-    player1 = Character(2,5,"Player",Pl1,"味方","Player",font,["剣","薬草"])
-    girl = Character(3,4,"Player",Pl2,"モブ","girl",font,["薬草"])
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font,["薬草"])
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font,["薬草"])
-    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"])
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font,[])
-
-    characters=[player1,slime1,slime2,goutou,cat,girl]
-
+    characters=[Character(*Db[i]) for i in range(len(Db))]
     #敵や味方の分類
     players=[]
     mobs=[]
@@ -318,26 +343,16 @@ def main():#-----------------------------------------------------------メイン
     #opening
     opening(screen,font,enemys,players,mobs,backGround)
 
-    # for ch in characters:
-    #     print("ch.name=",ch.name," ch.x=",ch.x,"ch.y=",ch.y)
-    #ct=0
-
-
     #battle 　
     while True:
         backGround.draw(screen,enemys)
 
-        #---------プレイヤー-------------------
-        for player in players:
-            player.update(screen,backGround,characters)
         #---------描画---------
         for ch in characters:
+            ch.update(screen,backGround,characters)
             ch.draw(screen)
                         
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で30フレームになるように33msecのwait
-        # ct+=1
-        # if ct>500:
-        #     break
 
 main()

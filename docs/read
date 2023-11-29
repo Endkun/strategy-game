@@ -1,0 +1,18 @@
+		C:\Users\Windows\tmp\strategy-game\Story1.py
+		動けるときはMoveが点灯
+		敵がいないときはFightが点灯しない
+		薬草を持っていればHealが点灯
+
+
+		動けるときはMoveが点灯
+		敵がいるのでFightが点灯
+		薬草を持っていればHealが点灯
+
+		動けるときはMoveが点灯
+		敵がいないときはFightが点灯しない
+		薬草を持っていればHealが点灯
+
+
+		動けないのでMoveがなし
+		敵がいるのでFightが点灯
+		薬草を持っていればHealが点灯
