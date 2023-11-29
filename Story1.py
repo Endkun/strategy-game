@@ -80,8 +80,8 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
         ck.tick(60) #1秒間で30フレームになるように33msecのwait                           
 
 class Character():
-    number=0
-    def __init__(self,x,y,id,type,image,team,name,font2,pocket):#-----------------------------------------------------------初期化
+    number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
+    def __init__(self,x,y,id,type,image,team,name,font,pocket):#-----------------------------------------------------------初期化
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
@@ -91,17 +91,16 @@ class Character():
         self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
-        self.font2 = font2
+        self.font2 = font
 
         self.tick = 0
-        self.mode="init"
-        self.canFight = False
-        self.canHeal = False
-        self.canMove=False
-        #self.mode = "first"
+        self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
+        self.canFight = False#戦えるか　四方に敵がいるか
+        self.canHeal = False#回復できるか　薬草を持っているか
+        self.canMove=False#移動できるか　四方に空間ががあるか
 
-        self.energyOrg=2#1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
-        self.energy=self.energyOrg
+        self.energyOrg=2#1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費　初期値
+        self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
     def moveCheck(self):
         #動けるかのチェック
@@ -118,7 +117,6 @@ class Character():
                 self.canFight=True
             else:
                 self.canFight=False
-            #print("@115 self.canFight=",self.canFight)
 
             #薬草を持っているかのチェック
             if "薬草" in self.pocket:
@@ -200,7 +198,7 @@ class Character():
                 new_x=int(x_pos/100)
                 new_y=int(y_pos/100)
                 print("@195 new_x=",new_x," new_y=",new_y)
-                moved=False
+                moved=False#実際に移動したか
                 if self.shui["up"]==[]     and new_y-self.y== -1 and self.x-new_x== 0:
                         self.y -= 1
                         moved=True
@@ -214,10 +212,8 @@ class Character():
                         self.x += 1
                         moved=True
                 if moved==True:
-                    self.mode="init"
-                    self.energy-=1
-                            
-
+                    self.mode="init"#実際に動いたらmodeをもとに戻す
+                    self.energy-=1#エネルギーを減らす
 
 
     def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
@@ -279,26 +275,23 @@ class Character():
                     self.y = 3
                 if self.tick == 500:
                     self.x = 1
-        if self.type == "Goutou":
-            if self.name == "Yakuza Sumiyoshi":
-                if self.tick == 400:
-                    self.x = 2
-                    self.y = 2
-        if self.type == "Player":
-            if self.name == "girl":
-                if self.tick == 300:
-                    self.y += 1
-                if self.tick == 400:
-                    #self.y += 4
-                    self.y += 0
-        if self.type == "Animal":
-            if self.name == "Cat":
-                if self.tick == 400:
-                    self.y += 1
-                if self.tick == 550:
-                    self.x += 2
-                if self.tick == 650:
-                    self.y += 4
+        if self.type == "Goutou" and self.name == "Yakuza Sumiyoshi":
+            if self.tick == 400:
+                self.x = 2
+                self.y = 2
+        if self.type == "Player" and self.name == "girl":
+            if self.tick == 300:
+                self.y += 1
+            if self.tick == 400:
+                #self.y += 4
+                self.y += 0
+        if self.type == "Animal" and self.name == "Cat":
+            if self.tick == 400:
+                self.y += 1
+            if self.tick == 550:
+                self.x += 2
+            if self.tick == 650:
+                self.y += 4
 
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
@@ -315,7 +308,8 @@ def main():#-----------------------------------------------------------メイン
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
 
-    Db=[
+    Db=[#キャラのデータベース
+        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物)
         (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"]),
         (3,4,1,"Player",Pl2,"モブ","girl",font,["薬草"]),
         (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"]),
@@ -324,7 +318,7 @@ def main():#-----------------------------------------------------------メイン
         (1,4,5,"Animal",Cat,"モブ","Cat",font,[]),
     ]
 
-    #instance
+    #データベースからインスタンス化
     characters=[Character(*Db[i]) for i in range(len(Db))]
     #敵や味方の分類
     players=[]
@@ -346,13 +340,10 @@ def main():#-----------------------------------------------------------メイン
     #battle 　
     while True:
         backGround.draw(screen,enemys)
-
-        #---------描画---------
+        #---------更新と描画---------
         for ch in characters:
             ch.update(screen,backGround,characters)
             ch.draw(screen)
-                        
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で30フレームになるように33msecのwait
-
 main()
