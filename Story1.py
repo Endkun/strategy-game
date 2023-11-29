@@ -31,10 +31,6 @@ class BackGround():
         screen.fill((255,255,255))
         for i in range(5):
             for j in range(9):
-                # for enemy in enemys:
-                #     if enemy.x == i and enemy.y == j:
-                #         if self.mapchip[j][i] == "1":
-                #             self.mapchip[j][i] = "5"
                 mapnum = int(self.mapchip[j][i])            
                 screen.blit(self.tiles[mapnum] ,Rect(tx+i*100,ty+j*100,50,50))            
 
@@ -102,6 +98,33 @@ class Character():
         self.energyOrg=2#1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費　初期値
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
+    def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
+        if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
+            return
+        if self.team=="味方":
+            self.mikata_update(screen,backGround,characters)    
+
+    def mikata_update(self,screen,backGround,characters):    
+        print("self.id=",self.id)
+        if self.mode=="init":#初期化モード
+            print("init self.energy=",self.energy)
+            self.check(backGround.mapchip,characters)
+            self.player_mouse_init()          
+            self.draw_mode_button(screen)
+        elif self.mode=="move":#移動モード
+            print("move self.energy=",self.energy)
+            self.check(backGround.mapchip,characters)
+            self.draw_point(screen)
+            self.player_mouse_move()      
+        elif self.mode=="heal":#移動モード
+            print("heal self.energy=",self.energy)
+            pass
+        elif self.mode=="fight":
+            print("fihght self.energy=",self.energy)
+            pass    
+        if self.energy<=0:
+            Character.number=(Character.number+1)%len(characters)
+
     def moveCheck(self):
         #動けるかのチェック
         if self.energy>0:
@@ -153,7 +176,7 @@ class Character():
         for direction, dx, dy in directions:
             self.check_direction(direction, dx, dy, mapchip, characters)
 
-    def draw_button(self,screen): #---------------------------ボタン描画
+    def draw_mode_button(self,screen): #---------------------------ボタン描画
         #print("@195 self.canMove=",self.canMove)   
         self.moveCheck()
         #print("@197 self.canMove=",self.canMove)   
@@ -170,7 +193,7 @@ class Character():
             txt = self.font2.render("回復", True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [380, 805])# 文字列の表示位置
 
-    def player_mouse(self):
+    def player_mouse_init(self):#初期化モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -188,7 +211,7 @@ class Character():
                 print("p239 self.mode=",self.mode)        
 
 
-    def player_mouse2(self):
+    def player_mouse_move(self):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -216,25 +239,6 @@ class Character():
                     self.energy-=1#エネルギーを減らす
 
 
-    def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
-        if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
-            return
-        if self.mode=="init":#初期化モード
-            print("init self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.player_mouse()          
-            self.draw_button(screen)
-        elif self.mode=="move":#移動モード
-            print("move self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.draw_point(screen)
-            self.player_mouse2()      
-        elif self.mode=="heal":#移動モード
-            print("heal self.energy=",self.energy)
-            pass
-        elif self.mode=="fight":
-            print("fihght self.energy=",self.energy)
-            pass    
 
     def draw_point(self, screen): #動ける場所に黄色いガイド点を描く
         #print("@250 self.shui=",self.shui)     
@@ -311,7 +315,7 @@ def main():#-----------------------------------------------------------メイン
     Db=[#キャラのデータベース
         #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物)
         (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"]),
-        (3,4,1,"Player",Pl2,"モブ","girl",font,["薬草"]),
+        (3,4,1,"Player",Pl2,"味方","girl",font,["薬草"]),
         (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"]),
         (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"]),
         (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"]),
