@@ -110,22 +110,70 @@ class Character():
             print("init self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.player_mouse_init()          
-            self.draw_mode_button(screen)
+            self.draw_mode(screen)
         elif self.mode=="move":#移動モード
             print("move self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
-            self.draw_point(screen)
+            self.draw_point_for_move(screen)
             self.player_mouse_move()      
         elif self.mode=="heal":#移動モード
             print("heal self.energy=",self.energy)
             pass
         elif self.mode=="fight":
             print("fihght self.energy=",self.energy)
-            pass    
-        if self.energy<=0:
+            self.check(backGround.mapchip,characters)
+            self.draw_point_for_fight(screen)
+        if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(characters)
 
-    def moveCheck(self):
+    #------------------------------------------------------------周囲のチェック
+
+    def check(self, mapchip, characters):
+        #上下左右の周囲を見渡して以下のようなデータを作成する
+        # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
+        #w1:壁　c1:味方　c2:敵　c3:モブ
+        self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
+        directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
+
+        for direction, dx, dy in directions:
+            self.check_direction(direction, dx, dy, mapchip, characters)
+
+    def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
+        new_x = self.x + delta_x#新しい位置＝着目点
+        new_y = self.y + delta_y
+        map_w1 = 1#マップの左端
+        map_h1 =3#上
+        map_w2 = 4#右端
+        map_h2 =6#下
+
+        if not (map_w1 <= new_x < map_w2 and map_h1 <= new_y < map_h2):  # 範囲外のチェック
+            self.shui[direction].append("w1")
+        elif int(mapchip[new_y][new_x]) > 1:  # 壁や建造物のチェック
+            self.shui[direction].append("w2")
+        else:
+            for ch in characters:  # キャラクターのチェック
+                if new_x == ch.x and new_y == ch.y:
+                    code = "c1" if ch.team == "味方" else "c2" if ch.team == "敵" else "c3"
+                    self.shui[direction].append(code)
+
+    def draw_mode(self,screen): #---------------------------ボタン描画
+        #print("@195 self.canMove=",self.canMove)   
+        self.check_for_mode()
+        #print("@197 self.canMove=",self.canMove)   
+        if self.canMove:
+            pygame.draw.rect(screen, (255,255,255), Rect(50,800,120,40))
+            txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(txt, [80, 805])# 文字列の表示位置
+        if self.canFight:
+            pygame.draw.rect(screen, (255,255,255), Rect(200,800,120,40))
+            txt = self.font2.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(txt, [230, 805])# 文字列の表示位置
+        if self.canHeal:
+            pygame.draw.rect(screen, (255,255,255), Rect(350,800,120,40))
+            txt = self.font2.render("回復", True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(txt, [380, 805])# 文字列の表示位置
+
+    def check_for_mode(self):
         #動けるかのチェック
         if self.energy>0:
             #print("@104 self.shui=",self.shui)
@@ -146,52 +194,6 @@ class Character():
                 self.canHeal=True
             else:
                 self.canHeal=False   
-
-    #------------------------------------------------------------周囲のチェック
-    def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
-        new_x = self.x + delta_x
-        new_y = self.y + delta_y
-        map_w1 = 1
-        map_h1 =3
-        map_w2 = 4
-        map_h2 =6
-
-        if not (map_w1 <= new_x < map_w2 and map_h1 <= new_y < map_h2):  # 範囲外のチェック
-            self.shui[direction].append("w1")
-        elif int(mapchip[new_y][new_x]) > 1:  # 壁や建造物のチェック
-            self.shui[direction].append("w2")
-        else:
-            for ch in characters:  # キャラクターのチェック
-                if new_x == ch.x and new_y == ch.y:
-                    code = "c1" if ch.team == "味方" else "c2" if ch.team == "敵" else "c3"
-                    self.shui[direction].append(code)
-
-
-    def check(self, mapchip, characters):
-        #上下左右の周囲を見渡して以下のようなデータを作成する
-        # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-        self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
-        directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
-
-        for direction, dx, dy in directions:
-            self.check_direction(direction, dx, dy, mapchip, characters)
-
-    def draw_mode_button(self,screen): #---------------------------ボタン描画
-        #print("@195 self.canMove=",self.canMove)   
-        self.moveCheck()
-        #print("@197 self.canMove=",self.canMove)   
-        if self.canMove:
-            pygame.draw.rect(screen, (255,255,255), Rect(50,800,120,40))
-            txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [80, 805])# 文字列の表示位置
-        if self.canFight:
-            pygame.draw.rect(screen, (255,255,255), Rect(200,800,120,40))
-            txt = self.font2.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [230, 805])# 文字列の表示位置
-        if self.canHeal:
-            pygame.draw.rect(screen, (255,255,255), Rect(350,800,120,40))
-            txt = self.font2.render("回復", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [380, 805])# 文字列の表示位置
 
     def player_mouse_init(self):#初期化モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -238,9 +240,7 @@ class Character():
                     self.mode="init"#実際に動いたらmodeをもとに戻す
                     self.energy-=1#エネルギーを減らす
 
-
-
-    def draw_point(self, screen): #動ける場所に黄色いガイド点を描く
+    def draw_point_for_move(self, screen): #動ける場所に黄色いガイド点を描く
         #print("@250 self.shui=",self.shui)     
         if self.shui["up"] == []:
             pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
@@ -250,6 +250,17 @@ class Character():
             pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
         if self.shui["left"] == []:
             pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
+
+    def draw_point_for_fight(self, screen): #戦える相手の場所に白いガイドを描く
+        col=(250,250,250)
+        if "c2" in self.shui["up"] :
+            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y-1)*100,100,100), 1)  
+        if "c2" in self.shui["down"]:
+            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y+1)*100,100,100), 1)  
+        if "c2" in self.shui["right"] :
+            pygame.draw.rect(screen, col, Rect((self.x+1)*100,self.y*100,100,100), 1)  
+        if "c2" in self.shui["left"] :
+            pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 1)  
 
 
     def place(self):#---------------------------------------------アクション
@@ -346,8 +357,8 @@ def main():#-----------------------------------------------------------メイン
         backGround.draw(screen,enemys)
         #---------更新と描画---------
         for ch in characters:
-            ch.update(screen,backGround,characters)
             ch.draw(screen)
+            ch.update(screen,backGround,characters)
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で30フレームになるように33msecのwait
 main()
