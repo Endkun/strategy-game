@@ -88,6 +88,17 @@ class Character():
                 self.canMoveLeft = True
             else:
                 self.canMoveLeft = False
+        if self.isBUTTONDOWN == "FightDown":
+            if mapchip[self.y-1][self.x] == "5": #上
+                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y-0.5)*100),10)
+            if mapchip[self.y+1][self.x] == "5": #下  
+                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y+1.5)*100),10)
+            if mapchip[self.y][self.x+1] == "5": #右
+                #print(self.y,self.x)
+                pygame.draw.circle(screen,(250,250,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
+            if mapchip[self.y][self.x-1] == "5": #左
+                pygame.draw.circle(screen,(250,250,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
+
         #-----------------------------------------------------------------------------------------ボタン・フラグ管理
         if self.tick == 700:
             self.isBUTTONDOWN = "isnotpushed"
@@ -110,6 +121,7 @@ class Character():
             elif event.type == MOUSEBUTTONDOWN:
                 if self.isBUTTONDOWN == "isnotpushed":
                     x, y = event.pos
+                    print(x,y)
                     if 15 < x < 215 and 700 < y < 800:
                             self.isBUTTONDOWN = "MoveLighton"
                 if self.isBUTTONDOWN == "MoveLighton":
@@ -119,19 +131,31 @@ class Character():
                         if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
                             self.y -= 1  
                             self.Fight = True
+                            self.isBUTTONDOWN = "isnotpushed"
                     if self.canMoveDown == True:
                         if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
                             self.y += 1  
                             self.Fight = True
+                            self.isBUTTONDOWN = "isnotpushed"
+                    print(self.y*100+100,y,self.y*100)
                     if self.canMoveLeft == True:
-                        if self.x*100-100 < x < self.x*100:
+                        if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
                             self.x -= 1
                             self.Fight = True
+                            self.isBUTTONDOWN = "isnotpushed"
                     if self.canMoveRight == True:
-                        if self.x*100+100 < x < self.x*100+200:
+                        if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
                             self.x += 1    
                             self.Fight = True
-                    print(self.x*100,x,self.x*100-100)
+                            self.isBUTTONDOWN = "isnotpushed"
+                if self.Fight == True:
+                    x,y = event.pos
+                    if 230 < x < 450 and 700 < y < 800:
+                        self.isBUTTONDOWN = "FightDown"
+                                
+                    
+
+
     def place(self):#----------------------------------------------------------------アクション
         if self.CharacterType == "Goutou":
             if self.Name == "Yakuza Sumiyoshi":
@@ -220,14 +244,16 @@ def main():#-----------------------------------------------------------メイン
         for mob in mobs:
             mob.firstAnimation()
 
+       
+        #---------描画---------
+        #---------敵-------------------
+        for enemy in enemys:
+            enemy.draw(screen)
         #---------プレイヤー-------------------
         for player in players:
             player.button(screen,mapchip)
-        #---------描画---------
         for player in players:
             player.draw(screen)
-        for enemy in enemys:
-            enemy.draw(screen)
         for mob in mobs:
             mob.draw(screen)
                           
