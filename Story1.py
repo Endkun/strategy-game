@@ -34,6 +34,27 @@ class BackGround():
                 mapnum = int(self.mapchip[j][i])            
                 screen.blit(self.tiles[mapnum] ,Rect(tx+i*100,ty+j*100,50,50))            
 
+
+def opening2(screen,font,Cs,backGround):#--------------------
+    for C1 in Cs:
+        if C1.type == "Slime":   
+            if C1.name == "BlueSlime":
+                C1.y = 4
+                C1.x = 1
+            if C1.name == "GreenSlime":
+                C1.y = 4
+                C1.x = 3
+        if C1.type == "Goutou" and C1.name == "Yakuza Sumiyoshi":
+                C1.x = 2
+                C1.y = 2
+        if C1.type == "Player" and C1.name == "girl":
+                C1.y += 1
+                C1.y += 0
+        if C1.type == "Animal" and C1.name == "Cat":
+                C1.x += 2
+                C1.y += 4
+
+
 def opening(screen,font,enemys,players,mobs,backGround):#--------------------
     ##オープニング
     ck = pygame.time.Clock()
@@ -87,7 +108,7 @@ class Character():
         self.id = id
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
         self.pocket=pocket#持ち物
-        self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
+        self.type = type#キャラクタータイプ Player、Slime,Animal,Goutouなどキャラクタータイプ)
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
         self.font2 = font
@@ -126,7 +147,7 @@ class Character():
             #print("fihght self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.draw_point_for_fight(screen)
-            self.player_mouse_fight()      
+            self.player_mouse_fight(characters)      
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(characters)
             #print(f"next={Character.number} {characters[Character.number].name}")
@@ -273,7 +294,7 @@ class Character():
             pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 1)  
 
 
-    def player_mouse_fight(self):#移動モードでの入力
+    def player_mouse_fight(self,Cs):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -286,15 +307,28 @@ class Character():
                 #moved=False#実際に移動したか
                 if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
                         print("fight up")
+                        for C1 in Cs:
+                            print(f"@290 C1.x={C1.x} C1.y={C1.y} C1.team={C1.team} self.x={self.x} self.y={self.y}")
+                            if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
+                                print(f"対象は{C1.name}")
                         moved=True
                 elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
                         print("fight down")
+                        for C1 in Cs:
+                            if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
+                                print(f"対象は{C1.name}")
                         moved=True
                 elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
                         print("fight left")
+                        for C1 in Cs:
+                            if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
+                                print(f"対象は{C1.name}")
                         moved=True
                 elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
                         print("fight right")
+                        for C1 in Cs:
+                            if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
+                                print(f"対象は{C1.name}")
                         moved=True
                 if moved==True:
                     #import pdb;pdb.set_trace()
@@ -307,7 +341,7 @@ class Character():
                 self.y = 3
     def draw(self,screen):#--------------------------------------------描画
         if Character.number==self.id:
-            print(f"@310 self.id={self.id}")
+            #print(f"@310 self.id={self.id}")
             pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
 
@@ -348,6 +382,9 @@ class Character():
                 self.x += 2
             if self.tick == 650:
                 self.y += 4
+
+
+
 
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
@@ -392,7 +429,8 @@ def main():#-----------------------------------------------------------メイン
 
     #opening
     Character.number=999
-    opening(screen,font,enemys,players,mobs,backGround)
+    #opening(screen,font,enemys,players,mobs,backGround)
+    opening2(screen,font,characters,backGround)
     Character.number=0
     #battle 　
     while True:
