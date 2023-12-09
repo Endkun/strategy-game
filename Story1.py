@@ -308,27 +308,47 @@ class Character():
                 if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
                         print("fight up")
                         for C1 in Cs:
-                            print(f"@290 C1.x={C1.x} C1.y={C1.y} C1.team={C1.team} self.x={self.x} self.y={self.y}")
+                            #print(f"@290 C1.x={C1.x} C1.y={C1.y} C1.team={C1.team} self.x={self.x} self.y={self.y}")
                             if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
                                 print(f"対象は{C1.name}")
+                                dmg=self.ap-C1.dp
+                                if dmg<0:
+                                    dmg=0
+                                C1.hp=C1.hp-dmg    
+                                print(f"　{dmg}のダメージを与えた結果、{C1.name}のHPは{C1.hp}になった")
                         moved=True
                 elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
                         print("fight down")
                         for C1 in Cs:
                             if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
                                 print(f"対象は{C1.name}")
+                                dmg=self.ap-C1.dp
+                                if dmg<0:
+                                    dmg=0
+                                C1.hp=C1.hp-dmg    
+                                print(f"　{dmg}のダメージを与えた結果、{C1.name}のHPは{C1.hp}になった")
                         moved=True
                 elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
                         print("fight left")
                         for C1 in Cs:
                             if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
                                 print(f"対象は{C1.name}")
+                                dmg=self.ap-C1.dp
+                                if dmg<0:
+                                    dmg=0
+                                C1.hp=C1.hp-dmg    
+                                print(f"　{dmg}のダメージを与えた結果、{C1.name}のHPは{C1.hp}になった")
                         moved=True
                 elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
                         print("fight right")
                         for C1 in Cs:
                             if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
                                 print(f"対象は{C1.name}")
+                                dmg=self.ap-C1.dp
+                                if dmg<0:
+                                    dmg=0
+                                C1.hp=C1.hp-dmg    
+                                print(f"　{dmg}のダメージを与えた結果、{C1.name}のHPは{C1.hp}になった")
                         moved=True
                 if moved==True:
                     #import pdb;pdb.set_trace()
@@ -429,8 +449,8 @@ def main():#-----------------------------------------------------------メイン
 
     #opening
     Character.number=999
-    #opening(screen,font,enemys,players,mobs,backGround)
-    opening2(screen,font,characters,backGround)
+    #opening(screen,font,enemys,players,mobs,backGround)#本番用
+    opening2(screen,font,characters,backGround)#テスト用　オープニング省略バージョン
     Character.number=0
     #battle 　
     while True:
