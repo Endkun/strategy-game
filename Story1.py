@@ -77,11 +77,14 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
 
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
-    def __init__(self,x,y,id,type,image,team,name,font,pocket):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,id,type,image,team,name,font,pocket,hp,ap,dp):#-----------------------------------------------------------初期化
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
-        self.id=id
+        self.hp = hp
+        self.ap = ap
+        self.dp = dp
+        self.id = id
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
@@ -89,7 +92,7 @@ class Character():
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
         self.font2 = font
 
-        self.tick = 0
+        self.tick = 0#アニメ用
         self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
         self.canFight = False#戦えるか　四方に敵がいるか
         self.canHeal = False#回復できるか　薬草を持っているか
@@ -105,33 +108,40 @@ class Character():
             self.mikata_update(screen,backGround,characters)    
 
     def mikata_update(self,screen,backGround,characters):    
-        print("self.id=",self.id)
+        #print(f"@111 self.id={self.id} self.energy={self.energy}")
         if self.mode=="init":#初期化モード
-            print("init self.energy=",self.energy)
+            #print("init self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.player_mouse_init()          
             self.draw_mode(screen)
         elif self.mode=="move":#移動モード
-            print("move self.energy=",self.energy)
+            #print("move self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.draw_point_for_move(screen)
             self.player_mouse_move()      
         elif self.mode=="heal":#移動モード
-            print("heal self.energy=",self.energy)
+            #print("heal self.energy=",self.energy)
             pass
         elif self.mode=="fight":
-            print("fihght self.energy=",self.energy)
+            #print("fihght self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.draw_point_for_fight(screen)
+            self.player_mouse_fight()      
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(characters)
-
+            #print(f"next={Character.number} {characters[Character.number].name}")
+            #import pdb;pdb.set_trace()
+            #ここで次のキャラを初期化するべし！
+            characters[Character.number].energy = characters[Character.number].energyOrg
+            self.energy=self.energyOrg#自分も戻しておく
     #------------------------------------------------------------周囲のチェック
 
     def check(self, mapchip, characters):
         #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
         #w1:壁　c1:味方　c2:敵　c3:モブ
+        #w1:壁　m+id:味方　e+id:敵　b+id:モブ
+
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
         directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
 
@@ -141,10 +151,10 @@ class Character():
     def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
         new_x = self.x + delta_x#新しい位置＝着目点
         new_y = self.y + delta_y
-        map_w1 = 1#マップの左端
-        map_h1 =3#上
-        map_w2 = 4#右端
-        map_h2 =6#下
+        map_w1 = 1 #マップの左端
+        map_h1 = 3 #上
+        map_w2 = 4 #右端
+        map_h2 = 6 #下
 
         if not (map_w1 <= new_x < map_w2 and map_h1 <= new_y < map_h2):  # 範囲外のチェック
             self.shui[direction].append("w1")
@@ -263,11 +273,42 @@ class Character():
             pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 1)  
 
 
+    def player_mouse_fight(self):#移動モードでの入力
+        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
+            if event.type == QUIT:        # 閉じるボタンが押されたら終了
+                pygame.quit()             # Pygameの終了(ないと終われない)
+                sys.exit()                # 終了（ないとエラーで終了することになる）
+            elif event.type == MOUSEBUTTONDOWN:
+                x_pos, y_pos = event.pos
+                new_x=int(x_pos/100)
+                new_y=int(y_pos/100)
+                print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
+                #moved=False#実際に移動したか
+                if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
+                        print("fight up")
+                        moved=True
+                elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
+                        print("fight down")
+                        moved=True
+                elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
+                        print("fight left")
+                        moved=True
+                elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
+                        print("fight right")
+                        moved=True
+                if moved==True:
+                    #import pdb;pdb.set_trace()
+                    self.mode="init"#実際に動いたらmodeをもとに戻す
+                    self.energy-=1#エネルギーを減らす
+
     def place(self):#---------------------------------------------アクション
         if self.type == "Goutou":
             if self.name == "Yakuza Sumiyoshi":
                 self.y = 3
     def draw(self,screen):#--------------------------------------------描画
+        if Character.number==self.id:
+            print(f"@310 self.id={self.id}")
+            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
 
 
@@ -287,9 +328,9 @@ class Character():
                     self.x = 2
                     self.y = 2
                 if self.tick == 400:
-                    self.y = 3
+                    self.y = 4
                 if self.tick == 500:
-                    self.x = 1
+                    self.x = 3
         if self.type == "Goutou" and self.name == "Yakuza Sumiyoshi":
             if self.tick == 400:
                 self.x = 2
@@ -325,12 +366,12 @@ def main():#-----------------------------------------------------------メイン
 
     Db=[#キャラのデータベース
         #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物)
-        (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"]),
-        (3,4,1,"Player",Pl2,"味方","girl",font,["薬草"]),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"]),
-        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"]),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"]),
-        (1,4,5,"Animal",Cat,"モブ","Cat",font,[]),
+        (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"],100,50,50),
+        (3,4,1,"Player",Pl2,"味方","girl",font,["薬草"],50,10,10),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"],70,10,20),
+        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"],30,20,10),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"],500,50,50),
+        (1,4,5,"Animal",Cat,"モブ","Cat",font,[],500,50,50),
     ]
 
     #データベースからインスタンス化
@@ -350,15 +391,16 @@ def main():#-----------------------------------------------------------メイン
     backGround=BackGround()
 
     #opening
+    Character.number=999
     opening(screen,font,enemys,players,mobs,backGround)
-
+    Character.number=0
     #battle 　
     while True:
         backGround.draw(screen,enemys)
         #---------更新と描画---------
         for ch in characters:
-            ch.draw(screen)
             ch.update(screen,backGround,characters)
+            ch.draw(screen)
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で30フレームになるように33msecのwait
 main()
