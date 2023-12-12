@@ -103,6 +103,7 @@ class Character():
         self.x = x      #キャラの座標
         self.y = y
         self.hp = hp
+        self.hpOrg = self.hp
         self.ap = ap
         self.dp = dp
         self.id = id
@@ -142,19 +143,49 @@ class Character():
             self.energy=self.energyOrg#自分も戻しておく
 
 
+    def useYakusou(self):#薬草を使う
+        self.hp+=30
+        if self.hp>self.hpOrg:
+            self.hp=self.hpOrg
+        self.pocket.remove("薬草")   
+        print(f"薬草をつかった　hpは{self.hp}に回復") 
+
     def teki_update(self,screen,backGround,characters):    
-        print(f"@134 {self.id=} {self.energy=}")
+        print(f"@134 {self.id=} {self.name=} {self.energy=}")
         #if self.mode=="init":#初期化モード
         self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
         print(f"@138 {self.shui=} ")
+
+        if self.hp/self.hpOrg < 1.0:
+            if "薬草" in self.pocket:
+                self.useYakusou()#薬草を使う
+            else:        #逃げるを実行    
+                nigeDir=[]    
+                if self.shui["up"]==[] and self.y-1 >=0:
+                    nigeDir.append("up")
+                elif self.shui["down"]==[] and self.y+1 <len(backGround.mapchip):
+                    nigeDir.append("down")
+                elif self.shui["left"]==[] and self.x-1 >= 0:
+                    nigeDir.append("left")
+                elif self.shui["right"]==[] and self.x+1 <= len(backGround.mapchip[0]):
+                    nigeDir.append("right")
+                nigeD=random.choice(nigeDir)
+                print(f"@172 {nigeDir=} {nigeD=}")
+                if nigeD=="up":
+                    self.y-=1
+                elif nigeD=="down":
+                    self.y+=1
+                elif nigeD=="right":
+                    self.x+=1
+                elif nigeD=="left":
+                    self.x-=1
+
+
+
         self.energy -=1
         time.sleep(1)
-        # if self.energy<=0:#キャラクターの交代
-        #     Character.number=(Character.number+1)%len(characters)
-        #     #ここで次のキャラを初期化するべし！
-        #     characters[Character.number].energy = characters[Character.number].energyOrg
-        #     self.energy=self.energyOrg#自分も戻しておく
+
 
     def mikata_update(self,screen,backGround,characters):    
         #print(f"@111 self.id={self.id} self.energy={self.energy}")
@@ -176,13 +207,7 @@ class Character():
             self.check(backGround.mapchip,characters)
             self.draw_point_for_fight(screen)
             self.player_mouse_fight(characters)      
-        # if self.energy<=0:#キャラクターの交代
-        #     Character.number=(Character.number+1)%len(characters)
-        #     #print(f"next={Character.number} {characters[Character.number].name}")
-        #     #import pdb;pdb.set_trace()
-        #     #ここで次のキャラを初期化するべし！
-        #     characters[Character.number].energy = characters[Character.number].energyOrg
-        #     self.energy=self.energyOrg#自分も戻しておく
+
     #------------------------------------------------------------周囲のチェック
 
     def check(self, mapchip, characters):
