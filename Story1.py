@@ -127,6 +127,22 @@ class Character():
             return
         if self.team=="味方":
             self.mikata_update(screen,backGround,characters)    
+        elif self.team=="敵":
+            self.teki_update(screen,backGround,characters)    
+
+    def teki_update(self,screen,backGround,characters):    
+        print(f"@134 {self.id=} {self.energy=}")
+        #if self.mode=="init":#初期化モード
+        self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
+        # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
+        print(f"@138 {self.shui=} ")
+        self.energy -=1
+        time.sleep(1)
+        if self.energy<=0:#キャラクターの交代
+            Character.number=(Character.number+1)%len(characters)
+            #ここで次のキャラを初期化するべし！
+            characters[Character.number].energy = characters[Character.number].energyOrg
+            self.energy=self.energyOrg#自分も戻しておく
 
     def mikata_update(self,screen,backGround,characters):    
         #print(f"@111 self.id={self.id} self.energy={self.energy}")
@@ -233,7 +249,7 @@ class Character():
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
                 x_pos, y_pos = event.pos
-                self.mode=""
+                self.mode="init"
                 if 800< y_pos < 830:
                     if 50<x_pos<150 and self.canMove:
                         self.mode="move"
@@ -253,23 +269,23 @@ class Character():
                 x_pos, y_pos = event.pos
                 new_x=int(x_pos/100)
                 new_y=int(y_pos/100)
-                print("@195 new_x=",new_x," new_y=",new_y)
-                moved=False#実際に移動したか
+                #print("@195 new_x=",new_x," new_y=",new_y)
                 if self.shui["up"]==[]     and new_y-self.y== -1 and self.x-new_x== 0:
                         self.y -= 1
-                        moved=True
+                        self.energy-=1
+                        self.mode="init"
                 elif self.shui["down"]==[] and new_y-self.y== 1 and self.x-new_x== 0:
                         self.y += 1
-                        moved=True
+                        self.energy-=1
+                        self.mode="init"
                 elif self.shui["left"]==[] and self.y-new_y== 0 and new_x-self.x== -1:
                         self.x -= 1
-                        moved=True
+                        self.energy-=1
+                        self.mode="init"
                 elif self.shui["right"]==[] and self.y-new_y== 0 and new_x-self.x== 1:
                         self.x += 1
-                        moved=True
-                if moved==True:
-                    self.mode="init"#実際に動いたらmodeをもとに戻す
-                    self.energy-=1#エネルギーを減らす
+                        self.energy-=1
+                        self.mode="init"
 
     def draw_point_for_move(self, screen): #動ける場所に黄色いガイド点を描く
         #print("@250 self.shui=",self.shui)     
