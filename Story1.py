@@ -129,6 +129,18 @@ class Character():
             self.mikata_update(screen,backGround,characters)    
         elif self.team=="敵":
             self.teki_update(screen,backGround,characters)    
+        elif self.team=="モブ":
+            #self.teki_update(screen,backGround,characters)    
+            self.energy -=1
+
+        if self.energy<=0:#キャラクターの交代
+            Character.number=(Character.number+1)%len(characters)
+            #print(f"next={Character.number} {characters[Character.number].name}")
+            #import pdb;pdb.set_trace()
+            #ここで次のキャラを初期化するべし！
+            characters[Character.number].energy = characters[Character.number].energyOrg
+            self.energy=self.energyOrg#自分も戻しておく
+
 
     def teki_update(self,screen,backGround,characters):    
         print(f"@134 {self.id=} {self.energy=}")
@@ -138,11 +150,11 @@ class Character():
         print(f"@138 {self.shui=} ")
         self.energy -=1
         time.sleep(1)
-        if self.energy<=0:#キャラクターの交代
-            Character.number=(Character.number+1)%len(characters)
-            #ここで次のキャラを初期化するべし！
-            characters[Character.number].energy = characters[Character.number].energyOrg
-            self.energy=self.energyOrg#自分も戻しておく
+        # if self.energy<=0:#キャラクターの交代
+        #     Character.number=(Character.number+1)%len(characters)
+        #     #ここで次のキャラを初期化するべし！
+        #     characters[Character.number].energy = characters[Character.number].energyOrg
+        #     self.energy=self.energyOrg#自分も戻しておく
 
     def mikata_update(self,screen,backGround,characters):    
         #print(f"@111 self.id={self.id} self.energy={self.energy}")
@@ -164,13 +176,13 @@ class Character():
             self.check(backGround.mapchip,characters)
             self.draw_point_for_fight(screen)
             self.player_mouse_fight(characters)      
-        if self.energy<=0:#キャラクターの交代
-            Character.number=(Character.number+1)%len(characters)
-            #print(f"next={Character.number} {characters[Character.number].name}")
-            #import pdb;pdb.set_trace()
-            #ここで次のキャラを初期化するべし！
-            characters[Character.number].energy = characters[Character.number].energyOrg
-            self.energy=self.energyOrg#自分も戻しておく
+        # if self.energy<=0:#キャラクターの交代
+        #     Character.number=(Character.number+1)%len(characters)
+        #     #print(f"next={Character.number} {characters[Character.number].name}")
+        #     #import pdb;pdb.set_trace()
+        #     #ここで次のキャラを初期化するべし！
+        #     characters[Character.number].energy = characters[Character.number].energyOrg
+        #     self.energy=self.energyOrg#自分も戻しておく
     #------------------------------------------------------------周囲のチェック
 
     def check(self, mapchip, characters):
@@ -301,13 +313,13 @@ class Character():
     def draw_point_for_fight(self, screen): #戦える相手の場所に白いガイドを描く
         col=(250,250,250)
         if "c2" in self.shui["up"] :
-            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y-1)*100,100,100), 1)  
+            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y-1)*100,100,100), 3)  
         if "c2" in self.shui["down"]:
-            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y+1)*100,100,100), 1)  
+            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y+1)*100,100,100), 3)  
         if "c2" in self.shui["right"] :
-            pygame.draw.rect(screen, col, Rect((self.x+1)*100,self.y*100,100,100), 1)  
+            pygame.draw.rect(screen, col, Rect((self.x+1)*100,self.y*100,100,100), 3)  
         if "c2" in self.shui["left"] :
-            pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 1)  
+            pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 3)  
 
 
     def player_mouse_fight(self,Cs):#移動モードでの入力
