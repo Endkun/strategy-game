@@ -8,6 +8,7 @@ import time
 class BackGround():
     def __init__(self,font):
         self.mess=[]
+        self.mes_tail=""
         pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
         pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
         pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
@@ -40,6 +41,11 @@ class BackGround():
             txt = self.font2.render(mes, True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [5, y])# 文字列の表示位置
             y+=40
+    def draw_tail(self,screen):
+        y=860#文字の位置ｙ座標のみ
+        txt = self.font2.render(self.mes_tail, True, (0,0,0))   # 描画する文字列の設定
+        screen.blit(txt, [5, y])# 文字列の表示位置
+
 
 def opening2(screen,font,Cs,backGround):#--------------------
     for C1 in Cs:
@@ -61,7 +67,7 @@ def opening2(screen,font,Cs,backGround):#--------------------
                 C1.y += 4
 
 
-def opening(screen,font,enemys,players,mobs,backGround):#--------------------
+def opening(screen,font,Cs,B):#--------------------
     ##オープニング
     ck = pygame.time.Clock()
     tick=0
@@ -70,7 +76,7 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
         if tick>800:
             break
 
-        backGround.draw(screen,enemys)
+        B.draw(screen)
 
         if tick <= 500:
             Story = font.render("喫茶店でくつろいでいたら", True, (0,0,255)) # 描画する文字列を画像にする
@@ -84,20 +90,12 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
         screen.blit(Story, [70,40])
         screen.blit(Story2,[70,70])   
         #---------アニメーション---------
-        for player in players:
-            player.firstAnimation()
-        for enemy in enemys:
-            enemy.firstAnimation()
-        for mob in mobs:
-            mob.firstAnimation()
+        for C1 in Cs:
+            C1.firstAnimation()
 
         #---------描画---------
-        for player in players:
-            player.draw(screen)
-        for enemy in enemys:
-            enemy.draw(screen)
-        for mob in mobs:
-            mob.draw(screen)
+        for C1 in Cs:
+            C1.draw(screen)
                           
         pygame.display.update()         
         ck.tick(60) #1秒間で30フレームになるように33msecのwait                           
@@ -137,6 +135,9 @@ class Character():
             self.y=-10
             Character.number=(Character.number+1)%len(characters)
             return
+
+        txt=f"{self.name}のターン"
+        backGround.mes_tail=txt
 
         if self.team=="味方":
             self.mikata_update(screen,backGround,characters)    
@@ -178,20 +179,20 @@ class Character():
             else:        #逃げるを実行    
                 self.teki_nigeru(backGround) 
         else:
-           self.teki_kougeki(backGround)
+           self.teki_kougeki(backGround,characters)
         self.energy -=1
         time.sleep(1)
 
 
-    def teki_kougeki(self,backGround):
+    def teki_kougeki(self,B,Cs):
         kogekiDir=[]    
         if "c1" in self.shui["up"] and self.y-1 >=0:
             kogekiDir.append("up")
-        elif "c1" in self.shui["down"] and self.y+1 <len(backGround.mapchip):
+        elif "c1" in self.shui["down"] and self.y+1 <len(B.mapchip):
             kogekiDir.append("down")
         if "c1" in self.shui["left"] and self.x-1 >=0:
             kogekiDir.append("left")
-        if "c1" in self.shui["right"] and self.y-1 < len(backGround.mapchip[0]):
+        if "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
             kogekiDir.append("right")
         if len(kogekiDir)>0:    #あるならランダムで選ぶ
             kogekiD=random.choice(kogekiDir)
@@ -199,14 +200,25 @@ class Character():
             kogekiD=""    #ないときなにもしない
         #実行    
         print(f"@192 {kogekiDir=} {kogekiD=}")
+        txt=""
         if kogekiD=="up":
-            self.y-=1
+            for C1 in Cs:
+                if C1.x==self.x and C1.y-1 == self.y and C1.team=="味方":
+                    txt=f"up対象は{C1.name}"
         elif kogekiD=="down":
-            self.y+=1
+            for C1 in Cs:
+                if C1.x==self.x and C1.y+1 == self.y and C1.team=="味方":
+                    txt=f"dw対象は{C1.name}"
         elif kogekiD=="right":
-            self.x+=1
+            for C1 in Cs:
+                if C1.x-1 ==self.x and C1.y == self.y and C1.team=="味方":
+                    txt=f"rg対象は{C1.name}"
         elif kogekiD=="left":
-            self.x-=1
+            for C1 in Cs:
+                if C1.x+1 ==self.x and C1.y == self.y and C1.team=="味方":
+                    txt=f"lf対象は{C1.name}"
+        B.mess=[]
+        B.mess.append(txt)
 
     def teki_nigeru(self,backGround):
         nigeDir=[]    
@@ -405,6 +417,17 @@ class Character():
         B.mess.append(txt2)                
         B.mess.append(txt3)    
 
+    def make_text2(self, C1,B):
+        #text
+        B.mess=[]                
+        txt1=f"{self.name}は{C1.name}を攻撃"
+        #txt2=f"{dmg}のダメージを与えた結果、"
+        #txt3=f"{C1.name}のHPは{C1.hp}になった"
+        B.mess.append(txt1)                
+        #B.mess.append(txt2)                
+        #B.mess.append(txt3)    
+
+
     def handle_fight(self,Cs,B):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
@@ -517,9 +540,6 @@ class Character():
             if self.tick == 650:
                 self.y += 4
 
-
-
-
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
     font = pygame.font.SysFont("yumincho", 30)       
@@ -547,29 +567,18 @@ def main():#-----------------------------------------------------------メイン
 
     #データベースからインスタンス化
     Cs = [Character(*Db[i]) for i in range(len(Db))]
-    #敵や味方の分類
-    # players=[]
-    # mobs=[]
-    # enemys=[]
-    # for ch in Cs:
-    #     if ch.team=="味方":
-    #         players.append(ch)
-    #     elif ch.team=="敵":
-    #         enemys.append(ch)
-    #     elif ch.team=="モブ":
-    #         mobs.append(ch)
-
     B1 = BackGround(font)
 
     #opening
     Character.number=999
-    #opening(screen,font,enemys,players,mobs,backGround)#本番用
-    opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
+    opening(screen,font,Cs,B1)#本番用
+    #opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
     Character.number=0
     #battle 　
     while True:
         B1.draw_tile(screen)
         B1.draw_text(screen)
+        B1.draw_tail(screen)
         #---------更新と描画---------
         for ch in Cs:
             ch.update(screen,B1,Cs)
