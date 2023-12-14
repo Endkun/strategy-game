@@ -98,7 +98,7 @@ def opening(screen,font,enemys,players,mobs,backGround):#--------------------
 
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
-    def __init__(self,x,y,id,type,image,team,name,font,pocket,hp,ap,dp):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,id,type,image,team,name,font,pocket,hp,ap,dp,energy):#-----------------------------------------------------------初期化
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
@@ -120,12 +120,18 @@ class Character():
         self.canHeal = False#回復できるか　薬草を持っているか
         self.canMove=False#移動できるか　四方に空間ががあるか
 
-        self.energyOrg=2#1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費　初期値
+        self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
     def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
+        if self.hp<0:#死んでいたら何もしないで次に送る
+            self.x=-10
+            self.y=-10
+            Character.number=(Character.number+1)%len(characters)
+            return
+
         if self.team=="味方":
             self.mikata_update(screen,backGround,characters)    
         elif self.team=="敵":
@@ -170,7 +176,10 @@ class Character():
                     nigeDir.append("left")
                 elif self.shui["right"]==[] and self.x+1 <= len(backGround.mapchip[0]):
                     nigeDir.append("right")
-                nigeD=random.choice(nigeDir)
+                if len(nigeDir)>0:    #逃げ場があるならランダムで選ぶ
+                    nigeD=random.choice(nigeDir)
+                else:
+                    nigeD=""    #逃げ場がないときなにもしない
                 print(f"@172 {nigeDir=} {nigeD=}")
                 if nigeD=="up":
                     self.y-=1
@@ -181,8 +190,6 @@ class Character():
                 elif nigeD=="left":
                     self.x-=1
 
-
-
         self.energy -=1
         time.sleep(1)
 
@@ -192,13 +199,13 @@ class Character():
         if self.mode=="init":#初期化モード
             #print("init self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
-            self.player_mouse_init()          
-            self.draw_mode(screen)
+            self.draw_button_for_init(screen)#各種選択肢の表示
+            self.handle_init()          #選択肢をチョイス
         elif self.mode=="move":#移動モード
             #print("move self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.draw_point_for_move(screen)
-            self.player_mouse_move()      
+            self.handle_move()      
         elif self.mode=="heal":#移動モード
             #print("heal self.energy=",self.energy)
             pass
@@ -206,7 +213,7 @@ class Character():
             #print("fihght self.energy=",self.energy)
             self.check(backGround.mapchip,characters)
             self.draw_point_for_fight(screen)
-            self.player_mouse_fight(characters)      
+            self.handle_fight(characters)      
 
     #------------------------------------------------------------周囲のチェック
 
@@ -240,7 +247,7 @@ class Character():
                     code = "c1" if ch.team == "味方" else "c2" if ch.team == "敵" else "c3"
                     self.shui[direction].append(code)
 
-    def draw_mode(self,screen): #---------------------------ボタン描画
+    def draw_button_for_init(self,screen): #---------------------------ボタン描画
         #print("@195 self.canMove=",self.canMove)   
         self.check_for_mode()
         #print("@197 self.canMove=",self.canMove)   
@@ -279,7 +286,7 @@ class Character():
             else:
                 self.canHeal=False   
 
-    def player_mouse_init(self):#初期化モードでの入力
+    def handle_init(self):#初期化モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -297,7 +304,7 @@ class Character():
                 print("p239 self.mode=",self.mode)        
 
 
-    def player_mouse_move(self):#移動モードでの入力
+    def handle_move(self):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -347,7 +354,7 @@ class Character():
             pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 3)  
 
 
-    def player_mouse_fight(self,Cs):#移動モードでの入力
+    def handle_fight(self,Cs):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -408,18 +415,17 @@ class Character():
                     self.mode="init"#実際に動いたらmodeをもとに戻す
                     self.energy-=1#エネルギーを減らす
 
-    def place(self):#---------------------------------------------アクション
-        if self.type == "Goutou":
-            if self.name == "Yakuza Sumiyoshi":
-                self.y = 3
-    def draw(self,screen):#--------------------------------------------描画
-        if Character.number==self.id:
-            #print(f"@310 self.id={self.id}")
-            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
-        screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
+    # def place(self):#------------------------アクション
+    #     if self.type == "Goutou":
+    #         if self.name == "Yakuza Sumiyoshi":
+    #             self.y = 3
+    def draw(self,screen):#----------------------------描画
+        if self.hp>=0:
+            if Character.number==self.id :
+                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
+            screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
 
-
-    def firstAnimation(self):#----------------------------最初のアニメーション
+    def firstAnimation(self):#----------最初のアニメーション
         self.tick += 1
         if self.type == "Slime":   
             if self.name == "BlueSlime":
@@ -475,13 +481,13 @@ def main():#-----------------------------------------------------------メイン
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
 
     Db=[#キャラのデータベース
-        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物)
-        (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"],100,50,50),
-        (3,4,1,"Player",Pl2,"味方","girl",font,["薬草"],50,10,10),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"],70,10,20),
-        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"],30,20,10),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"],500,50,50),
-        (1,4,5,"Animal",Cat,"モブ","Cat",font,[],500,50,50),
+        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,energy)
+        (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"],100,50,50,3),
+        (3,4,1,"Player",Pl2,"味方","girl",font,["薬草"],50,10,10,2),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"],70,10,20,3),
+        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"],30,20,10,2),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"],500,50,50,3),
+        (1,4,5,"Animal",Cat,"モブ","Cat",font,[],500,50,50,2),
     ]
 
     #データベースからインスタンス化
