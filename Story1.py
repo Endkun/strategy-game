@@ -3,8 +3,6 @@ from pygame.locals import *
 import sys
 import random
 import time
-
-
 class BackGround():
     def __init__(self,font):
         self.mess=[]
@@ -46,7 +44,6 @@ class BackGround():
         txt = self.font2.render(self.mes_tail, True, (0,0,0))   # 描画する文字列の設定
         screen.blit(txt, [5, y])# 文字列の表示位置
 
-
 def opening2(screen,font,Cs,backGround):#--------------------
     for C1 in Cs:
         if C1.type == "Slime":   
@@ -65,7 +62,6 @@ def opening2(screen,font,Cs,backGround):#--------------------
         if C1.type == "Animal" and C1.name == "Cat":
                 C1.x += 2
                 C1.y += 4
-
 
 def opening(screen,font,Cs,B):#--------------------
     ##オープニング
@@ -124,6 +120,18 @@ class Character():
 
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
+        self.isAnime=False
+
+    #-------------------------------基本のやつ-----------
+    def draw(self,screen):#----------------------------描画
+        if self.hp>=0:
+            if Character.number==self.id :
+                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
+            screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
+        if self.isAnime==True:
+            pygame.draw.rect(screen, (255,155,100), Rect(100,300,300,300))
+            txt=f"{self.tick=}"
+
 
     def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
@@ -142,139 +150,17 @@ class Character():
         elif self.team=="敵":
             self.teki_update(screen,backGround,characters)    
         elif self.team=="モブ":
-            #self.teki_update(screen,backGround,characters)    
+            #self.mob_update(screen,backGround,characters)    
             self.energy -=1
             pass
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(characters)
-            #print(f"next={Character.number} {characters[Character.number].name}")
-            #import pdb;pdb.set_trace()
             #ここで次のキャラを初期化するべし！
             characters[Character.number].energy = characters[Character.number].energyOrg
             characters[Character.number].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
-
-    def useYakusou(self,B):#薬草を使う
-        self.hp+=30
-        if self.hp>self.hpOrg:
-            self.hp=self.hpOrg
-        self.pocket.remove("薬草")   
-        txt=f"{self.name}は薬草をつかった！"
-        B.mess.append(txt) 
-        txt=f"hpは{self.hp}に回復"
-        B.mess.append(txt) 
-
-
-    def teki_update(self,screen,backGround,characters):    
-        self.tick+=1
-        if self.tick % 60 == 30:
-            print(f"@@@@@@172 {self.name=}")
-            self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
-            # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-            if self.hp/self.hpOrg < 1.0:
-                if "薬草" in self.pocket:
-                    self.useYakusou(backGround)#薬草を使う
-                else:        #逃げるを実行    
-                    self.teki_nigeru(backGround) 
-            else:
-                self.teki_kougeki(backGround,characters)
-            self.energy -=1
-
-
-    def teki_kougeki(self,B,Cs):
-        kogekiDir=[]    
-        if "c1" in self.shui["up"] and self.y-1 >=0:
-            kogekiDir.append("up")
-        elif "c1" in self.shui["down"] and self.y+1 <len(B.mapchip):
-            kogekiDir.append("down")
-        if "c1" in self.shui["left"] and self.x-1 >=0:
-            kogekiDir.append("left")
-        if "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
-            kogekiDir.append("right")
-        if len(kogekiDir)>0:    #あるならランダムで選ぶ
-            kogekiD=random.choice(kogekiDir)
-        else:
-            kogekiD=""    #ないときなにもしない
-        #実行    
-        print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
-        txt=""
-        if kogekiD=="up":
-            for C1 in Cs:
-                if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
-                    txt=f"up対象は{C1.name}"
-        elif kogekiD=="down":
-            for C1 in Cs:
-                if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
-                    txt=f"dw対象は{C1.name}"
-        elif kogekiD=="right":
-            for C1 in Cs:
-                print(f"@212 {C1.x=} {C1.y=}")
-                if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
-                    dmg=self.ap-C1.dp
-                    if dmg <0:
-                        dmg=0
-                    C1.hp-=dmg    
-                    txt1=f"{self.name}は{C1.name}を攻撃"
-                    txt2=f"{dmg}のダメージで{C1.hp}になった"
-
-                    print(txt)
-                    print(txt2)
-        elif kogekiD=="left":
-            for C1 in Cs:
-                if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
-                    txt=f"lf対象は{C1.name}"
-        B.mess=[]
-        B.mess.append(txt)
-
-    def teki_nigeru(self,backGround):
-        nigeDir=[]    
-        if self.shui["up"]==[] and self.y-1 >=0:
-            nigeDir.append("up")
-        elif self.shui["down"]==[] and self.y+1 <len(backGround.mapchip):
-            nigeDir.append("down")
-        elif self.shui["left"]==[] and self.x-1 >= 0:
-
-            nigeDir.append("left")
-        elif self.shui["right"]==[] and self.x+1 < len(backGround.mapchip[0]):
-            nigeDir.append("right")
-
-        if len(nigeDir)>0:    #逃げ場があるならランダムで選ぶ
-            nigeD=random.choice(nigeDir)
-        else:
-            nigeD=""    #逃げ場がないときなにもしない
-            print("@246 do nothing")
-        print(f"@172 {nigeDir=} {nigeD=}")
-        #実行    nigeDの方向にいる味方のid番号を探知する　→　dmgを与えて引く
-        if nigeD=="up":
-            self.y-=1
-        elif nigeD=="down":
-            self.y+=1
-        elif nigeD=="right":
-            self.x+=1
-        elif nigeD=="left":
-            self.x-=1
-
-    def mikata_update(self,screen,backGround,characters):    
-        #print(f"@111 self.id={self.id} self.energy={self.energy}")
-        if self.mode=="init":#初期化モード
-            #print("init self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.draw_button_for_init(screen)#各種選択肢の表示
-            self.handle_init()          #選択肢をチョイス
-        elif self.mode=="move":#移動モード
-            #print("move self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.draw_point_for_move(screen)
-            self.handle_move()      
-        elif self.mode=="heal":#移動モード
-            #print("heal self.energy=",self.energy)
-            pass
-        elif self.mode=="fight":
-            #print("fihght self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.draw_point_for_fight(screen)
-            self.handle_fight(characters,backGround)      
+    #----------------------敵味方-共用-小物-----------------------------------------
 
     #------------------------------------------------------------周囲のチェック
 
@@ -307,6 +193,166 @@ class Character():
                 if new_x == ch.x and new_y == ch.y:
                     code = "c1" if ch.team == "味方" else "c2" if ch.team == "敵" else "c3"
                     self.shui[direction].append(code)
+
+
+
+
+    def useYakusou(self,B):#薬草を使う
+        self.hp+=30
+        if self.hp>self.hpOrg:
+            self.hp=self.hpOrg
+        self.pocket.remove("薬草")   
+        txt=f"{self.name}は薬草をつかった！"
+        B.mess.append(txt) 
+        txt=f"hpは{self.hp}に回復"
+        B.mess.append(txt) 
+
+    def dmg_calc_show(self,C):
+        dmg=self.dmg_calc(C)
+        txt1=f"{self.name}は{C.name}を攻撃"
+        txt2=f"{dmg}のダメージを与え、{C.hp}になった"
+        print(txt1)
+        print(txt2)
+        self.isAnime=True
+
+
+    def dmg_calc(self,C):
+        dmg=self.ap-C.dp
+        if dmg <0:
+            dmg=0
+        C.hp-=dmg  
+        return dmg  
+
+    def make_text(self, C1,B,dmg):
+        B.mess=[]                
+        txt1=f"{self.name}は{C1.name}に"
+        txt2=f"{dmg}のダメージを与えた結果、"
+        txt3=f"{C1.name}のHPは{C1.hp}になった"
+        B.mess.append(txt1)                
+        B.mess.append(txt2)                
+        B.mess.append(txt3)    
+
+    def make_text_for_enemy_attack(self, C1,B,dmg):
+        B.mess=[]                
+        txt1=f"{self.name}は{C1.name}に"
+        txt2=f"{dmg}のダメージを与えた結果、"
+        txt3=f"{C1.name}のHPは{C1.hp}になった"
+        B.mess.append(txt1)                
+        B.mess.append(txt2)                
+        B.mess.append(txt3) 
+
+    def make_text2(self, C1,B):
+        B.mess=[]                
+        txt1=f"{self.name}は{C1.name}を攻撃"
+        #txt2=f"{dmg}のダメージを与えた結果、"
+        #txt3=f"{C1.name}のHPは{C1.hp}になった"
+        B.mess.append(txt1)                
+        #B.mess.append(txt2)                
+        #B.mess.append(txt3)    
+
+    #---------------------------------敵周り-----------------------------------
+    def teki_update(self,screen,backGround,characters):    
+        self.tick+=1
+        if self.tick % 60 == 30:
+            print(f"---@@@@172 {self.name=}-----")
+            self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
+            if self.hp/self.hpOrg < 0.5:
+                if "薬草" in self.pocket:
+                    self.useYakusou(backGround)#薬草を使う
+                else:        #逃げるを実行    
+                    self.teki_nigeru(backGround) 
+            else:
+                self.teki_kougeki(backGround,characters)
+            self.energy -=1
+
+
+    def teki_kougeki(self,B,Cs):
+        kogekiDir=[]    
+        if "c1" in self.shui["up"] and self.y-1 >=0:
+            kogekiDir.append("up")
+        elif "c1" in self.shui["down"] and self.y+1 <len(B.mapchip):
+            kogekiDir.append("down")
+        if "c1" in self.shui["left"] and self.x-1 >=0:
+            kogekiDir.append("left")
+        if "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
+            kogekiDir.append("right")
+        if len(kogekiDir)>0:    #あるならランダムで選ぶ
+            kogekiD=random.choice(kogekiDir)
+        else:
+            kogekiD=""    #ないときなにもしない
+        #実行    
+        print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
+        txt=""
+        if kogekiD=="up":
+            for C1 in Cs:
+                if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
+                    self.dmg_calc_show(C1)
+        elif kogekiD=="down":
+            for C1 in Cs:
+                if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
+                    self.dmg_calc_show(C1)
+        elif kogekiD=="right":
+            for C1 in Cs:
+                print(f"@212 {C1.x=} {C1.y=}")
+                if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
+                    self.dmg_calc_show(C1)
+        elif kogekiD=="left":
+            for C1 in Cs:
+                if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
+                    self.dmg_calc_show(C1)
+        B.mess=[]
+        B.mess.append(txt)
+
+    def teki_nigeru(self,backGround):
+        nigeDir=[]    
+        if self.shui["up"]==[] and self.y-1 >=0:
+            nigeDir.append("up")
+        elif self.shui["down"]==[] and self.y+1 <len(backGround.mapchip):
+            nigeDir.append("down")
+        elif self.shui["left"]==[] and self.x-1 >= 0:
+
+            nigeDir.append("left")
+        elif self.shui["right"]==[] and self.x+1 < len(backGround.mapchip[0]):
+            nigeDir.append("right")
+
+        if len(nigeDir)>0:    #逃げ場があるならランダムで選ぶ
+            nigeD=random.choice(nigeDir)
+        else:
+            nigeD=""    #逃げ場がないときなにもしない
+            print("@246 do nothing")
+        print(f"@172 {nigeDir=} {nigeD=}")
+        #実行    nigeDの方向にいる味方のid番号を探知する　→　dmgを与えて引く
+        if nigeD=="up":
+            self.y-=1
+        elif nigeD=="down":
+            self.y+=1
+        elif nigeD=="right":
+            self.x+=1
+        elif nigeD=="left":
+            self.x-=1
+
+    #------------------------------------味方周り----------------------------------------
+    def mikata_update(self,screen,backGround,characters):    
+        #print(f"@111 self.id={self.id} self.energy={self.energy}")
+        if self.mode=="init":#初期化モード
+            #print("init self.energy=",self.energy)
+            self.check(backGround.mapchip,characters)
+            self.draw_button_for_init(screen)#各種選択肢の表示
+            self.handle_init()          #選択肢をチョイス
+        elif self.mode=="move":#移動モード
+            #print("move self.energy=",self.energy)
+            self.check(backGround.mapchip,characters)
+            self.draw_point_for_move(screen)
+            self.handle_move()      
+        elif self.mode=="heal":#移動モード
+            #print("heal self.energy=",self.energy)
+            pass
+        elif self.mode=="fight":
+            #print("fihght self.energy=",self.energy)
+            self.check(backGround.mapchip,characters)
+            self.draw_point_for_fight(screen)
+            self.handle_fight(characters,backGround)      
 
     def draw_button_for_init(self,screen): #---------------------------ボタン描画
         #print("@195 self.canMove=",self.canMove)   
@@ -415,37 +461,6 @@ class Character():
             pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 3)  
 
 
-    def make_text(self, C1,B,dmg):
-        #text
-        B.mess=[]                
-        txt1=f"{self.name}は{C1.name}に"
-        txt2=f"{dmg}のダメージを与えた結果、"
-        txt3=f"{C1.name}のHPは{C1.hp}になった"
-        B.mess.append(txt1)                
-        B.mess.append(txt2)                
-        B.mess.append(txt3)    
-
-    def make_text_for_enemy_attack(self, C1,B,dmg):
-        #text
-        B.mess=[]                
-        txt1=f"{self.name}は{C1.name}に"
-        txt2=f"{dmg}のダメージを与えた結果、"
-        txt3=f"{C1.name}のHPは{C1.hp}になった"
-        B.mess.append(txt1)                
-        B.mess.append(txt2)                
-        B.mess.append(txt3) 
-
-
-    def make_text2(self, C1,B):
-        #text
-        B.mess=[]                
-        txt1=f"{self.name}は{C1.name}を攻撃"
-        #txt2=f"{dmg}のダメージを与えた結果、"
-        #txt3=f"{C1.name}のHPは{C1.hp}になった"
-        B.mess.append(txt1)                
-        #B.mess.append(txt2)                
-        #B.mess.append(txt3)    
-
 
     def handle_fight(self,Cs,B):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -459,69 +474,35 @@ class Character():
                 #print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
                 #moved=False#実際に移動したか
                 if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
-                        #print("fight up")
-                        for C1 in Cs:
-                            #print(f"@290 C1.x={C1.x} C1.y={C1.y} C1.team={C1.team} self.x={self.x} self.y={self.y}")
-                            if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
-                                print(f"対象は{C1.name}")
-                                dmg=self.ap-C1.dp
-                                if dmg<0:
-                                    dmg=0
-                                C1.hp=C1.hp-dmg
-                                #text
-                                self.make_text(C1,B,dmg)
-                        moved=True
+                    for C1 in Cs:
+                        if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
                 elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
-                        print("fight down")
-                        for C1 in Cs:
-                            if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
-                                print(f"対象は{C1.name}")
-                                dmg=self.ap-C1.dp
-                                if dmg<0:
-                                    dmg=0
-                                C1.hp=C1.hp-dmg    
-                                #text
-                                self.make_text(C1,B,dmg)
-                        moved=True
+                    for C1 in Cs:
+                        if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
                 elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
-                        print("fight left")
-                        for C1 in Cs:
-                            if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
-                                print(f"対象は{C1.name}")
-                                dmg=self.ap-C1.dp
-                                if dmg<0:
-                                    dmg=0
-                                C1.hp=C1.hp-dmg    
-                                #text
-                                self.make_text(C1,B,dmg)
-                        moved=True
+                    for C1 in Cs:
+                        if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
                 elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
-                        print("fight right")
-                        for C1 in Cs:
-                            if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
-                                print(f"対象は{C1.name}")
-                                dmg=self.ap-C1.dp
-                                if dmg<0:
-                                    dmg=0
-                                C1.hp=C1.hp-dmg    
-                                #text
-                                self.make_text(C1,B,dmg)
-                        moved=True
+                    for C1 in Cs:
+                        if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
                 if moved==True:
-                    #import pdb;pdb.set_trace()
                     self.mode="init"#実際に動いたらmodeをもとに戻す
                     self.energy-=1#エネルギーを減らす
 
-    # def place(self):#------------------------アクション
-    #     if self.type == "Goutou":
-    #         if self.name == "Yakuza Sumiyoshi":
-    #             self.y = 3
-    def draw(self,screen):#----------------------------描画
-        if self.hp>=0:
-            if Character.number==self.id :
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
-            screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
 
+    #オープニング周り-------------------------------------
     def firstAnimation(self):#----------最初のアニメーション
         self.tick += 1
         if self.type == "Slime":   
