@@ -75,9 +75,7 @@ def opening(screen,font,Cs,B):#--------------------
         tick += 1
         if tick>800:
             break
-
-        B.draw(screen)
-
+        B.draw_tile(screen)
         if tick <= 500:
             Story = font.render("喫茶店でくつろいでいたら", True, (0,0,255)) # 描画する文字列を画像にする
             Story2 = font.render("突然強盗が入ってきた！", True, (0,0,255)) # 描画する文字列を画像にする
@@ -118,7 +116,7 @@ class Character():
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
         self.font2 = font
 
-        self.tick = 0#アニメ用
+        self.tick = 0#アニメ用 タイミング調節用
         self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
         self.canFight = False#戦えるか　四方に敵がいるか
         self.canHeal = False#回復できるか　薬草を持っているか
@@ -136,7 +134,7 @@ class Character():
             Character.number=(Character.number+1)%len(characters)
             return
 
-        txt=f"{self.name}のターン"
+        txt=f"{self.name}のターン {self.energy=}"
         backGround.mes_tail=txt
 
         if self.team=="味方":
@@ -146,13 +144,14 @@ class Character():
         elif self.team=="モブ":
             #self.teki_update(screen,backGround,characters)    
             self.energy -=1
-
+            pass
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(characters)
             #print(f"next={Character.number} {characters[Character.number].name}")
             #import pdb;pdb.set_trace()
             #ここで次のキャラを初期化するべし！
             characters[Character.number].energy = characters[Character.number].energyOrg
+            characters[Character.number].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
 
@@ -168,20 +167,19 @@ class Character():
 
 
     def teki_update(self,screen,backGround,characters):    
-        #print(f"@134 {self.id=} {self.name=} {self.energy=}")
-        #if self.mode=="init":#初期化モード
-        self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
-        # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-        #print(f"@138 {self.shui=} ")
-        if self.hp/self.hpOrg < 1.0:
-            if "薬草" in self.pocket:
-                self.useYakusou(backGround)#薬草を使う
-            else:        #逃げるを実行    
-                self.teki_nigeru(backGround) 
-        else:
-           self.teki_kougeki(backGround,characters)
-        self.energy -=1
-        time.sleep(1)
+        self.tick+=1
+        if self.tick % 60 == 30:
+            print(f"@@@@@@172 {self.name=}")
+            self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
+            if self.hp/self.hpOrg < 1.0:
+                if "薬草" in self.pocket:
+                    self.useYakusou(backGround)#薬草を使う
+                else:        #逃げるを実行    
+                    self.teki_nigeru(backGround) 
+            else:
+                self.teki_kougeki(backGround,characters)
+            self.energy -=1
 
 
     def teki_kougeki(self,B,Cs):
@@ -199,23 +197,32 @@ class Character():
         else:
             kogekiD=""    #ないときなにもしない
         #実行    
-        print(f"@192 {kogekiDir=} {kogekiD=}")
+        print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
         txt=""
         if kogekiD=="up":
             for C1 in Cs:
-                if C1.x==self.x and C1.y-1 == self.y and C1.team=="味方":
+                if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
                     txt=f"up対象は{C1.name}"
         elif kogekiD=="down":
             for C1 in Cs:
-                if C1.x==self.x and C1.y+1 == self.y and C1.team=="味方":
+                if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
                     txt=f"dw対象は{C1.name}"
         elif kogekiD=="right":
             for C1 in Cs:
-                if C1.x-1 ==self.x and C1.y == self.y and C1.team=="味方":
-                    txt=f"rg対象は{C1.name}"
+                print(f"@212 {C1.x=} {C1.y=}")
+                if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
+                    dmg=self.ap-C1.dp
+                    if dmg <0:
+                        dmg=0
+                    C1.hp-=dmg    
+                    txt1=f"{self.name}は{C1.name}を攻撃"
+                    txt2=f"{dmg}のダメージで{C1.hp}になった"
+
+                    print(txt)
+                    print(txt2)
         elif kogekiD=="left":
             for C1 in Cs:
-                if C1.x+1 ==self.x and C1.y == self.y and C1.team=="味方":
+                if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
                     txt=f"lf対象は{C1.name}"
         B.mess=[]
         B.mess.append(txt)
@@ -236,16 +243,17 @@ class Character():
             nigeD=random.choice(nigeDir)
         else:
             nigeD=""    #逃げ場がないときなにもしない
+            print("@246 do nothing")
         print(f"@172 {nigeDir=} {nigeD=}")
         #実行    nigeDの方向にいる味方のid番号を探知する　→　dmgを与えて引く
-        # if nigeD=="up":
-        #     self.y-=1
-        # elif nigeD=="down":
-        #     self.y+=1
-        # elif nigeD=="right":
-        #     self.x+=1
-        # elif nigeD=="left":
-        #     self.x-=1
+        if nigeD=="up":
+            self.y-=1
+        elif nigeD=="down":
+            self.y+=1
+        elif nigeD=="right":
+            self.x+=1
+        elif nigeD=="left":
+            self.x-=1
 
     def mikata_update(self,screen,backGround,characters):    
         #print(f"@111 self.id={self.id} self.energy={self.energy}")
@@ -417,6 +425,17 @@ class Character():
         B.mess.append(txt2)                
         B.mess.append(txt3)    
 
+    def make_text_for_enemy_attack(self, C1,B,dmg):
+        #text
+        B.mess=[]                
+        txt1=f"{self.name}は{C1.name}に"
+        txt2=f"{dmg}のダメージを与えた結果、"
+        txt3=f"{C1.name}のHPは{C1.hp}になった"
+        B.mess.append(txt1)                
+        B.mess.append(txt2)                
+        B.mess.append(txt3) 
+
+
     def make_text2(self, C1,B):
         #text
         B.mess=[]                
@@ -571,8 +590,8 @@ def main():#-----------------------------------------------------------メイン
 
     #opening
     Character.number=999
-    opening(screen,font,Cs,B1)#本番用
-    #opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
+    #opening(screen,font,Cs,B1)#本番用
+    opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
     Character.number=0
     #battle 　
     while True:
