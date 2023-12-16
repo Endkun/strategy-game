@@ -96,7 +96,7 @@ def opening(screen,font,Cs,B):#--------------------
 
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
-    def __init__(self,x,y,id,type,image,team,name,font,pocket,hp,ap,dp,energy):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy):#-----------------------------------------------------------初期化
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
@@ -110,7 +110,8 @@ class Character():
         self.type = type#キャラクタータイプ Player、Slime,Animal,Goutouなどキャラクタータイプ)
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
-        self.font2 = font
+        self.font2 = fonts[1]
+        self.fontm = fonts[2]
 
         self.tick = 0#アニメ用 タイミング調節用
         self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
@@ -120,7 +121,7 @@ class Character():
 
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
-        self.isAnime=False
+        #self.isAnime=False
 
     #-------------------------------基本のやつ-----------
     def draw(self,screen):#----------------------------描画
@@ -128,10 +129,13 @@ class Character():
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
             screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
-        if self.isAnime==True:
-            pygame.draw.rect(screen, (255,155,100), Rect(100,300,300,300))
-            txt=f"{self.tick=}"
 
+        txt = str(self.hp)
+        txtg = self.fontm.render(txt, True, (0,0,0))  
+        screen.blit(txtg, [self.x*100+10,self.y*100+10])
+        txtg = self.fontm.render(txt, True, (255,255,255))  
+        screen.blit(txtg, [self.x*100+12,self.y*100+12])
+        
 
     def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
@@ -213,7 +217,7 @@ class Character():
         txt2=f"{dmg}のダメージを与え、{C.hp}になった"
         print(txt1)
         print(txt2)
-        self.isAnime=True
+        #self.isAnime=True
 
 
     def dmg_calc(self,C):
@@ -543,7 +547,9 @@ class Character():
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
     font = pygame.font.SysFont("yumincho", 30)       
-    font2 = pygame.font.SysFont("yumincho", 60)                       
+    font2 = pygame.font.SysFont("yumincho", 60)                      
+    fontm = pygame.font.SysFont("yumincho", 20)                      
+    fonts=[font,font2,fontm] 
     screen = pygame.display.set_mode((500, 900))  # 800
     ck = pygame.time.Clock()
 
@@ -557,12 +563,12 @@ def main():#-----------------------------------------------------------メイン
 
     Db=[#キャラのデータベース
         #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,energy)
-        (2,5,0,"Player",Pl1,"味方","Player",font,["剣","薬草"],100,50,50,3),
-        (3,4,1,"Player",Pl2,"味方","girl",font,["薬草"],50,10,10,2),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",font,["薬草"],70,10,20,3),
-        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",font,["薬草"],30,20,10,2),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",font,["剣","薬草"],500,50,50,3),
-        (1,4,5,"Animal",Cat,"モブ","Cat",font,[],500,50,50,2),
+        (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
+        (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,10,10,2),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],70,10,20,3),
+        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],30,20,10,2),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],500,50,50,3),
+        (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],500,50,50,2),
     ]
 
     #データベースからインスタンス化
