@@ -442,6 +442,31 @@ class Character():
 
 
 
+    # def handle_fight(self,Cs,B):#移動モードでの入力
+    #     for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
+    #         if event.type == QUIT:        # 閉じるボタンが押されたら終了
+    #             pygame.quit()             # Pygameの終了(ないと終われない)
+    #             sys.exit()                # 終了（ないとエラーで終了することになる）
+    #         elif event.type == MOUSEBUTTONDOWN:
+    #             x_pos, y_pos = event.pos
+    #             new_x=int(x_pos/100)
+    #             new_y=int(y_pos/100)
+    #             #print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
+    #             moved=False#実際に移動したか
+    #             dfs=[(0,-1),(0,1),(1,0),(-1,0)]#上下左右の差分(x,y)
+    #             for df in dfs:
+    #                 if "c2" in self.shui["up"] and new_x-self.x ==df[0] and new_y-self.y == df[1]:
+    #                     for C1 in Cs:
+    #                         if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
+    #                             dmg=self.dmg_calc(C1)
+    #                             self.make_text(C1,B,dmg)
+    #                     moved=True
+
+    #             if moved==True:
+    #                 self.mode="init"#実際に動いたらmodeをもとに戻す
+    #                 self.energy-=1#エネルギーを減らす
+
+
     def handle_fight(self,Cs,B):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
@@ -453,18 +478,36 @@ class Character():
                 new_y=int(y_pos/100)
                 #print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
                 moved=False#実際に移動したか
-                dfs=[(0,-1),(0,1),(1,0),(-1,0)]#上下左右の差分(x,y)
-                for df in dfs:
-                    if "c2" in self.shui["up"] and new_x-self.x ==df[0] and new_y-self.y == df[1]:
-                        for C1 in Cs:
-                            if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
-                                dmg=self.dmg_calc(C1)
-                                self.make_text(C1,B,dmg)
-                        moved=True
-
+                if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
+                    for C1 in Cs:
+                        if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
+                elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
+                    for C1 in Cs:
+                        if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
+                elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
+                    for C1 in Cs:
+                        if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
+                elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
+                    for C1 in Cs:
+                        if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
+                            dmg=self.dmg_calc(C1)
+                            self.make_text(C1,B,dmg)
+                    moved=True
                 if moved==True:
                     self.mode="init"#実際に動いたらmodeをもとに戻す
                     self.energy-=1#エネルギーを減らす
+
+
+
 
 
     #オープニング周り-------------------------------------
