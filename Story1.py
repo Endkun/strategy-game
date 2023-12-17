@@ -97,6 +97,7 @@ def opening(screen,font,Cs,B):#--------------------
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
     def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy):#-----------------------------------------------------------初期化
+        self.id = id
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
@@ -104,13 +105,13 @@ class Character():
         self.hpOrg = self.hp
         self.ap = ap
         self.dp = dp
-        self.id = id
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ Player、Slime,Animal,Goutouなどキャラクタータイプ)
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム、モブチームOnly
-        self.font2 = fonts[1]
+        self.font = fonts[0]
+        self.fontb = fonts[1]
         self.fontm = fonts[2]
 
         self.tick = 0#アニメ用 タイミング調節用
@@ -126,15 +127,17 @@ class Character():
     #-------------------------------基本のやつ-----------
     def draw(self,screen):#----------------------------描画
         if self.hp>=0:
+            #画像表示    
+            screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
+            #hp表示
+            txt = str(self.hp)
+            txtg = self.fontm.render(txt, True, (0,0,0))  
+            screen.blit(txtg, [self.x*100+10,self.y*100+10])
+            txtg = self.fontm.render(txt, True, (255,255,255))  
+            screen.blit(txtg, [self.x*100+12,self.y*100+12])
+            #ガイドの表示
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
-            screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
-
-        txt = str(self.hp)
-        txtg = self.fontm.render(txt, True, (0,0,0))  
-        screen.blit(txtg, [self.x*100+10,self.y*100+10])
-        txtg = self.fontm.render(txt, True, (255,255,255))  
-        screen.blit(txtg, [self.x*100+12,self.y*100+12])
         
 
     def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
@@ -219,7 +222,6 @@ class Character():
         print(txt2)
         #self.isAnime=True
 
-
     def dmg_calc(self,C):
         dmg=self.ap-C.dp
         if dmg <0:
@@ -230,29 +232,9 @@ class Character():
     def make_text(self, C1,B,dmg):
         B.mess=[]                
         txt1=f"{self.name}は{C1.name}に"
-        txt2=f"{dmg}のダメージを与えた結果、"
-        txt3=f"{C1.name}のHPは{C1.hp}になった"
+        txt2=f"{dmg}のダメージを与えた"
         B.mess.append(txt1)                
         B.mess.append(txt2)                
-        B.mess.append(txt3)    
-
-    def make_text_for_enemy_attack(self, C1,B,dmg):
-        B.mess=[]                
-        txt1=f"{self.name}は{C1.name}に"
-        txt2=f"{dmg}のダメージを与えた結果、"
-        txt3=f"{C1.name}のHPは{C1.hp}になった"
-        B.mess.append(txt1)                
-        B.mess.append(txt2)                
-        B.mess.append(txt3) 
-
-    def make_text2(self, C1,B):
-        B.mess=[]                
-        txt1=f"{self.name}は{C1.name}を攻撃"
-        #txt2=f"{dmg}のダメージを与えた結果、"
-        #txt3=f"{C1.name}のHPは{C1.hp}になった"
-        B.mess.append(txt1)                
-        #B.mess.append(txt2)                
-        #B.mess.append(txt3)    
 
     #---------------------------------敵周り-----------------------------------
     def teki_update(self,screen,backGround,characters):    
@@ -277,9 +259,9 @@ class Character():
             kogekiDir.append("up")
         elif "c1" in self.shui["down"] and self.y+1 <len(B.mapchip):
             kogekiDir.append("down")
-        if "c1" in self.shui["left"] and self.x-1 >=0:
+        elif "c1" in self.shui["left"] and self.x-1 >=0:
             kogekiDir.append("left")
-        if "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
+        elif "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
             kogekiDir.append("right")
         if len(kogekiDir)>0:    #あるならランダムで選ぶ
             kogekiD=random.choice(kogekiDir)
@@ -288,6 +270,7 @@ class Character():
         #実行    
         print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
         txt=""
+
         if kogekiD=="up":
             for C1 in Cs:
                 if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
@@ -298,7 +281,6 @@ class Character():
                     self.dmg_calc_show(C1)
         elif kogekiD=="right":
             for C1 in Cs:
-                print(f"@212 {C1.x=} {C1.y=}")
                 if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
                     self.dmg_calc_show(C1)
         elif kogekiD=="left":
@@ -338,41 +320,35 @@ class Character():
 
     #------------------------------------味方周り----------------------------------------
     def mikata_update(self,screen,backGround,characters):    
-        #print(f"@111 self.id={self.id} self.energy={self.energy}")
+        print(f"@323 mikata {self.mode=}")
         if self.mode=="init":#初期化モード
-            #print("init self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
+            self.check(backGround.mapchip,characters)#索敵
             self.draw_button_for_init(screen)#各種選択肢の表示
             self.handle_init()          #選択肢をチョイス
         elif self.mode=="move":#移動モード
-            #print("move self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.draw_point_for_move(screen)
+            self.check(backGround.mapchip,characters)#索敵
+            self.draw_guide_point_for_move(screen)
             self.handle_move()      
         elif self.mode=="heal":#移動モード
-            #print("heal self.energy=",self.energy)
             pass
         elif self.mode=="fight":
-            #print("fihght self.energy=",self.energy)
-            self.check(backGround.mapchip,characters)
-            self.draw_point_for_fight(screen)
+            self.check(backGround.mapchip,characters)#索敵
+            self.draw_guide_point_for_fight(screen)
             self.handle_fight(characters,backGround)      
 
     def draw_button_for_init(self,screen): #---------------------------ボタン描画
-        #print("@195 self.canMove=",self.canMove)   
         self.check_for_mode()
-        #print("@197 self.canMove=",self.canMove)   
         if self.canMove:
             pygame.draw.rect(screen, (255,255,255), Rect(50,800,120,40))
-            txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
+            txt = self.font.render("移動", True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [80, 805])# 文字列の表示位置
         if self.canFight:
             pygame.draw.rect(screen, (255,255,255), Rect(200,800,120,40))
-            txt = self.font2.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
+            txt = self.font.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [230, 805])# 文字列の表示位置
         if self.canHeal:
             pygame.draw.rect(screen, (255,255,255), Rect(350,800,120,40))
-            txt = self.font2.render("回復", True, (0,0,0))   # 描画する文字列の設定
+            txt = self.font.render("回復", True, (0,0,0))   # 描画する文字列の設定
             screen.blit(txt, [380, 805])# 文字列の表示位置
 
     def check_for_mode(self):
@@ -442,7 +418,7 @@ class Character():
                         self.energy-=1
                         self.mode="init"
 
-    def draw_point_for_move(self, screen): #動ける場所に黄色いガイド点を描く
+    def draw_guide_point_for_move(self, screen): #動ける場所に黄色いガイド点を描く
         #print("@250 self.shui=",self.shui)     
         if self.shui["up"] == []:
             pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
@@ -453,7 +429,7 @@ class Character():
         if self.shui["left"] == []:
             pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
 
-    def draw_point_for_fight(self, screen): #戦える相手の場所に白いガイドを描く
+    def draw_guide_point_for_fight(self, screen): #戦える相手の場所に白いガイドを描く
         col=(250,250,250)
         if "c2" in self.shui["up"] :
             pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y-1)*100,100,100), 3)  
@@ -476,31 +452,16 @@ class Character():
                 new_x=int(x_pos/100)
                 new_y=int(y_pos/100)
                 #print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
-                #moved=False#実際に移動したか
-                if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
-                    for C1 in Cs:
-                        if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
-                    for C1 in Cs:
-                        if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
-                    for C1 in Cs:
-                        if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
-                    for C1 in Cs:
-                        if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
+                moved=False#実際に移動したか
+                dfs=[(0,-1),(0,1),(1,0),(-1,0)]#上下左右の差分(x,y)
+                for df in dfs:
+                    if "c2" in self.shui["up"] and new_x-self.x ==df[0] and new_y-self.y == df[1]:
+                        for C1 in Cs:
+                            if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
+                                dmg=self.dmg_calc(C1)
+                                self.make_text(C1,B,dmg)
+                        moved=True
+
                 if moved==True:
                     self.mode="init"#実際に動いたらmodeをもとに戻す
                     self.energy-=1#エネルギーを減らす
@@ -547,9 +508,9 @@ class Character():
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
     font = pygame.font.SysFont("yumincho", 30)       
-    font2 = pygame.font.SysFont("yumincho", 60)                      
+    fontb = pygame.font.SysFont("yumincho", 60)                      
     fontm = pygame.font.SysFont("yumincho", 20)                      
-    fonts=[font,font2,fontm] 
+    fonts=[font,fontb,fontm] 
     screen = pygame.display.set_mode((500, 900))  # 800
     ck = pygame.time.Clock()
 
@@ -562,13 +523,13 @@ def main():#-----------------------------------------------------------メイン
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
 
     Db=[#キャラのデータベース
-        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,energy)
+        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
         (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
         (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,10,10,2),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],70,10,20,3),
-        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],30,20,10,2),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],500,50,50,3),
-        (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],500,50,50,2),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,10,20,3),
+        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],60,30,30,4),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],200,50,50,3),
+        (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],100,50,50,2),
     ]
 
     #データベースからインスタンス化
