@@ -479,12 +479,13 @@ class Character():
 
     def handle_action(self,Cs,B,df,new_x,new_y):#移動モードでの入力
         if new_x-self.x== df[0] and new_y-self.y== df[1]  :#方向の特定
-            print(f"@485 {self.name=} {df=}")
+            print(f"@485 {self.name=} {df=} {self.shui=} {df[2]=}")
             #敵がいるか
             if "c2" in self.shui[df[2]]:
+                print(f" @485 敵がいるよ")
                 #敵の同定
                 for C1 in Cs:
-                    if C1.x-self.x == 0 and C1.y-self.y == -1 and C1.team=="敵":
+                    if C1.x-self.x == df[0] and C1.y-self.y == df[1] and C1.team=="敵":
                         print(f"@489 敵　{C1.name=}")
                         dmg=self.dmg_calc(C1)
                         self.make_text(C1,B,dmg)
@@ -493,7 +494,7 @@ class Character():
             elif "c1" in self.shui[df[2]]:
                 #味方の同定
                 for C1 in Cs:
-                    if C1.x-self.x == 0 and C1.y-self.y == -1 and C1.team=="味方":
+                    if C1.x-self.x == df[0] and C1.y-self.y == df[1] and C1.team=="味方":
                         print(f"@498 味方 {C1.name=}")
                         moved=True
                         pass
