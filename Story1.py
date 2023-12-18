@@ -105,7 +105,9 @@ class Character():
         backGround.mes_tail=txt
 
         if self.team=="味方":
-            self.mikata_update(screen,backGround,characters)    
+            #self.mikata_update(screen,backGround,characters)  
+            self.mikata_update2(screen,backGround,characters)  
+  
         elif self.team=="敵":
             self.teki_update(screen,backGround,characters)    
         elif self.team=="モブ":
@@ -119,15 +121,14 @@ class Character():
             characters[Character.number].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
-    #----------------------敵味方-共用-小物-----------------------------------------
+
 
     #------------------------------------------------------------周囲のチェック
 
     def check(self, mapchip, characters):
         #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-        #w1:壁　c1:味方　c2:敵　c3:モブ
-        #w1:壁　m+id:味方　e+id:敵　b+id:モブ
+        #w1:壁　w2:地形　c1:味方　c2:敵　c3:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
         directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
@@ -153,8 +154,33 @@ class Character():
                     code = "c1" if ch.team == "味方" else "c2" if ch.team == "敵" else "c3"
                     self.shui[direction].append(code)
 
-
-
+    #全キャラ用、新ガイドを描画するだけ
+    def new_guide(self,screen):
+        if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
+            return
+        for k,v in self.shui.items():
+            #print(f"@166 {k=} {v=}")
+            #位置の特定
+            px=self.x
+            py=self.y
+            if k=="up":
+                py-=1
+            elif k=="down":
+                py+=1
+            elif k=="right":
+                px+=1
+            elif k=="left":
+                px-=1
+            #敵がいるなら赤ガイド
+            if "c2" in v:
+                pygame.draw.circle(screen,(250,0,0),((px+0.5)*100,(py+.5)*100),10)
+            #味方がいるなら黄ガイド
+            elif "c1" in v:
+                pygame.draw.circle(screen,(250,255,0),((px+0.5)*100,(py+.5)*100),10)
+            #何もないなら青ガイド
+            elif v==[]:
+                pygame.draw.circle(screen,(0,0,255),((px+0.5)*100,(py+.5)*100),10)
+                #移動可能表示
 
     def useYakusou(self,B):#薬草を使う
         self.hp+=30
@@ -393,32 +419,6 @@ class Character():
             pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 3)  
 
 
-
-    # def handle_fight(self,Cs,B):#移動モードでの入力
-    #     for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
-    #         if event.type == QUIT:        # 閉じるボタンが押されたら終了
-    #             pygame.quit()             # Pygameの終了(ないと終われない)
-    #             sys.exit()                # 終了（ないとエラーで終了することになる）
-    #         elif event.type == MOUSEBUTTONDOWN:
-    #             x_pos, y_pos = event.pos
-    #             new_x=int(x_pos/100)
-    #             new_y=int(y_pos/100)
-    #             #print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
-    #             moved=False#実際に移動したか
-    #             dfs=[(0,-1),(0,1),(1,0),(-1,0)]#上下左右の差分(x,y)
-    #             for df in dfs:
-    #                 if "c2" in self.shui["up"] and new_x-self.x ==df[0] and new_y-self.y == df[1]:
-    #                     for C1 in Cs:
-    #                         if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
-    #                             dmg=self.dmg_calc(C1)
-    #                             self.make_text(C1,B,dmg)
-    #                     moved=True
-
-    #             if moved==True:
-    #                 self.mode="init"#実際に動いたらmodeをもとに戻す
-    #                 self.energy-=1#エネルギーを減らす
-
-
     def handle_fight(self,Cs,B):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
@@ -458,9 +458,52 @@ class Character():
                     self.mode="init"#実際に動いたらmodeをもとに戻す
                     self.energy-=1#エネルギーを減らす
 
+    #モードなしダイレクト入力
+    def mikata_update2(self,screen,backGround,characters):    
+        #print(f"@463 mikata update2")
+        self.check(backGround.mapchip,characters)#索敵
+        self.handle(backGround,characters)          #選択肢をチョイス
 
+    def handle(self,B,Cs):#移動モードでの入力
+        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
+            if event.type == QUIT:        # 閉じるボタンが押されたら終了
+                pygame.quit()             # Pygameの終了(ないと終われない)
+                sys.exit()                # 終了（ないとエラーで終了することになる）
+            elif event.type == MOUSEBUTTONDOWN:
+                x_pos, y_pos = event.pos
+                new_x=int(x_pos/100)
+                new_y=int(y_pos/100)
+                dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
+                for df in dfs:#上下左右の四方のアクションを実行
+                    self.handle_action(Cs,B,df,new_x,new_y)
 
-
+    def handle_action(self,Cs,B,df,new_x,new_y):#移動モードでの入力
+        if new_x-self.x== df[0] and new_y-self.y== df[1]  :#方向の特定
+            print(f"@485 {self.name=} {df=}")
+            #敵がいるか
+            if "c2" in self.shui[df[2]]:
+                #敵の同定
+                for C1 in Cs:
+                    if C1.x-self.x == 0 and C1.y-self.y == -1 and C1.team=="敵":
+                        print(f"@489 敵　{C1.name=}")
+                        dmg=self.dmg_calc(C1)
+                        self.make_text(C1,B,dmg)
+                        self.energy-=1
+            #味方がいるか
+            elif "c1" in self.shui[df[2]]:
+                #味方の同定
+                for C1 in Cs:
+                    if C1.x-self.x == 0 and C1.y-self.y == -1 and C1.team=="味方":
+                        print(f"@498 味方 {C1.name=}")
+                        moved=True
+                        pass
+                        #dmg=self.dmg_calc(C1)
+                        #self.make_text(C1,B,dmg)
+            #移動可能か        
+            elif self.shui[df[2]]==[]:
+                self.x+=df[0]
+                self.y+=df[1]
+                self.energy-=1
 
     #オープニング周り-------------------------------------
     def firstAnimation(self):#----------最初のアニメーション
@@ -533,8 +576,8 @@ def main():#-----------------------------------------------------------メイン
 
     #opening
     Character.number=999
-    opening.opening(screen,font,Cs,B1)#本番用
-    #opening.opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
+    #opening.opening(screen,font,Cs,B1)#本番用
+    opening.opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
     Character.number=0
     #battle 　
     while True:
@@ -545,6 +588,8 @@ def main():#-----------------------------------------------------------メイン
         for ch in Cs:
             ch.update(screen,B1,Cs)
             ch.draw(screen)
+        for ch in Cs:
+            ch.new_guide(screen)
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で30フレームになるように33msecのwait
 main()
