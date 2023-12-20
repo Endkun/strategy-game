@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 import sys
 import random
-import time
+import math
 import opening
 class BackGround():
     def __init__(self,font):
@@ -67,14 +67,13 @@ class Character():
         self.fontm = fonts[2]
 
         self.tick = 0#アニメ用 タイミング調節用
-        self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
-        self.canFight = False#戦えるか　四方に敵がいるか
-        self.canHeal = False#回復できるか　薬草を持っているか
-        self.canMove=False#移動できるか　四方に空間ががあるか
+        # self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
+        # self.canFight = False#戦えるか　四方に敵がいるか
+        # self.canHeal = False#回復できるか　薬草を持っているか
+        # self.canMove=False#移動できるか　四方に空間ががあるか
 
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
-        #self.isAnime=False
 
     #-------------------------------基本のやつ-----------
     def draw(self,screen):#----------------------------描画
@@ -91,7 +90,6 @@ class Character():
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
         
-
     def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
@@ -111,7 +109,6 @@ class Character():
         elif self.team=="敵":
             self.teki_update(screen,backGround,characters)    
         elif self.team=="モブ":
-            #self.mob_update(screen,backGround,characters)    
             self.energy -=1
             pass
         if self.energy<=0:#キャラクターの交代
@@ -123,7 +120,7 @@ class Character():
 
 
 
-    #------------------------------------------------------------周囲のチェック
+    #----------------------------敵味方共通-------------周囲のチェック------------
 
     def check(self, mapchip, characters):
         #上下左右の周囲を見渡して以下のようなデータを作成する
@@ -218,9 +215,10 @@ class Character():
     def teki_update(self,screen,backGround,characters):    
         self.tick+=1
         if self.tick % 60 == 30:
-            print(f"---@@@@172 {self.name=}-----")
+            print(f"------@172 {self.name=}-----")
             self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
             # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
+            #self.calc_jyusin(characters)
             if self.hp/self.hpOrg < 0.5:
                 if "薬草" in self.pocket:
                     self.useYakusou(backGround)#薬草を使う
@@ -232,6 +230,7 @@ class Character():
 
 
     def teki_kougeki(self,B,Cs):
+        #接敵状況を把握する
         kogekiDir=[]    
         if "c1" in self.shui["up"] and self.y-1 >=0:
             kogekiDir.append("up")
@@ -241,32 +240,61 @@ class Character():
             kogekiDir.append("left")
         elif "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
             kogekiDir.append("right")
-        if len(kogekiDir)>0:    #あるならランダムで選ぶ
-            kogekiD=random.choice(kogekiDir)
-        else:
-            kogekiD=""    #ないときなにもしない
-        #実行    
-        print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
-        txt=""
 
-        if kogekiD=="up":
-            for C1 in Cs:
-                if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
-                    self.dmg_calc_show(C1)
-        elif kogekiD=="down":
-            for C1 in Cs:
-                if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
-                    self.dmg_calc_show(C1)
-        elif kogekiD=="right":
-            for C1 in Cs:
-                if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
-                    self.dmg_calc_show(C1)
-        elif kogekiD=="left":
-            for C1 in Cs:
-                if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
-                    self.dmg_calc_show(C1)
-        B.mess=[]
-        B.mess.append(txt)
+        if len(kogekiDir)>0:    #接敵数が１つ以上あるならランダムで選ぶ
+            kogekiD=random.choice(kogekiDir)
+            #実行    
+            print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
+            txt=""
+            if kogekiD=="up":
+                for C1 in Cs:
+                    if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
+                        self.dmg_calc_show(C1)
+            elif kogekiD=="down":
+                for C1 in Cs:
+                    if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
+                        self.dmg_calc_show(C1)
+            elif kogekiD=="right":
+                for C1 in Cs:
+                    if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
+                        self.dmg_calc_show(C1)
+            elif kogekiD=="left":
+                for C1 in Cs:
+                    if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
+                        self.dmg_calc_show(C1)
+            B.mess=[]
+            B.mess.append(txt)
+
+        else:#接敵がないときの向敵アルゴリズム
+            self.easy_koteki(B)#とりあえずランダムで動く簡易化されたやつ
+            #self.koteki(B)#本格的なやつ
+
+    def easy_koteki(self,B):
+        dfs={"up":(0,-1),"down":(0,1),"right":(1,0),"left":(-1,0)}#デルタ
+        koteki=[]
+        if self.shui["up"] ==[] and self.y-1 >=0:
+            koteki.append("up")
+        elif self.shui["down"] ==[] and self.y+1 <len(B.mapchip):
+            koteki.append("down")
+        elif self.shui["right"] ==[] and self.x-1 >=0:
+            koteki.append("right")
+        elif self.shui["left"] ==[] and self.x+1 <len(B.mapchip[0]):
+            koteki.append("left")
+        kk=random.choice(koteki)    
+        dx,dy=dfs[kk]
+        #print(f"@288 {kk=} {dfs[kk]=} {dx=} {dy=}")
+        self.x+=dx
+        self.y+=dy
+
+
+    def koteki(self,B):
+        pass
+        #以下は本格的な向敵
+        #"味方チーム"から一番hpの小さいキャラを見つけ出す、そのキャラの座標をjx,jyとする
+        #障害物マップを作成する（通路は0、それ以外はすべて1、地形でもキャラでも）
+        #自分の位置（self.x,self.y）からjx,jyまでの迷路を幅優先探索（＝最短経路）で解く
+        #最初の一歩を踏み出す（）
+
 
     def teki_nigeru(self,backGround):
         nigeDir=[]    
@@ -284,8 +312,6 @@ class Character():
             nigeD=random.choice(nigeDir)
         else:
             nigeD=""    #逃げ場がないときなにもしない
-            print("@246 do nothing")
-        print(f"@172 {nigeDir=} {nigeD=}")
         #実行    nigeDの方向にいる味方のid番号を探知する　→　dmgを与えて引く
         if nigeD=="up":
             self.y-=1
@@ -296,168 +322,22 @@ class Character():
         elif nigeD=="left":
             self.x-=1
 
-    #------------------------------------味方周り----------------------------------------
-    def mikata_update(self,screen,backGround,characters):    
-        print(f"@323 mikata {self.mode=}")
-        if self.mode=="init":#初期化モード
-            self.check(backGround.mapchip,characters)#索敵
-            self.draw_button_for_init(screen)#各種選択肢の表示
-            self.handle_init()          #選択肢をチョイス
-        elif self.mode=="move":#移動モード
-            self.check(backGround.mapchip,characters)#索敵
-            self.draw_guide_point_for_move(screen)
-            self.handle_move()      
-        elif self.mode=="heal":#移動モード
-            pass
-        elif self.mode=="fight":
-            self.check(backGround.mapchip,characters)#索敵
-            self.draw_guide_point_for_fight(screen)
-            self.handle_fight(characters,backGround)      
+    def calc_jyusin(self,Cs):
+        jxsum=0
+        jysum=0
+        jct=0
+        for C in Cs:
+            if C.team=="味方":
+                jxsum+=C.x
+                jysum+=C.y
+                jct+=1
+        jx=jxsum/jct
+        jy=jysum/jct
+        print(f"{jx=} {jy=}") 
+        return jx,jy
+                
 
-    def draw_button_for_init(self,screen): #---------------------------ボタン描画
-        self.check_for_mode()
-        if self.canMove:
-            pygame.draw.rect(screen, (255,255,255), Rect(50,800,120,40))
-            txt = self.font.render("移動", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [80, 805])# 文字列の表示位置
-        if self.canFight:
-            pygame.draw.rect(screen, (255,255,255), Rect(200,800,120,40))
-            txt = self.font.render("戦闘", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [230, 805])# 文字列の表示位置
-        if self.canHeal:
-            pygame.draw.rect(screen, (255,255,255), Rect(350,800,120,40))
-            txt = self.font.render("回復", True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [380, 805])# 文字列の表示位置
-
-    def check_for_mode(self):
-        #動けるかのチェック
-        if self.energy>0:
-            #print("@104 self.shui=",self.shui)
-            if self.shui["up"]==[] or self.shui["down"]==[] or self.shui["right"]==[] or self.shui["left"]==[]:
-                self.canMove=True
-            else:
-                self.canMove=False
-
-            #周囲に敵がいるかのチェック
-            teki="c2"
-            if teki in self.shui["up"] or teki in self.shui["down"] or teki in self.shui["right"] or teki in self.shui["left"]:
-                self.canFight=True
-            else:
-                self.canFight=False
-
-            #薬草を持っているかのチェック
-            if "薬草" in self.pocket:
-                self.canHeal=True
-            else:
-                self.canHeal=False   
-
-    def handle_init(self):#初期化モードでの入力
-        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
-            if event.type == QUIT:        # 閉じるボタンが押されたら終了
-                pygame.quit()             # Pygameの終了(ないと終われない)
-                sys.exit()                # 終了（ないとエラーで終了することになる）
-            elif event.type == MOUSEBUTTONDOWN:
-                x_pos, y_pos = event.pos
-                self.mode="init"
-                if 800< y_pos < 830:
-                    if 50<x_pos<150 and self.canMove:
-                        self.mode="move"
-                    elif 200<x_pos<300 and self.canFight:
-                        self.mode="fight"
-                    elif 350<x_pos<500 and self.canHeal:
-                        self.mode="heal" 
-                print("p239 self.mode=",self.mode)        
-
-
-    def handle_move(self):#移動モードでの入力
-        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
-            if event.type == QUIT:        # 閉じるボタンが押されたら終了
-                pygame.quit()             # Pygameの終了(ないと終われない)
-                sys.exit()                # 終了（ないとエラーで終了することになる）
-            elif event.type == MOUSEBUTTONDOWN:
-                x_pos, y_pos = event.pos
-                new_x=int(x_pos/100)
-                new_y=int(y_pos/100)
-                #print("@195 new_x=",new_x," new_y=",new_y)
-                if self.shui["up"]==[]     and new_y-self.y== -1 and self.x-new_x== 0:
-                        self.y -= 1
-                        self.energy-=1
-                        self.mode="init"
-                elif self.shui["down"]==[] and new_y-self.y== 1 and self.x-new_x== 0:
-                        self.y += 1
-                        self.energy-=1
-                        self.mode="init"
-                elif self.shui["left"]==[] and self.y-new_y== 0 and new_x-self.x== -1:
-                        self.x -= 1
-                        self.energy-=1
-                        self.mode="init"
-                elif self.shui["right"]==[] and self.y-new_y== 0 and new_x-self.x== 1:
-                        self.x += 1
-                        self.energy-=1
-                        self.mode="init"
-
-    def draw_guide_point_for_move(self, screen): #動ける場所に黄色いガイド点を描く
-        #print("@250 self.shui=",self.shui)     
-        if self.shui["up"] == []:
-            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-        if self.shui["down"] == []:
-            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
-        if self.shui["right"] == []:
-            pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-        if self.shui["left"] == []:
-            pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-
-    def draw_guide_point_for_fight(self, screen): #戦える相手の場所に白いガイドを描く
-        col=(250,250,250)
-        if "c2" in self.shui["up"] :
-            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y-1)*100,100,100), 3)  
-        if "c2" in self.shui["down"]:
-            pygame.draw.rect(screen, col, Rect((self.x)*100,(self.y+1)*100,100,100), 3)  
-        if "c2" in self.shui["right"] :
-            pygame.draw.rect(screen, col, Rect((self.x+1)*100,self.y*100,100,100), 3)  
-        if "c2" in self.shui["left"] :
-            pygame.draw.rect(screen, col, Rect((self.x-1)*100,self.y*100,100,100), 3)  
-
-
-    def handle_fight(self,Cs,B):#移動モードでの入力
-        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
-            if event.type == QUIT:        # 閉じるボタンが押されたら終了
-                pygame.quit()             # Pygameの終了(ないと終われない)
-                sys.exit()                # 終了（ないとエラーで終了することになる）
-            elif event.type == MOUSEBUTTONDOWN:
-                x_pos, y_pos = event.pos
-                new_x=int(x_pos/100)
-                new_y=int(y_pos/100)
-                #print(f"@275 new_x={new_x} new_y={new_y} self.shui={self.shui}")
-                moved=False#実際に移動したか
-                if "c2" in self.shui["up"] and new_y-self.y== -1 and self.x-new_x== 0:
-                    for C1 in Cs:
-                        if C1.x==self.x and C1.y==self.y-1 and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                elif "c2" in self.shui["down"]  and new_y-self.y== 1 and self.x-new_x== 0:
-                    for C1 in Cs:
-                        if C1.x==self.x and C1.y==self.y+1 and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                elif "c2" in self.shui["left"]  and new_y-self.y== 0 and self.x-new_x== 1:
-                    for C1 in Cs:
-                        if C1.x==self.x-1 and C1.y==self.y and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                elif "c2" in self.shui["right"]  and new_y-self.y== 0 and self.x-new_x== -1:
-                    for C1 in Cs:
-                        if C1.x==self.x+1 and C1.y==self.y and C1.team=="敵":
-                            dmg=self.dmg_calc(C1)
-                            self.make_text(C1,B,dmg)
-                    moved=True
-                if moved==True:
-                    self.mode="init"#実際に動いたらmodeをもとに戻す
-                    self.energy-=1#エネルギーを減らす
-
+    #=================味方周り===========================================
     #モードなしダイレクト入力
     def mikata_update2(self,screen,backGround,characters):    
         #print(f"@463 mikata update2")
@@ -479,14 +359,11 @@ class Character():
 
     def handle_action(self,Cs,B,df,new_x,new_y):#移動モードでの入力
         if new_x-self.x== df[0] and new_y-self.y== df[1]  :#方向の特定
-            print(f"@485 {self.name=} {df=} {self.shui=} {df[2]=}")
             #敵がいるか
             if "c2" in self.shui[df[2]]:
-                print(f" @485 敵がいるよ")
                 #敵の同定
                 for C1 in Cs:
                     if C1.x-self.x == df[0] and C1.y-self.y == df[1] and C1.team=="敵":
-                        print(f"@489 敵　{C1.name=}")
                         dmg=self.dmg_calc(C1)
                         self.make_text(C1,B,dmg)
                         self.energy-=1
@@ -495,11 +372,7 @@ class Character():
                 #味方の同定
                 for C1 in Cs:
                     if C1.x-self.x == df[0] and C1.y-self.y == df[1] and C1.team=="味方":
-                        print(f"@498 味方 {C1.name=}")
-                        moved=True
                         pass
-                        #dmg=self.dmg_calc(C1)
-                        #self.make_text(C1,B,dmg)
             #移動可能か        
             elif self.shui[df[2]]==[]:
                 self.x+=df[0]
@@ -567,7 +440,7 @@ def main():#-----------------------------------------------------------メイン
         (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,10,10,2),
         (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,10,20,3),
         (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],60,30,30,4),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],200,50,50,3),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],200,60,40,3),
         (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],100,50,50,2),
     ]
 
