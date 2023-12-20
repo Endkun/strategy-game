@@ -136,9 +136,9 @@ class Character():
     def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
         new_x = self.x + delta_x#新しい位置＝着目点
         new_y = self.y + delta_y
-        map_w1 = 1 #マップの左端
-        map_h1 = 3 #上
-        map_w2 = 4 #右端
+        map_w1 = 0 #マップの左端
+        map_h1 = 1 #上
+        map_w2 = 5 #右端
         map_h2 = 6 #下
 
         if not (map_w1 <= new_x < map_w2 and map_h1 <= new_y < map_h2):  # 範囲外のチェック
@@ -395,7 +395,7 @@ class Character():
                 if self.tick == 200:
                     self.x = 2
                     self.y = 2
-                if self.tick == 400:
+                if self.tick == 400:git status
                     self.y = 4
                 if self.tick == 500:
                     self.x = 3
@@ -416,6 +416,35 @@ class Character():
                 self.x += 2
             if self.tick == 650:
                 self.y += 4
+
+class Judge():
+    def __init__(self):
+        self.winner=""
+        pass
+
+    def judge(self,Cs):
+        mnum=0#全体数
+        tnum=0
+        mdead=0#死んだ数
+        tdead=0
+        for C in Cs:
+            if C.team=="味方":
+                mnum+=1
+                if C.hp<0:
+                    mdead+=1
+            elif C.team=="敵":
+                tnum+=1
+                if C.hp<0:
+                    tdead+=1
+        #print(f"@438 {mdead=} {tdead=}")
+        #print(f"{mnum=} {tnum=}")
+        if mnum>0 and mnum==mdead:
+            print("味方全滅")
+            self.winner="teki"
+        if tnum>0 and tnum==tdead:
+            print("敵全滅")
+            self.winner="mikata"
+ 
 
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
@@ -440,14 +469,14 @@ def main():#-----------------------------------------------------------メイン
         (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,10,10,2),
         (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,10,20,3),
         (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],60,30,30,4),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],200,60,40,3),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],150,60,20,3),
         (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],100,50,50,2),
     ]
 
     #データベースからインスタンス化
     Cs = [Character(*Db[i]) for i in range(len(Db))]
     B1 = BackGround(font)
-
+    J1 = Judge()
     #opening
     Character.number=999
     #opening.opening(screen,font,Cs,B1)#本番用
@@ -464,6 +493,9 @@ def main():#-----------------------------------------------------------メイン
             ch.draw(screen)
         for ch in Cs:
             ch.new_guide(screen)
+        J1.judge(Cs)    
+        if J1.winner=="teki" or J1.winner=="mikata":
+            break
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で30フレームになるように33msecのwait
 main()
