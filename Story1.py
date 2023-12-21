@@ -275,46 +275,55 @@ class Character():
             self.easy_koteki(B)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
-    # def easy_koteki2(self,B):
-    #     dfs={"up":(0,-1),"down":(0,1),"right":(1,0),"left":(-1,0)}#デルタ
-    #     koteki=[]
-    #     if self.shui["up"] ==[] and self.y-1 >=0:
-    #         koteki.append("up")
-    #     elif self.shui["down"] ==[] and self.y+1 <len(B.mapchip):
-    #         koteki.append("down")
-    #     elif self.shui["right"] ==[] and self.x-1 >=0:
-    #         koteki.append("right")
-    #     elif self.shui["left"] ==[] and self.x+1 <len(B.mapchip[0]):
-    #         koteki.append("left")
-    #     kk=random.choice(koteki)    
-    #     dx,dy=dfs[kk]
-    #     #print(f"@288 {kk=} {dfs[kk]=} {dx=} {dy=}")
-    #     self.x+=dx
-    #     self.y+=dy
 
-    def easy_koteki(self,B):
+    def calc_target_delta(self):
+        m_x=3#とりあえず固定,実際は味方のうち一番弱いhpの座標になる！
+        m_y=4
+        dx=m_x-self.x#差分を取る
+        dy=m_y-self.y
+        if dx==0:
+            if dy<0:
+                delta=(0,-1) 
+            else:
+                delta=(0,1)     
+            return  delta                
+
+        a=dy/dx#傾きを計算
+        if -1<a<1:
+            if dx>0:
+                delta=(1,0)
+            else:
+                delta=(-1,0)
+        else:
+            if dy<0:
+                delta=(0,-1) 
+            else:
+                delta=(0,1)                   
+        return delta        
+
+
+    def easy_koteki(self,B):#向敵の最初の一歩を計算
         deltas=[]
-
+        #動ける方向を収集する
         if self.shui["up"] ==[] :
-            #print("@293 up")
             if self.y-1 >=B.h1:
                 deltas.append((0,-1))
         if self.shui["down"] ==[]: 
-            #print("@297 down")
             if self.y+1 <B.h2:
                 deltas.append((0,1))
         if self.shui["right"] ==[] :
-            #print(f"@301 right {self.x-1} ")
             if self.x-1 <=B.w2:
                 deltas.append((1,0))
         if self.shui["left"] ==[] :
-            #print(f"@305 left {self.x+1=} {B.mapchip[0]=}")
             if self.x+1 >= B.w1:
-                #print(f"@307 left append!")
                 deltas.append((-1,0))
-        delta = random.choice(deltas)    
-        #print(f" @308 {self.shui=} {deltas=} {delta=}")    
-        self.x+=delta[0]
+    
+        d = self.calc_target_delta()#ターゲットのdeltaを計算
+        if d in deltas:#動ける方向に入っていればそこに向かう
+            delta=d
+        else:#なければランダムで選ぶ
+            delta = random.choice(deltas)    
+        self.x+=delta[0]#移動する
         self.y+=delta[1]
 
 
