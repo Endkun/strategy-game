@@ -26,6 +26,12 @@ class BackGround():
             ["0","0","0","0","0"],
             ]
         self.font2=font
+
+        self.w1 = 0 #マップの左端
+        self.w2 = 5 #右端(実際の取る値は-1まで)
+        self.h1 = 1 #上
+        self.h2 = 6 #下(実際の取る値は-1まで)
+
     def draw_tile(self,screen):
         tx = 0#タイル用x,y
         ty = 0
@@ -269,22 +275,48 @@ class Character():
             self.easy_koteki(B)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
+    # def easy_koteki2(self,B):
+    #     dfs={"up":(0,-1),"down":(0,1),"right":(1,0),"left":(-1,0)}#デルタ
+    #     koteki=[]
+    #     if self.shui["up"] ==[] and self.y-1 >=0:
+    #         koteki.append("up")
+    #     elif self.shui["down"] ==[] and self.y+1 <len(B.mapchip):
+    #         koteki.append("down")
+    #     elif self.shui["right"] ==[] and self.x-1 >=0:
+    #         koteki.append("right")
+    #     elif self.shui["left"] ==[] and self.x+1 <len(B.mapchip[0]):
+    #         koteki.append("left")
+    #     kk=random.choice(koteki)    
+    #     dx,dy=dfs[kk]
+    #     #print(f"@288 {kk=} {dfs[kk]=} {dx=} {dy=}")
+    #     self.x+=dx
+    #     self.y+=dy
+
     def easy_koteki(self,B):
-        dfs={"up":(0,-1),"down":(0,1),"right":(1,0),"left":(-1,0)}#デルタ
-        koteki=[]
-        if self.shui["up"] ==[] and self.y-1 >=0:
-            koteki.append("up")
-        elif self.shui["down"] ==[] and self.y+1 <len(B.mapchip):
-            koteki.append("down")
-        elif self.shui["right"] ==[] and self.x-1 >=0:
-            koteki.append("right")
-        elif self.shui["left"] ==[] and self.x+1 <len(B.mapchip[0]):
-            koteki.append("left")
-        kk=random.choice(koteki)    
-        dx,dy=dfs[kk]
-        #print(f"@288 {kk=} {dfs[kk]=} {dx=} {dy=}")
-        self.x+=dx
-        self.y+=dy
+        deltas=[]
+
+        if self.shui["up"] ==[] :
+            #print("@293 up")
+            if self.y-1 >=B.h1:
+                deltas.append((0,-1))
+        if self.shui["down"] ==[]: 
+            #print("@297 down")
+            if self.y+1 <B.h2:
+                deltas.append((0,1))
+        if self.shui["right"] ==[] :
+            #print(f"@301 right {self.x-1} ")
+            if self.x-1 <=B.w2:
+                deltas.append((1,0))
+        if self.shui["left"] ==[] :
+            #print(f"@305 left {self.x+1=} {B.mapchip[0]=}")
+            if self.x+1 >= B.w1:
+                #print(f"@307 left append!")
+                deltas.append((-1,0))
+        delta = random.choice(deltas)    
+        #print(f" @308 {self.shui=} {deltas=} {delta=}")    
+        self.x+=delta[0]
+        self.y+=delta[1]
+
 
 
     def koteki(self,B):
@@ -395,7 +427,7 @@ class Character():
                 if self.tick == 200:
                     self.x = 2
                     self.y = 2
-                if self.tick == 400:git status
+                if self.tick == 400:
                     self.y = 4
                 if self.tick == 500:
                     self.x = 3
