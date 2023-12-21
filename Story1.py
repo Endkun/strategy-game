@@ -272,13 +272,22 @@ class Character():
             B.mess.append(txt)
 
         else:#接敵がないときの向敵アルゴリズム
-            self.easy_koteki(B)#とりあえずランダムで動く簡易化されたやつ
+            self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
+    def search_target(self,Cs):
+        mhp=9999
+        for C in Cs:
+            if mhp>C.hp:
+                mhp=C.hp
+                m_x=C.x
+                m_y=C.y
+        return m_x,m_y        
 
-    def calc_target_delta(self):
-        m_x=3#とりあえず固定,実際は味方のうち一番弱いhpの座標になる！
-        m_y=4
+    def calc_target_delta(self,Cs):
+        m_x,m_y = self.search_target(Cs)
+        # m_x=3#とりあえず固定,実際は味方のうち一番弱いhpの座標になる！
+        # m_y=4
         dx=m_x-self.x#差分を取る
         dy=m_y-self.y
         if dx==0:
@@ -302,7 +311,7 @@ class Character():
         return delta        
 
 
-    def easy_koteki(self,B):#向敵の最初の一歩を計算
+    def easy_koteki(self,B,Cs):#向敵の最初の一歩を計算
         deltas=[]
         #動ける方向を収集する
         if self.shui["up"] ==[] :
@@ -318,7 +327,7 @@ class Character():
             if self.x+1 >= B.w1:
                 deltas.append((-1,0))
     
-        d = self.calc_target_delta()#ターゲットのdeltaを計算
+        d = self.calc_target_delta(Cs)#ターゲットのdeltaを計算
         if d in deltas:#動ける方向に入っていればそこに向かう
             delta=d
         else:#なければランダムで選ぶ
