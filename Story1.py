@@ -16,17 +16,17 @@ class BackGround():
         self.tiles=[pt2,pt1,pt3,door,door2,pt1]
         self.mapchip = [
             ["2","2","2","2","2"],
-            ["0","0","0","0","0"],
-            ["0","0","3","0","0"],
-            ["0","1","1","1","0"],
-            ["0","1","1","1","0"],
-            ["0","1","1","1","0"],
+            ["1","1","1","1","1"],
+            ["1","1","3","1","1"],
+            ["1","1","1","1","1"],
+            ["1","1","1","1","1"],
+            ["1","1","1","1","1"],
             ["0","0","0","4","0"],
             ["0","0","0","0","0"],
             ["0","0","0","0","0"],
             ]
-        self.font2=font
 
+        self.font2=font
         self.w1 = 0 #マップの左端
         self.w2 = 5 #右端(実際の取る値は-1まで)
         self.h1 = 1 #上
@@ -73,11 +73,6 @@ class Character():
         self.fontm = fonts[2]
 
         self.tick = 0#アニメ用 タイミング調節用
-        # self.mode="init"#各インスタンスが今どの状態なるかを把握するための変数
-        # self.canFight = False#戦えるか　四方に敵がいるか
-        # self.canHeal = False#回復できるか　薬草を持っているか
-        # self.canMove=False#移動できるか　四方に空間ががあるか
-
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
@@ -96,39 +91,39 @@ class Character():
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
         
-    def update(self,screen,backGround,characters):#更新（最初に呼ばれるところ）
+    def update(self,screen,B,Cs):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<0:#死んでいたら何もしないで次に送る
             self.x=-10
             self.y=-10
-            Character.number=(Character.number+1)%len(characters)
+            Character.number=(Character.number+1)%len(Cs)#つぎのキャラに送る
             return
 
         txt=f"{self.name}のターン {self.energy=}"
-        backGround.mes_tail=txt
+        B.mes_tail=txt
 
         if self.team=="味方":
             #self.mikata_update(screen,backGround,characters)  
-            self.mikata_update2(screen,backGround,characters)  
+            self.mikata_update2(B,Cs)  
   
         elif self.team=="敵":
-            self.teki_update(screen,backGround,characters)    
+            self.teki_update(screen,B,Cs)    
         elif self.team=="モブ":
             self.energy -=1
             pass
         if self.energy<=0:#キャラクターの交代
-            Character.number=(Character.number+1)%len(characters)
+            Character.number=(Character.number+1)%len(Cs)
             #ここで次のキャラを初期化するべし！
-            characters[Character.number].energy = characters[Character.number].energyOrg
-            characters[Character.number].tick = 0
+            Cs[Character.number].energy = Cs[Character.number].energyOrg
+            Cs[Character.number].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
 
 
     #----------------------------敵味方共通-------------周囲のチェック------------
 
-    def check(self, mapchip, characters):
+    def check(self, B, Cs):
         #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
         #w1:壁　w2:地形　c1:味方　c2:敵　c3:モブ
@@ -137,24 +132,20 @@ class Character():
         directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
 
         for direction, dx, dy in directions:
-            self.check_direction(direction, dx, dy, mapchip, characters)
+            self.check_direction(direction, dx, dy, B, Cs)
 
-    def check_direction(self, direction, delta_x, delta_y, mapchip, characters):
+    def check_direction(self, direction, delta_x, delta_y, B, Cs):
         new_x = self.x + delta_x#新しい位置＝着目点
         new_y = self.y + delta_y
-        map_w1 = 0 #マップの左端
-        map_h1 = 1 #上
-        map_w2 = 5 #右端
-        map_h2 = 6 #下
 
-        if not (map_w1 <= new_x < map_w2 and map_h1 <= new_y < map_h2):  # 範囲外のチェック
+        if not (B.w1 <= new_x < B.w2 and B.h1 <= new_y < B.h2):  # 範囲外のチェック
             self.shui[direction].append("w1")
-        elif int(mapchip[new_y][new_x]) > 1:  # 壁や建造物のチェック
+        elif int(B.mapchip[new_y][new_x]) > 1:  # 壁や建造物があるかチェック
             self.shui[direction].append("w2")
         else:
-            for ch in characters:  # キャラクターのチェック
-                if new_x == ch.x and new_y == ch.y:
-                    code = "c1" if ch.team == "味方" else "c2" if ch.team == "敵" else "c3"
+            for C in Cs:  # キャラクターがいるかチェック
+                if new_x == C.x and new_y == C.y:
+                    code = "c1" if C.team == "味方" else "c2" if C.team == "敵" else "c3"
                     self.shui[direction].append(code)
 
     #全キャラ用、新ガイドを描画するだけ
@@ -162,7 +153,6 @@ class Character():
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         for k,v in self.shui.items():
-            #print(f"@166 {k=} {v=}")
             #位置の特定
             px=self.x
             py=self.y
@@ -199,39 +189,38 @@ class Character():
         dmg=self.dmg_calc(C)
         txt1=f"{self.name}は{C.name}を攻撃"
         txt2=f"{dmg}のダメージを与え、{C.hp}になった"
-        print(txt1)
-        print(txt2)
-        #self.isAnime=True
+        # print(txt1)
+        # print(txt2)
 
-    def dmg_calc(self,C):
+    def dmg_calc(self,C):#ダメージの計算
         dmg=self.ap-C.dp
         if dmg <0:
             dmg=0
         C.hp-=dmg  
         return dmg  
 
-    def make_text(self, C1,B,dmg):
+    def make_text(self, C,B,dmg):
         B.mess=[]                
-        txt1=f"{self.name}は{C1.name}に"
+        txt1=f"{self.name}は{C.name}に"
         txt2=f"{dmg}のダメージを与えた"
         B.mess.append(txt1)                
         B.mess.append(txt2)                
 
     #---------------------------------敵周り-----------------------------------
-    def teki_update(self,screen,backGround,characters):    
+    def teki_update(self,screen,B,Cs):    
         self.tick+=1
         if self.tick % 60 == 30:
-            print(f"------@172 {self.name=}-----")
-            self.check(backGround.mapchip,characters)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            #print(f"------@172 {self.name=}-----")
+            self.check(B,Cs)        #上下左右の周囲を見渡して以下のようなデータを作成する
             # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
             #self.calc_jyusin(characters)
             if self.hp/self.hpOrg < 0.5:
                 if "薬草" in self.pocket:
-                    self.useYakusou(backGround)#薬草を使う
+                    self.useYakusou(B)#薬草を使う
                 else:        #逃げるを実行    
-                    self.teki_nigeru(backGround) 
+                    self.teki_nigeru(B) 
             else:
-                self.teki_kougeki(backGround,characters)
+                self.teki_kougeki(B,Cs)
             self.energy -=1
 
 
@@ -250,7 +239,6 @@ class Character():
         if len(kogekiDir)>0:    #接敵数が１つ以上あるならランダムで選ぶ
             kogekiD=random.choice(kogekiDir)
             #実行    
-            print(f"@192 {kogekiDir=} {kogekiD=} {self.x=} {self.y=} ")
             txt=""
             if kogekiD=="up":
                 for C1 in Cs:
@@ -275,21 +263,21 @@ class Character():
             self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
-    def search_target(self,Cs):
-        mhp=9999
+    def search_target(self,Cs):#一番弱い、生きているキャラを狙う,
+        t_hp=9999
         for C in Cs:
-            if mhp>C.hp:
-                mhp=C.hp
-                m_x=C.x
-                m_y=C.y
-        return m_x,m_y        
+            if C.hp>0 and C.team=="味方" and t_hp>C.hp:#生きているかつ一番弱いか
+                t_hp=C.hp
+                t_x=C.x
+                t_y=C.y
+                t_id=C.id
+        print(f"@274 {t_x=}  {t_y=} {t_id=}")       
+        return t_x,t_y ,t_id       
 
     def calc_target_delta(self,Cs):
-        m_x,m_y = self.search_target(Cs)
-        # m_x=3#とりあえず固定,実際は味方のうち一番弱いhpの座標になる！
-        # m_y=4
-        dx=m_x-self.x#差分を取る
-        dy=m_y-self.y
+        t_x,t_y,t_id = self.search_target(Cs)#一番弱いやつを狙う
+        dx = t_x-self.x#差分を取る
+        dy = t_y-self.y
         if dx==0:
             if dy<0:
                 delta=(0,-1) 
@@ -346,16 +334,15 @@ class Character():
         #最初の一歩を踏み出す（）
 
 
-    def teki_nigeru(self,backGround):
+    def teki_nigeru(self,B):
         nigeDir=[]    
-        if self.shui["up"]==[] and self.y-1 >=0:
+        if self.shui["up"]==[] and self.y-1 >=B.h1:
             nigeDir.append("up")
-        elif self.shui["down"]==[] and self.y+1 <len(backGround.mapchip):
+        elif self.shui["down"]==[] and self.y+1 <B.h2:
             nigeDir.append("down")
-        elif self.shui["left"]==[] and self.x-1 >= 0:
-
+        elif self.shui["left"]==[] and self.x-1 >= B.w1:
             nigeDir.append("left")
-        elif self.shui["right"]==[] and self.x+1 < len(backGround.mapchip[0]):
+        elif self.shui["right"]==[] and self.x+1 < B.w2:
             nigeDir.append("right")
 
         if len(nigeDir)>0:    #逃げ場があるならランダムで選ぶ
@@ -389,10 +376,9 @@ class Character():
 
     #=================味方周り===========================================
     #モードなしダイレクト入力
-    def mikata_update2(self,screen,backGround,characters):    
-        #print(f"@463 mikata update2")
-        self.check(backGround.mapchip,characters)#索敵
-        self.handle(backGround,characters)          #選択肢をチョイス
+    def mikata_update2(self,B,Cs):    
+        self.check(B,Cs)#索敵
+        self.handle(B,Cs)          #選択肢をチョイス
 
     def handle(self,B,Cs):#移動モードでの入力
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -470,7 +456,6 @@ class Character():
 class Judge():
     def __init__(self):
         self.winner=""
-        pass
 
     def judge(self,Cs):
         mnum=0#全体数
@@ -486,8 +471,6 @@ class Judge():
                 tnum+=1
                 if C.hp<0:
                     tdead+=1
-        #print(f"@438 {mdead=} {tdead=}")
-        #print(f"{mnum=} {tnum=}")
         if mnum>0 and mnum==mdead:
             print("味方全滅")
             self.winner="teki"
@@ -522,9 +505,7 @@ def main():#-----------------------------------------------------------メイン
         (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],150,60,20,3),
         (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],100,50,50,2),
     ]
-
-    #データベースからインスタンス化
-    Cs = [Character(*Db[i]) for i in range(len(Db))]
+    Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(font)
     J1 = Judge()
     #opening
@@ -547,5 +528,5 @@ def main():#-----------------------------------------------------------メイン
         if J1.winner=="teki" or J1.winner=="mikata":
             break
         pygame.display.update() #こいつは引数がない        
-        ck.tick(60) #1秒間で30フレームになるように33msecのwait
+        ck.tick(60) #1秒間で60フレームになるように16msecのwait
 main()
