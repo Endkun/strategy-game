@@ -12,7 +12,7 @@ class Character():
         self.y = y
         self.fight = False 
         self.font2 = font2
-        self.tick = 0
+        self.animationTick = 0
         self.isButtonDown = "down"
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム
@@ -28,47 +28,86 @@ class Character():
         self.canFightDown = False
         self.canFightRight = False
         self.canFightLeft = False
+        self.enemyMoveUp = False
+        self.enemyMoveDown = False
+        self.enemyMoveRight = False
+        self.enemyMoveLeft = False
     def firstAnimation(self,screen,tick):#-----------------------------------------------------------最初のアニメーション
-        self.tick = tick
+        self.animaionTick = tick
         if self.characterType == "Slime":   
             if self.name == "BlueSlime":
-                if self.tick >= 120:
+                if self.animaionTick >= 120:
                     self.x = 2
                     self.y = 2
-                if self.tick >= 200:
+                if self.animaionTick >= 200:
                     self.y = 3
-                if self.tick >= 400:
+                if self.animaionTick >= 400:
                     self.x = 3
             if self.name == "GreenSlime":
-                if self.tick >= 200:
+                if self.animaionTick >= 200:
                     self.x = 2
                     self.y = 2
-                if self.tick >= 400:
+                if self.animaionTick >= 400:
                     self.y = 3
-                if self.tick >= 500:
+                if self.animaionTick >= 500:
                     self.x = 1
         if self.characterType == "Goutou":
             if self.name == "Yakuza Sumiyoshi":
-                if self.tick >= 400:
+                if self.animaionTick >= 400:
                     self.x = 2
                     self.y = 2
         if self.characterType == "Player":
             if self.name == "Mikata1":
-                if self.tick >= 650:
+                if self.animaionTick >= 650:
                     self.y = 5
         if self.characterType == "Animal":
             if self.name == "Cat":
-                if self.tick >= 400:
+                if self.animaionTick >= 400:
                     self.y = 5
-                if self.tick >= 550:
+                if self.animaionTick >= 550:
                     self.x = 3
-                if self.tick >= 650:
+                if self.animaionTick >= 650:
                     self.y = 9
     def update(self,screen,mapchip):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
-
         if self.team == "敵":
-            Character.num = 0#pass
+            if mapchip[self.y-1][self.x] == "1": #上
+                self.enemyMoveUp = True
+            else:
+                self.enemyMoveUp = False
+            if mapchip[self.y+1][self.x] == "1": #下  
+                self.enemyMoveDown = True
+            else:
+                self.enemyMoveDown = False
+            if mapchip[self.y][self.x+1] == "1": #右
+                self.enemyMoveRight = True
+            else:
+                self.enemyMoveRight = False
+            if mapchip[self.y][self.x-1] == "1": #左
+                self.enemyMoveLeft = True
+            else:
+                self.enemyMoveLeft = False
+            self.direction = random.randint(0,4)
+            if self.direction == 0:
+                if self.enemyMoveRight == True:
+                    self.x += 1
+                    self.energy -= 1
+            elif self.direction == 1:
+                if self.enemyMoveLeft == True:
+                    self.x -= 1
+                    self.energy -= 1
+            elif self.direction == 2:
+                if self.enemyMoveDown == True:
+                    self.y += 1
+                    self.energy -= 1
+            elif self.direction == 3:
+                if self.enemyMoveUp == True:
+                    self.y -= 1
+                    self.energy -= 1
+            if self.energy == 0:
+                Character.num += 1
+                self.energy = self.tenergy
+            print(self.name,self.energy,Character.num)           
         elif self.team == "味方":
             self.detection(screen,mapchip)
             if self.energy == 0:
@@ -302,8 +341,8 @@ def main():#-----------------------------------------------------------メイン
         #print(characters[i].Name,":",characters[i].id)
     mapchip = [
         ["2","2","2","2","2"],
-        ["0","0","0","0","0"],
         ["0","0","3","0","0"],
+        ["0","0","1","0","0"],
         ["0","1","1","1","0"],
         ["0","1","1","1","0"],
         ["0","1","1","1","0"],
@@ -339,7 +378,7 @@ def main():#-----------------------------------------------------------メイン
         #if tick%300 == 1:
         #    Character.num += 1
         #    print(Character.num)
-        if Character.num == 4:
+        if Character.num >= 4:
             Character.num = 0
         #---------プレイヤー-------------------
         for character in characters:
