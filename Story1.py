@@ -3,13 +3,46 @@ from pygame.locals import *
 import sys
 import random
 import time
-
+class Field():
+    def __init__(self):
+        self.tx = 0
+        self.ty = 0
+        self.pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
+        self.pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
+        self.pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
+        self.door = pygame.image.load("img/door.png").convert_alpha()   #ドアタイル
+        self.door2 = pygame.image.load("img/door2.png").convert_alpha()   #裏口タイル
+        self.mapchip = [
+        ["2","2","2","2","2"],
+        ["0","0","3","0","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","0","0","4","0"],
+        ["0","0","0","0","0"],
+        ]
+    def draw(self,screen):
+        for i in range(5):
+            for j in range(9):
+                if self.mapchip[j][i] == "1":#動けるタイル
+                    screen.blit(self.pt1 ,Rect(self.tx+i*100,self.ty+j*100,50,50))
+                elif self.mapchip[j][i] == "0":#壁
+                    screen.blit(self.pt2 ,Rect(self.tx+i*100,self.ty+j*100,50,50))  
+                elif self.mapchip[j][i] == "2":#字幕
+                    screen.blit(self.pt3 ,Rect(self.tx+i*100,self.ty+j*100,50,50))
+                elif self.mapchip[j][i] == "3":#ドア
+                    screen.blit(self.door ,Rect(self.tx+i*100,self.ty+j*100,50,50))
+                elif self.mapchip[j][i] == "4":#ドア
+                    screen.blit(self.door2,Rect(self.tx+i*100,self.ty+j*100,50,50))
 class Character():
     num = 0#クラス変数
     def __init__(self,x,y,characterType,image,team,name,font2,id,energy):#-----------------------------------------------------------初期化
         self.id = id#id番号 
         self.x = x
         self.y = y
+        self.tick = 0
         self.fight = False 
         self.font2 = font2
         self.animationTick = 0
@@ -68,10 +101,9 @@ class Character():
                     self.x = 3
                 if self.animaionTick >= 650:
                     self.y = 9
-    def update(self,screen,mapchip,characters):#移動ボタン用
+    def update(self,screen,mapchip,characters,enemys):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         if self.team == "敵":
-
             if mapchip[self.y-1][self.x] == "1": #上
                 self.enemyMoveUp = True
             else:
@@ -116,10 +148,11 @@ class Character():
                     self.energy -= 1
             if self.energy == 0:
                 Character.num += 1
+                time.sleep(0.5)
                 self.energy = self.tenergy
-            print(self.name,self.energy,Character.num)           
+            print(self.name,self.energy,Character.num)        
         elif self.team == "味方":
-            self.detection(screen,mapchip)
+            self.detection(screen,mapchip,enemys,characters)
             if self.energy == 0:
                 Character.num += 1
                 self.energy = self.tenergy
@@ -133,12 +166,15 @@ class Character():
                 txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
                 screen.blit(txt, [20, 720])# 文字列の表示位置
                 if self.fight == True:#--------------------------------------------------戦う
-                    if mapchip[self.y-1][self.x] == "5" or mapchip[self.y+1][self.x] == "5" or mapchip[self.y][self.x+1] == "5" or mapchip[self.y][self.x-1] == "5":
-                        pygame.draw.rect(screen, (255,255,255), Rect(230,700,200,100))
-                        txt = self.font2.render("戦う", True, (0,0,0))   # 描画する文字列の設定
-                        screen.blit(txt, [250, 720])# 文字列の表示位置
-                    else:
-                        self.fight = False
+                    if self.x == enemy.x and self.y-1 == enemy.y:
+                        if self.x == enemy.x and self.y+1 == enemy.y:
+                            if self.x+1 == enemy.x and self.y == enemy.y:
+                                if self.x-1 == enemy.x and self.y == enemy.y:          
+                                    pygame.draw.rect(screen, (255,255,255), Rect(230,700,200,100))
+                                    txt = self.font2.render("戦う", True, (0,0,0))   # 描画する文字列の設定
+                                    screen.blit(txt, [250, 720])# 文字列の表示位置
+                                else:
+                                    self.fight = False
             self.event()
             #-----------------------------------------------------------------------------------------イベント処理
     def event(self):
@@ -163,7 +199,8 @@ class Character():
                             self.isButtonDown = "isnotpushed"
                     if self.canMoveDown == True:
                         if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
-                            self.y += 1  
+                            self.y += 1 
+                            print("MOVE") 
                             self.energy -= 1
                             self.Fight = True
                             self.isButtonDown = "isnotpushed"
@@ -212,7 +249,7 @@ class Character():
                                     self.isButtonDown = "isnotpushed"
                                     
                         
-    def detection(self,screen,mapchip):
+    def detection(self,screen,mapchip,enemys,characters):
         #-----------------------------------------------------------------------------------------動ける所の検出
         if self.isButtonDown == "MoveLighton":#プレイヤーはx=2,y=5
             if mapchip[self.y-1][self.x] == "1": #上
@@ -223,15 +260,6 @@ class Character():
                 pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
             if mapchip[self.y][self.x-1] == "1": #左
                 pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-#        if self.isButtonDown == "FightDown":
-#            if mapchip[self.y-1][self.x] == "5": #上
-#                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y-0.5)*100),10)
-#            if mapchip[self.y+1][self.x] == "5": #下  
-#                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y+1.5)*100),10)
-#            if mapchip[self.y][self.x+1] == "5": #右
-#                pygame.draw.circle(screen,(250,250,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
-#            if mapchip[self.y][self.x-1] == "5": #左
-#                pygame.draw.circle(screen,(250,250,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
         #------------------------------------------------------------------------------------------禁止用
         if self.isButtonDown == "MoveLighton":
             if mapchip[self.y-1][self.x] == "1": #上
@@ -250,18 +278,24 @@ class Character():
                 self.canMoveLeft = True
             else:
                 self.canMoveLeft = False
-
-#        if self.isButtonDown == "FightDown":
-#            if mapchip[self.y-1][self.x] == "5": #上
-#                self.canFightUp = True
-#                #print(self.canFightUp)
-#            if mapchip[self.y+1][self.x] == "5": #下  
-#                self.canFightDown = True
-#            if mapchip[self.y][self.x+1] == "5": #右
-#                self.canFightRight = True
-#           if mapchip[self.y][self.x-1] == "5": #左
-#               self.canFightLeft = True
-
+            for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
+                if self.x == character.x and self.y-1 == character.y: #上
+                    self.canMoveUp = False
+                if self.x == character.x and self.y+1 == character.y: #下  
+                    self.canMoveDown = False
+                if self.x+1 == character.x and self.y == character.y: #右
+                    self.canMoveRight = False
+                if self.x-1 == character.x and self.y == character.y: #左
+                    self.canMoveLeft = False
+            for enemy in enemys:#敵を呼び出して戦えるかを判別する。
+                if self.x == enemy.x and self.y-1 == enemy.y: #上
+                    self.canFightUp = True
+                if self.x == enemy.x and self.y+1 == enemy.y: #下  
+                    self.canFightDown = True
+                if self.x+1 == enemy.x and self.y == enemy.y: #右
+                    self.canFightRight = True
+                if self.x-1 == enemy.x and self.y == enemy.y: #左
+                    self.canFightLeft = True
 
 
     def place(self):#----------------------------------------------------------------アクション
@@ -270,8 +304,10 @@ class Character():
                 self.y = 3
     def draw(self,screen):#-----------------------------------------------------------描画
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
+        if self.id == Character.num:
+            pygame.draw.circle(screen, (255,255,255), ((self.x+0.5)*100,(self.y+0.5)*100), 30, 5)  
  
-def animation(tick,players,enemys,mobs,mapchip,tx,ty,screen,font,ck):
+def animation(tick,players,enemys,mobs,mapchip,screen,font,ck,field):
     pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
     pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
     pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
@@ -288,22 +324,7 @@ def animation(tick,players,enemys,mobs,mapchip,tx,ty,screen,font,ck):
             Story2 = font.render("打たれたくないなら金だ！", True, (0,0,0)) # 描画する文字列を画像にする
         screen.blit(Story, [70,40])
         screen.blit(Story2,[70,70]) 
-        for i in range(5):
-            for j in range(9):
-                if mapchip[j][i] == "1":#動けるタイル
-                    screen.blit(pt1 ,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "0":#壁
-                    screen.blit(pt2 ,Rect(tx+i*100,ty+j*100,50,50))  
-                elif mapchip[j][i] == "2":#字幕
-                    screen.blit(pt3 ,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "3":#ドア
-                    screen.blit(door ,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "4":#ドア
-                    screen.blit(door2,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "5":#不可触タイル
-                    screen.blit(pt1,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "6":#不可触タイル
-                    screen.blit(pt1,Rect(tx+i*100,ty+j*100,50,50))
+        field.draw(screen)
         #---------アニメーション---------
         for player in players:
             player.firstAnimation(screen,tick)
@@ -324,21 +345,14 @@ def main():#-----------------------------------------------------------メイン
     font = pygame.font.SysFont("yumincho", 30)       
     font2 = pygame.font.SysFont("yumincho", 60)                       
     screen = pygame.display.set_mode((500, 900))  # 800
-    pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
-    pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
-    pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
-    door = pygame.image.load("img/door.png").convert_alpha()   #ドアタイル
-    door2 = pygame.image.load("img/door2.png").convert_alpha()   #裏口タイル
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
     Cat = pygame.image.load("img/cat.png").convert_alpha()       #プレイヤー
     Sl1 = pygame.image.load("img/Slime1.png").convert_alpha()       #雑魚スライム
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
-    tx = 0#タイル用x,y
-    ty = 0
     tick = 700
-    writeCircle = True
+    field = Field()
     player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,1)
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,1)
     slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1)
@@ -351,34 +365,13 @@ def main():#-----------------------------------------------------------メイン
     characters = [player1,player2,slime1,slime2,goutou,cat]
     #for i in range(len(characters)):
         #print(characters[i].Name,":",characters[i].id)
-    mapchip = [
-        ["2","2","2","2","2"],
-        ["0","0","3","0","0"],
-        ["0","1","1","1","0"],
-        ["0","1","1","1","0"],
-        ["0","1","1","1","0"],
-        ["0","1","1","1","0"],
-        ["0","1","1","1","0"],
-        ["0","0","0","4","0"],
-        ["0","0","0","0","0"],
-        ]
+
     ck = pygame.time.Clock()
-    animation(tick,players,enemys,mobs,mapchip,tx,ty,screen,font,ck)                     
+    animation(tick,players,enemys,mobs,field.mapchip,screen,font,ck,field)                     
     while True:
         tick += 1
         screen.fill((0,0,255))
-        for i in range(5):
-            for j in range(9):
-                if mapchip[j][i] == "1":#動けるタイル
-                    screen.blit(pt1 ,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "0":#壁
-                    screen.blit(pt2 ,Rect(tx+i*100,ty+j*100,50,50))  
-                elif mapchip[j][i] == "2":#字幕
-                    screen.blit(pt3 ,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "3":#ドア
-                    screen.blit(door ,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "4":#ドア
-                    screen.blit(door2,Rect(tx+i*100,ty+j*100,50,50))
+        field.draw(screen)
         #if tick%300 == 1:
         #    Character.num += 1
         #    print(Character.num)
@@ -387,14 +380,9 @@ def main():#-----------------------------------------------------------メイン
         #---------プレイヤー-------------------
         for character in characters:
             if Character.num == character.id:
-                character.update(screen,mapchip,characters)
+                character.update(screen,field.mapchip,characters,enemys)
             character.draw(screen)
-        #---------描画---------
-        if writeCircle == True:
-            pygame.draw.circle(screen, (255,255,255), ((players[0].x+0.5)*100,(players[0].y+0.5)*100), 30, 5)    
-        if tick == 1000:
-            writeCircle = False
-
+        #---------描画---------  
         pygame.display.update()         
         ck.tick(30) #1秒間で30フレームになるように33msecのwait   
 main()
