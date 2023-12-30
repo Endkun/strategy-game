@@ -68,9 +68,10 @@ class Character():
                     self.x = 3
                 if self.animaionTick >= 650:
                     self.y = 9
-    def update(self,screen,mapchip):#移動ボタン用
+    def update(self,screen,mapchip,characters):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         if self.team == "敵":
+
             if mapchip[self.y-1][self.x] == "1": #上
                 self.enemyMoveUp = True
             else:
@@ -87,6 +88,15 @@ class Character():
                 self.enemyMoveLeft = True
             else:
                 self.enemyMoveLeft = False
+            for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
+                if self.x == character.x and self.y-1 == character.y: #上
+                    self.enemyMoveUp = False
+                if self.x == character.x and self.y+1 == character.y: #下  
+                    self.enemyMoveDown = False
+                if self.x+1 == character.x and self.y == character.y: #右
+                    self.enemyMoveRight = False
+                if self.x-1 == character.x and self.y == character.y: #左
+                    self.enemyMoveLeft = False
             self.direction = random.randint(0,4)
             if self.direction == 0:
                 if self.enemyMoveRight == True:
@@ -213,15 +223,15 @@ class Character():
                 pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
             if mapchip[self.y][self.x-1] == "1": #左
                 pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-        if self.isButtonDown == "FightDown":
-            if mapchip[self.y-1][self.x] == "5": #上
-                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y-0.5)*100),10)
-            if mapchip[self.y+1][self.x] == "5": #下  
-                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y+1.5)*100),10)
-            if mapchip[self.y][self.x+1] == "5": #右
-                pygame.draw.circle(screen,(250,250,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
-            if mapchip[self.y][self.x-1] == "5": #左
-                pygame.draw.circle(screen,(250,250,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
+#        if self.isButtonDown == "FightDown":
+#            if mapchip[self.y-1][self.x] == "5": #上
+#                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y-0.5)*100),10)
+#            if mapchip[self.y+1][self.x] == "5": #下  
+#                pygame.draw.circle(screen,(250,250,255),((self.x+0.5)*100,(self.y+1.5)*100),10)
+#            if mapchip[self.y][self.x+1] == "5": #右
+#                pygame.draw.circle(screen,(250,250,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
+#            if mapchip[self.y][self.x-1] == "5": #左
+#                pygame.draw.circle(screen,(250,250,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
         #------------------------------------------------------------------------------------------禁止用
         if self.isButtonDown == "MoveLighton":
             if mapchip[self.y-1][self.x] == "1": #上
@@ -241,16 +251,16 @@ class Character():
             else:
                 self.canMoveLeft = False
 
-        if self.isButtonDown == "FightDown":
-            if mapchip[self.y-1][self.x] == "5": #上
-                self.canFightUp = True
-                #print(self.canFightUp)
-            if mapchip[self.y+1][self.x] == "5": #下  
-                self.canFightDown = True
-            if mapchip[self.y][self.x+1] == "5": #右
-                self.canFightRight = True
-            if mapchip[self.y][self.x-1] == "5": #左
-                self.canFightLeft = True
+#        if self.isButtonDown == "FightDown":
+#            if mapchip[self.y-1][self.x] == "5": #上
+#                self.canFightUp = True
+#                #print(self.canFightUp)
+#            if mapchip[self.y+1][self.x] == "5": #下  
+#                self.canFightDown = True
+#            if mapchip[self.y][self.x+1] == "5": #右
+#                self.canFightRight = True
+#           if mapchip[self.y][self.x-1] == "5": #左
+#               self.canFightLeft = True
 
 
 
@@ -291,6 +301,8 @@ def animation(tick,players,enemys,mobs,mapchip,tx,ty,screen,font,ck):
                 elif mapchip[j][i] == "4":#ドア
                     screen.blit(door2,Rect(tx+i*100,ty+j*100,50,50))
                 elif mapchip[j][i] == "5":#不可触タイル
+                    screen.blit(pt1,Rect(tx+i*100,ty+j*100,50,50))
+                elif mapchip[j][i] == "6":#不可触タイル
                     screen.blit(pt1,Rect(tx+i*100,ty+j*100,50,50))
         #---------アニメーション---------
         for player in players:
@@ -342,12 +354,12 @@ def main():#-----------------------------------------------------------メイン
     mapchip = [
         ["2","2","2","2","2"],
         ["0","0","3","0","0"],
-        ["0","0","1","0","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
         ["0","1","1","1","0"],
         ["0","1","1","1","0"],
         ["0","1","1","1","0"],
         ["0","0","0","4","0"],
-        ["0","0","0","0","0"],
         ["0","0","0","0","0"],
         ]
     ck = pygame.time.Clock()
@@ -357,12 +369,6 @@ def main():#-----------------------------------------------------------メイン
         screen.fill((0,0,255))
         for i in range(5):
             for j in range(9):
-                if mapchip[j][i] == "5":
-                    mapchip[j][i] = "1"
-                for enemy in enemys:
-                    if enemy.x == i and enemy.y == j:
-                        if mapchip[j][i] == "1":
-                            mapchip[j][i] = "5"
                 if mapchip[j][i] == "1":#動けるタイル
                     screen.blit(pt1 ,Rect(tx+i*100,ty+j*100,50,50))
                 elif mapchip[j][i] == "0":#壁
@@ -373,8 +379,6 @@ def main():#-----------------------------------------------------------メイン
                     screen.blit(door ,Rect(tx+i*100,ty+j*100,50,50))
                 elif mapchip[j][i] == "4":#ドア
                     screen.blit(door2,Rect(tx+i*100,ty+j*100,50,50))
-                elif mapchip[j][i] == "5":#不可触タイル
-                    screen.blit(pt1,Rect(tx+i*100,ty+j*100,50,50))
         #if tick%300 == 1:
         #    Character.num += 1
         #    print(Character.num)
@@ -383,7 +387,7 @@ def main():#-----------------------------------------------------------メイン
         #---------プレイヤー-------------------
         for character in characters:
             if Character.num == character.id:
-                character.update(screen,mapchip)
+                character.update(screen,mapchip,characters)
             character.draw(screen)
         #---------描画---------
         if writeCircle == True:
@@ -392,5 +396,5 @@ def main():#-----------------------------------------------------------メイン
             writeCircle = False
 
         pygame.display.update()         
-        ck.tick(60) #1秒間で30フレームになるように33msecのwait   
+        ck.tick(30) #1秒間で30フレームになるように33msecのwait   
 main()
