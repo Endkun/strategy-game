@@ -8,11 +8,16 @@ class BackGround():
     def __init__(self,font):
         self.mess=[]
         self.mes_tail=""
-        pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
+        pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 
+        pt1 = pygame.transform.scale(pt1, (SIZE, SIZE)) 
         pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
+        pt2 = pygame.transform.scale(pt2, (SIZE, SIZE)) 
         pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
+        pt3 = pygame.transform.scale(pt3, (SIZE, SIZE)) 
         door = pygame.image.load("img/door.png").convert_alpha()   #ドアタイル
+        door = pygame.transform.scale(door, (SIZE, SIZE)) 
         door2 = pygame.image.load("img/door2.png").convert_alpha()   #裏口タイル
+        door2 = pygame.transform.scale(door2, (SIZE, SIZE)) 
         self.tiles=[pt2,pt1,pt3,door,door2,pt1]
         self.mapchip = [
             ["2","2","2","2","2"],
@@ -39,7 +44,7 @@ class BackGround():
         for i in range(len(self.mapchip[0])):
             for j in range(len(self.mapchip)):
                 mapnum = int(self.mapchip[j][i])            
-                screen.blit(self.tiles[mapnum] ,Rect(tx+i*100,ty+j*100,50,50))            
+                screen.blit(self.tiles[mapnum] ,Rect(tx+i*SIZE,ty+j*SIZE,50,50))            
     def draw_text(self,screen):
         y=20#文字の位置ｙ座標のみ
         for mes in self.mess:
@@ -80,16 +85,16 @@ class Character():
     def draw(self,screen):#----------------------------描画
         if self.hp>=0:
             #画像表示    
-            screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
+            screen.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
             #hp表示
             txt = str(self.hp)
             txtg = self.fontm.render(txt, True, (0,0,0))  
-            screen.blit(txtg, [self.x*100+10,self.y*100+10])
+            screen.blit(txtg, [self.x*SIZE+10,self.y*SIZE+10])
             txtg = self.fontm.render(txt, True, (255,255,255))  
-            screen.blit(txtg, [self.x*100+12,self.y*100+12])
+            screen.blit(txtg, [self.x*SIZE+12,self.y*SIZE+12])
             #ガイドの表示
             if Character.number==self.id :
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+0.5)*100),50,2)
+                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
         
     def update(self,screen,B,Cs):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
@@ -166,13 +171,13 @@ class Character():
                 px-=1
             #敵がいるなら赤ガイド
             if "c2" in v:
-                pygame.draw.circle(screen,(250,0,0),((px+0.5)*100,(py+.5)*100),10)
+                pygame.draw.circle(screen,(250,0,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
             #味方がいるなら黄ガイド
             elif "c1" in v:
-                pygame.draw.circle(screen,(250,255,0),((px+0.5)*100,(py+.5)*100),10)
+                pygame.draw.circle(screen,(250,255,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
             #何もないなら青ガイド
             elif v==[]:
-                pygame.draw.circle(screen,(0,0,255),((px+0.5)*100,(py+.5)*100),10)
+                pygame.draw.circle(screen,(0,0,255),((px+0.5)*SIZE,(py+.5)*SIZE),10)
                 #移動可能表示
 
     def useYakusou(self,B):#薬草を使う
@@ -387,8 +392,8 @@ class Character():
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
                 x_pos, y_pos = event.pos
-                new_x=int(x_pos/100)
-                new_y=int(y_pos/100)
+                new_x=int(x_pos/SIZE)
+                new_y=int(y_pos/SIZE)
                 dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for df in dfs:#上下左右の四方のアクションを実行
                     self.handle_action(Cs,B,df,new_x,new_y)
@@ -490,11 +495,19 @@ def main():#-----------------------------------------------------------メイン
 
     #image load
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
+    Pl1 = pygame.transform.scale(Pl1, (SIZE, SIZE)) 
+
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
+    Pl2 = pygame.transform.scale(Pl2, (SIZE, SIZE)) 
+
     Cat = pygame.image.load("img/cat.png").convert_alpha()       #プレイヤー
+    Cat = pygame.transform.scale(Cat, (SIZE, SIZE)) 
     Sl1 = pygame.image.load("img/Slime1.png").convert_alpha()       #雑魚スライム
+    Sl1 = pygame.transform.scale(Sl1, (SIZE, SIZE)) 
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
+    Sl2 = pygame.transform.scale(Sl2, (SIZE, SIZE)) 
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
+    Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
 
     Db=[#キャラのデータベース
         #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
@@ -503,7 +516,7 @@ def main():#-----------------------------------------------------------メイン
         (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,10,20,3),
         (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],60,30,30,4),
         (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],150,60,20,3),
-        (1,4,5,"Animal",Cat,"モブ","Cat",fonts,[],100,50,50,2),
+        (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],10,50,50,2),
     ]
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(font)
@@ -529,4 +542,6 @@ def main():#-----------------------------------------------------------メイン
             break
         pygame.display.update() #こいつは引数がない        
         ck.tick(60) #1秒間で60フレームになるように16msecのwait
+
+SIZE=70
 main()

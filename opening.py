@@ -18,8 +18,8 @@ def opening2(screen,font,Cs,backGround):#--------------------
                 C1.y += 1
                 C1.y += 0
         if C1.type == "Animal" and C1.name == "Cat":
-                C1.x += 2
-                C1.y += 4
+                C1.x = 0
+                C1.y = 4
 
 def opening(screen,font,Cs,B):#--------------------
     ##オープニング
