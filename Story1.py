@@ -38,33 +38,60 @@ class Field():
                     screen.blit(self.door2,Rect(self.tx+i*100,self.ty+j*100,50,50))
 class Character():
     num = 0#クラス変数
-    def __init__(self,x,y,characterType,image,team,name,font2,id,energy):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,characterType,image,team,name,font2,id,energy,at,df,hp):#-----------------------------------------------------------初期化
+        #-------------------------------キャラクター
+        #------------------キャラクターID
         self.id = id#id番号 
+        #------------------キャラクターの基本変数
         self.x = x
         self.y = y
-        self.tick = 0
-        self.fight = False 
-        self.font2 = font2
-        self.animationTick = 0
-        self.isButtonDown = "down"
+        self.at = at
+        self.df = df
+        self.hp = hp
+        #---------------------キャラクターのタイプ変数
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム
         self.name = name#名前
+        self.characterType = characterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
+        #--------------------キャラクターエネルギー
         self.energy = energy
         self.tenergy = energy#保存
-        self.characterType = characterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
+        #----------------------------------------------設定
+        #--------------------フォント
+        self.font2 = font2
+        #---------------------ティック秒
+        self.tick = 0#全体のティック
+        self.animationTick = 0#アニメーションのティック
+        #----------------------------------------------演算
+        #----------------------味方の場合に動けるか
         self.canMoveUp = False
         self.canMoveDown = False
         self.canMoveRight = False
         self.canMoveLeft = False
+        #----------------------味方の場合に戦えるか
         self.canFightUp = False
         self.canFightDown = False
         self.canFightRight = False
         self.canFightLeft = False
+        #----------------------敵の場合に動けるか
         self.enemyMoveUp = False
         self.enemyMoveDown = False
         self.enemyMoveRight = False
         self.enemyMoveLeft = False
+        #-----------------------------------------------判別・処理
+        self.buttonStatus = "down"#イベントキーが現在どうなってるか
+        self.buttonEvent = "isnotpushed"
+        """ステータス
+        　・downの場合は未稼働状態
+        　・MoveLightonの場合は移動ができる
+        　・FightDownの場合は攻撃ができる"""
+        """イベント
+        　・isnotpushedの場合はボタンが押されてない
+        　・ispushedの場合はボタンが押されている"""
+        #------------------------戦うフラグ
+        self.isFight = False#戦えるか判別
+        #------------------------リセットキー
+        self.fightFalses = False
     def firstAnimation(self,screen,tick):#-----------------------------------------------------------最初のアニメーション
         self.animaionTick = tick
         if self.characterType == "Slime":   
@@ -101,7 +128,7 @@ class Character():
                     self.x = 3
                 if self.animaionTick >= 650:
                     self.y = 9
-    def update(self,screen,mapchip,characters,enemys):#移動ボタン用
+    def update(self,screen,mapchip,characters,enemys,font2):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         if self.team == "敵":
             if mapchip[self.y-1][self.x] == "1": #上
@@ -148,7 +175,7 @@ class Character():
                     self.energy -= 1
             if self.energy == 0:
                 Character.num += 1
-                time.sleep(0.5)
+                #time.sleep(0.5)
                 self.energy = self.tenergy
             print(self.name,self.energy,Character.num)        
         elif self.team == "味方":
@@ -156,112 +183,129 @@ class Character():
             if self.energy == 0:
                 Character.num += 1
                 self.energy = self.tenergy
-                self.isButtonDown = "isnotpushed"
+                self.buttonEvent = "isnotpushed"
             #-----------------------------------------------------------------------------------------ボタン・フラグ管理
-            if self.isButtonDown != "MoveLighton":
-                if self.isButtonDown != "FightDown":
-                    self.isButtonDown = "isnotpushed"
-            if self.isButtonDown == "isnotpushed":
+            if self.buttonStatus != "MoveLighton":#上下左右のどれかに動ける
+                if self.buttonStatus != "FightDown":#戦える
+                    self.buttonEvent = "isnotpushed"
+            if self.buttonEvent == "isnotpushed":
                 pygame.draw.rect(screen, (255,255,255), Rect(15,700,200,100))
                 txt = self.font2.render("移動", True, (0,0,0))   # 描画する文字列の設定
                 screen.blit(txt, [20, 720])# 文字列の表示位置
-                if self.fight == True:#--------------------------------------------------戦う
-                    if self.x == enemy.x and self.y-1 == enemy.y:
-                        if self.x == enemy.x and self.y+1 == enemy.y:
-                            if self.x+1 == enemy.x and self.y == enemy.y:
-                                if self.x-1 == enemy.x and self.y == enemy.y:          
-                                    pygame.draw.rect(screen, (255,255,255), Rect(230,700,200,100))
-                                    txt = self.font2.render("戦う", True, (0,0,0))   # 描画する文字列の設定
-                                    screen.blit(txt, [250, 720])# 文字列の表示位置
-                                else:
-                                    self.fight = False
-            self.event()
+                self.fightupdate(screen,font2,enemys)      
+            self.event(screen,enemys)
             #-----------------------------------------------------------------------------------------イベント処理
-    def event(self):
+    def event(self,screen,enemys):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
-                if self.isButtonDown == "isnotpushed":
+                if self.buttonEvent == "isnotpushed":
                     x, y = event.pos
-                    print("x,y:",x,y)
+                    #print("x,y:",x,y)
                     if 15 < x < 215 and 700 < y < 800:
-                            self.isButtonDown = "MoveLighton"
-                if self.isButtonDown == "MoveLighton":
+                            self.buttonStatus = "MoveLighton"
+                if self.buttonStatus == "MoveLighton":
                     x, y = event.pos
                     #print(self.x*100)
                     if self.canMoveUp == True:
                         if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
                             self.y -= 1  
                             self.energy -= 1
-                            self.Fight = True
-                            self.isButtonDown = "isnotpushed"
+                            self.buttonEvent = "isnotpushed"
                     if self.canMoveDown == True:
                         if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
                             self.y += 1 
-                            print("MOVE") 
+                            #print("MOVE") 
                             self.energy -= 1
-                            self.Fight = True
-                            self.isButtonDown = "isnotpushed"
+                            self.buttonEvent = "isnotpushed"
                     #print(self.y*100+100,y,self.y*100)
                     if self.canMoveLeft == True:
                         if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
                             self.x -= 1
                             self.energy -= 1
-                            self.Fight = True
-                            self.isButtonDown = "isnotpushed"
+                            self.buttonEvent = "isnotpushed"
                     if self.canMoveRight == True:
                         if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
                             self.x += 1    
                             self.energy -= 1
-                            self.Fight = True
-                            self.isButtonDown = "isnotpushed"
-                if self.fight == True:
+                            self.buttonEvent = "isnotpushed"     
+                if self.isFight == True:
                     x,y = event.pos
                     if 230 < x < 450 and 700 < y < 800:
-                        self.isButtonDown = "FightDown"
-                        if self.isButtonDown == "FightDown":
-                            #print(self.canFightUp,self.canFightDown,self.canFightLeft,self.canFightRight)
-                            if self.canFightUp == True:
-                                if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
-                                    self.y -= 1  
-                                    self.energy -= 1
-                                    self.canFightUp = False
-                                    self.isButtonDown = "isnotpushed"
-                            if self.canFightDown == True:
-                                if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
-                                    self.y += 1  
-                                    self.energy -= 1
-                                    self.canFightDown = False
-                                    self.isButtonDown = "isnotpushed"
-                            if self.canFightLeft == True:
-                                if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
-                                    self.x -= 1
-                                    self.energy -= 1
-                                    self.canFightLeft = False
-                                    self.isButtonDown = "isnotpushed"
-                            if self.canFightRight == True:
-                                if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
-                                    self.x += 1    
-                                    self.energy -= 1
-                                    self.canFightRight = False
-                                    self.isButtonDown = "isnotpushed"
-                                    
-                        
-    def detection(self,screen,mapchip,enemys,characters):
+                        self.buttonStatus = "FightDown"
+                        self.enemydetection(enemys,screen)
+                if self.buttonStatus == "FightDown":
+                    x,y = event.pos
+                    print("hannou")
+                    if self.canFightUp == True:
+                        if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
+                            self.fight()
+                            self.energy -= 1
+                            self.fightFalses = True
+                            self.buttonEvent = "isnotpushed"
+                    if self.canFightDown == True:
+                        if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
+                            self.fight()
+                            self.energy -= 1
+                            self.fightFalses = True
+                            self.buttonEvent = "isnotpushed"
+                    if self.canFightLeft == True:
+                        if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
+                            self.fight()
+                            self.energy -= 1
+                            self.fightFalses = True
+                            self.buttonEvent = "isnotpushed"
+                    if self.canFightRight == True:
+                        if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
+                            self.fight()
+                            self.energy -= 1
+                            self.fightFalses = True
+                            self.buttonEvent = "isnotpushed"
+                    if self.fightFalses == True:
+                        self.canFightDown = False
+                        self.canFightUp = False
+                        self.canFightLeft = False
+                        self.canFightRight = False
+    def enemydetection(self,enemys,screen):#戦う時に周囲をチェックする関数
+        if self.energy != 0:
+            for enemy in enemys:#敵を呼び出して戦えるかを判別する。
+                if self.x == enemy.x and self.y-1 == enemy.y: #上
+                    print("ue",enemy.name)
+                    self.canFightUp = True
+                    #pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
+                if self.x == enemy.x and self.y+1 == enemy.y: #下  
+                    print("shita",enemy.name)
+                    self.canFightDown = True
+                    #pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+                if self.x+1 == enemy.x and self.y == enemy.y: #右
+                    print("migi",enemy.name)
+                    self.canFightRight = True
+                    #pygame.draw.circle(screen,(250,0,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
+                if self.x-1 == enemy.x and self.y == enemy.y: #左
+                    print("hidari",enemy.name)
+                    self.canFightLeft = True
+                    #pygame.draw.circle(screen,(250,0,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
+        return
+    def detection(self,screen,mapchip,enemys,characters):#動くときに周囲をチェックする関数
         #-----------------------------------------------------------------------------------------動ける所の検出
-        if self.isButtonDown == "MoveLighton":#プレイヤーはx=2,y=5
-            if mapchip[self.y-1][self.x] == "1": #上
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-            if mapchip[self.y+1][self.x] == "1": #下  
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
-            if mapchip[self.y][self.x+1] == "1": #右
-                pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-            if mapchip[self.y][self.x-1] == "1": #左
-                pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
+        if self.buttonStatus == "MoveLighton":#プレイヤーはx=2,y=5
+            for enemy in enemys:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
+                if mapchip[self.y-1][self.x] == "1": #上
+                    if self.x != enemy.x and self.y-1 != enemy.y: #上
+                        pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
+                if mapchip[self.y+1][self.x] == "1": #下  
+                    if self.x != enemy.x and self.y+1 != enemy.y: #下
+                        pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+                if mapchip[self.y][self.x+1] == "1": #右
+                    if self.x+1 == enemy.x and self.y == enemy.y: #右
+                        pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
+                if mapchip[self.y][self.x-1] == "1": #左
+                    if self.x-1 != enemy.x and self.y != enemy.y: #左
+                        pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
         #------------------------------------------------------------------------------------------禁止用
-        if self.isButtonDown == "MoveLighton":
+        if self.buttonStatus == "MoveLighton":
             if mapchip[self.y-1][self.x] == "1": #上
                 self.canMoveUp = True
             else:
@@ -287,25 +331,36 @@ class Character():
                     self.canMoveRight = False
                 if self.x-1 == character.x and self.y == character.y: #左
                     self.canMoveLeft = False
-            for enemy in enemys:#敵を呼び出して戦えるかを判別する。
-                if self.x == enemy.x and self.y-1 == enemy.y: #上
-                    self.canFightUp = True
-                if self.x == enemy.x and self.y+1 == enemy.y: #下  
-                    self.canFightDown = True
-                if self.x+1 == enemy.x and self.y == enemy.y: #右
-                    self.canFightRight = True
-                if self.x-1 == enemy.x and self.y == enemy.y: #左
-                    self.canFightLeft = True
 
-
+    def fight(self):
+        print(self.name,"は","に攻撃をした！")
+        return
+    def fightupdate(self,screen,font2,enemys):
+        for enemy in enemys:
+            if self.x == enemy.x and self.y-1 == enemy.y or self.x == enemy.x and self.y+1 == enemy.y or self.x+1 == enemy.x and self.y == enemy.y or self.x-1 == enemy.x and self.y == enemy.y:
+                self.isFight = True
+            else:
+                self.isFight = False
+        if self.isFight == True:         
+            pygame.draw.rect(screen, (255,255,255), Rect(230,700,200,100))
+            txt = self.font2.render("戦う", True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(txt, [250, 720])# 文字列の表示位置
     def place(self):#----------------------------------------------------------------アクション
         if self.characterType == "Goutou":
             if self.name == "Yakuza Sumiyoshi":
                 self.y = 3
     def draw(self,screen):#-----------------------------------------------------------描画
-        screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))
-        if self.id == Character.num:
-            pygame.draw.circle(screen, (255,255,255), ((self.x+0.5)*100,(self.y+0.5)*100), 30, 5)  
+        screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
+        if self.id == Character.num:#------------------------操作中NPC表示
+            pygame.draw.circle(screen, (255,255,255), ((self.x+0.5)*100,(self.y+0.5)*100), 30, 5)
+        if self.canFightUp == True:#--------------------------#戦う
+            pygame.draw.circle(screen,(255,50,0),((self.x+0.5)*100,(self.y-0.5)*100),10)#上
+        if self.canFightDown == True:
+            pygame.draw.circle(screen,(255,50,0),((self.x+0.5)*100,(self.y+1.5)*100),10)#下
+        if self.canFightRight == True:
+            pygame.draw.circle(screen,(255,50,0),((self.x+1.5)*100,(self.y+0.5)*100),10)#右
+        if self.canFightLeft == True:  
+            pygame.draw.circle(screen,(255,50,0),((self.x-0.5)*100,(self.y+0.5)*100),10)#左
  
 def animation(tick,players,enemys,mobs,mapchip,screen,font,ck,field):
     pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
@@ -353,16 +408,16 @@ def main():#-----------------------------------------------------------メイン
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
     tick = 700
     field = Field()
-    player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,1)
-    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,1)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1)
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2,3,1)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font2,4,2)
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1)
+    player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,3,24,12,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
+    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,1,12,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,6,0,10)
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2,3,1,6,0,10)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font2,4,3,24,6,50)
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1,0,0,20)
     players = [player1,player2]
     enemys = [slime1,slime2,goutou]
     mobs = [cat]
-    characters = [player1,player2,slime1,slime2,goutou,cat]
+    characters = [slime1,slime2,goutou,cat,player1,player2]
     #for i in range(len(characters)):
         #print(characters[i].Name,":",characters[i].id)
 
@@ -380,7 +435,7 @@ def main():#-----------------------------------------------------------メイン
         #---------プレイヤー-------------------
         for character in characters:
             if Character.num == character.id:
-                character.update(screen,field.mapchip,characters,enemys)
+                character.update(screen,field.mapchip,characters,enemys,font2)
             character.draw(screen)
         #---------描画---------  
         pygame.display.update()         
