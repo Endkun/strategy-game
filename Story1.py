@@ -125,7 +125,6 @@ class Character():
             self.energy=self.energyOrg#自分も戻しておく
 
 
-
     #----------------------------敵味方共通-------------周囲のチェック------------
 
     def check(self, B, Cs):
@@ -328,8 +327,6 @@ class Character():
         self.x+=delta[0]#移動する
         self.y+=delta[1]
 
-
-
     def koteki(self,B):
         pass
         #以下は本格的な向敵
@@ -378,7 +375,6 @@ class Character():
         print(f"{jx=} {jy=}") 
         return jx,jy
                 
-
     #=================味方周り===========================================
     #モードなしダイレクト入力
     def mikata_update2(self,B,Cs):    
@@ -482,24 +478,21 @@ class Judge():
         if tnum>0 and tnum==tdead:
             print("敵全滅")
             self.winner="mikata"
- 
 
-def main():#-----------------------------------------------------------メイン
+def mainInit(): 
     pygame.init()        
+    screen = pygame.display.set_mode((500, 900))  # 800
     font = pygame.font.SysFont("yumincho", 30)       
     fontb = pygame.font.SysFont("yumincho", 60)                      
     fontm = pygame.font.SysFont("yumincho", 20)                      
     fonts=[font,fontb,fontm] 
-    screen = pygame.display.set_mode((500, 900))  # 800
     ck = pygame.time.Clock()
 
     #image load
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl1 = pygame.transform.scale(Pl1, (SIZE, SIZE)) 
-
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
     Pl2 = pygame.transform.scale(Pl2, (SIZE, SIZE)) 
-
     Cat = pygame.image.load("img/cat.png").convert_alpha()       #プレイヤー
     Cat = pygame.transform.scale(Cat, (SIZE, SIZE)) 
     Sl1 = pygame.image.load("img/Slime1.png").convert_alpha()       #雑魚スライム
@@ -521,27 +514,31 @@ def main():#-----------------------------------------------------------メイン
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(font)
     J1 = Judge()
+    return screen,fonts,Cs,B1,J1,ck
+
+def main():#-----------------------------------------------------------メイン
+    #init
+    screen,fonts,Cs,B1,J1,ck=mainInit()
     #opening
-    Character.number=999
-    #opening.opening(screen,font,Cs,B1)#本番用
-    opening.opening2(screen,font,Cs,B1)#テスト用　オープニング省略バージョン
-    Character.number=0
+    #opening.opening(screen,fonts[0],Cs,B1)#本番用
+    opening.opening2(screen,fonts[0],Cs,B1)#テスト用　オープニング省略バージョン
+    Character.number=0#現在選択されているキャラ、クラス変数
     #battle 　
     while True:
-        B1.draw_tile(screen)
-        B1.draw_text(screen)
-        B1.draw_tail(screen)
+        B1.draw_tile(screen)#壁面
+        B1.draw_text(screen)#メイン文字
+        B1.draw_tail(screen)#補足説明用の文字
         #---------更新と描画---------
-        for ch in Cs:
-            ch.update(screen,B1,Cs)
+        for ch in Cs:#キャラ全員の更新と描画
+            ch.update(screen,B1,Cs)#ただし現在選択されているキャラ以外は即return
             ch.draw(screen)
-        for ch in Cs:
+        for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
             ch.new_guide(screen)
-        J1.judge(Cs)    
+        J1.judge(Cs)    #判定
         if J1.winner=="teki" or J1.winner=="mikata":
             break
-        pygame.display.update() #こいつは引数がない        
+        pygame.display.update() #画面更新、こいつは引数がない        
         ck.tick(60) #1秒間で60フレームになるように16msecのwait
 
-SIZE=70
+SIZE=70#画面での１マスの大きさ
 main()
