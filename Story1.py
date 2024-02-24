@@ -151,15 +151,26 @@ class Character():
               体力がある程度回復した場合は戦いに戻る
             5.
             """
-            print(self.y+1,self.x)
             if mapchip[self.y-1][self.x] == "1": #上
                 self.enemyMove.append("ue")
+            else:
+                if "ue" in self.enemyMove:
+                    self.enemyMove.remove("ue")
             if mapchip[self.y+1][self.x] == "1": #下  
                 self.enemyMove.append("sita")
+            else:
+                if "sita" in self.enemyMove:
+                    self.enemyMove.remove("sita")
             if mapchip[self.y][self.x+1] == "1": #右
                 self.enemyMove.append("migi")
+            else:
+                if "migi" in self.enemyMove:
+                    self.enemyMove.remove("migi")
             if mapchip[self.y][self.x-1] == "1": #左
                 self.enemyMove.append("hidari")
+            else:
+                if "hidari" in self.enemyMove:
+                    self.enemyMove.remove("hidari")
 
             for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
                 #移動
@@ -208,16 +219,24 @@ class Character():
                     if "ue" in self.enemyMove:
                         self.y -= 1
                         self.energy -= 1
+                    print(self.name,self.energy)#-2になる。
                     #ターン攻撃
                     if "migi" in self.enemyFight:
                         self.hp -= character.hp
                         self.energy -= 1
+                        print(self.name,"は",character.name,"に攻撃した！")
                     if "hidari" in self.enemyFight:
+                        self.hp -= character.hp
                         self.energy -= 1
+                        print(self.name,"は",character.name,"に攻撃した！")
                     if "sita" in self.enemyFight:
+                        self.hp -= character.hp
                         self.energy -= 1
+                        print(self.name,"は",character.name,"に攻撃した！")
                     if "ue" in self.enemyFight:
+                        self.hp -= character.hp
                         self.energy -= 1
+                        print(self.name,"は",character.name,"に攻撃した！")
                 if self.energy <= 0:
                     Character.num += 1
                     self.energy = self.tenergy
@@ -512,10 +531,10 @@ def main():#-----------------------------------------------------------メイン
     tick = 700
     field = Field()
     player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,3,24,12,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
-    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,2,12,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,6,0,10)
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2,3,1,6,0,10)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font2,4,4,24,6,50)
+    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,12,12,60)
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2,3,1,24,0,60)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font2,4,4,30,6,80)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1,0,0,20)
     characters = [slime1,slime2,goutou,cat,player1,player2]
     #for i in range(len(characters)):
