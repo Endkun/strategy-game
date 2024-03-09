@@ -579,7 +579,7 @@ def main():#-----------------------------------------------------------メイン
         for character in characters:
             if Character.num == character.id:
                 #if character.team == "敵":
-                character.enemyUpdate(screen,field.mapchip,characters,font2)
+               character.enemyUpdate(screen,field.mapchip,characters,font2)
                 #if character.team == "味方":
                 character.playerUpdate(screen,field.mapchip,characters,font2)
             character.draw(screen)
