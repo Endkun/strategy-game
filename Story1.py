@@ -123,137 +123,161 @@ class Character():
                     self.x = 3
                 if self.animaionTick >= 650:
                     self.y = 9
-    def update(self,screen,mapchip,characters,font2):#移動ボタン用
+    def enemyMoveDetection(self,mapchip):
+        if mapchip[self.y-1][self.x] == "1": #上
+            self.enemyMove.append("ue")
+        else:
+            if "ue" in self.enemyMove:
+                self.enemyMove.remove("ue")
+        if mapchip[self.y+1][self.x] == "1": #下  
+            self.enemyMove.append("sita")
+        else:
+            if "sita" in self.enemyMove:
+                self.enemyMove.remove("sita")
+        if mapchip[self.y][self.x+1] == "1": #右
+            self.enemyMove.append("migi")
+        else:
+            if "migi" in self.enemyMove:
+                self.enemyMove.remove("migi")
+        if mapchip[self.y][self.x-1] == "1": #左
+            self.enemyMove.append("hidari")
+        else:
+            if "hidari" in self.enemyMove:
+                self.enemyMove.remove("hidari")
+    def enemyInfoDetection(self,mapchip,character):
+        if self.x == character.x and self.y-1 == character.y: #移上
+            if "ue" in self.enemyMove:
+                self.enemyMove.remove("ue")
+        if self.x == character.x and self.y+1 == character.y: #移下  
+            if "sita" in self.enemyMove:
+                self.enemyMove.remove("sita")
+        if self.x+1 == character.x and self.y == character.y: #移右
+            if "migi" in self.enemyMove:
+                self.enemyMove.remove("migi")
+        if self.x-1 == character.x and self.y == character.y: #移左
+            if "hidari" in self.enemyMove:
+                self.enemyMove.remove("hidari")
+        #攻
+        if self.x == character.x and self.y-1 == character.y: #攻上
+            self.enemyFight.append("ue")
+        if self.x == character.x and self.y+1 == character.y: #攻下
+            self.enemyFight.append("sita")
+        if self.x+1 == character.x and self.y == character.y: #攻右
+            self.enemyFight.append("migi")
+        if self.x-1 == character.x and self.y == character.y: #攻左
+            self.enemyFight.append("hidari")
+    def enemyEvent(self,character):
+        self.enemyFightCalculation(character)
+    def enemyFightCalculation(self,character):
+        if self.x == character.x and self.y-1 == character.y: #攻上
+            if self.hp+10 <= character.hp:
+                self.enemyFight.remove("ue")
+        if self.x == character.x and self.y+1 == character.y: #攻下
+            if self.hp+10 <= character.hp:
+                self.enemyFight.append("sita")
+        if self.x+1 == character.x and self.y == character.y: #攻右
+            if self.hp+10 <= character.hp:
+                self.enemyFight.append("migi")              
+        if self.x-1 == character.x and self.y == character.y: #攻左
+            if self.hp+10 <= character.hp:
+                self.enemyFight.append("hidari")        
+    def enemyUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         self.playerMove.clear()
         self.enemyMove.clear()
         self.enemyFight.clear()
-        if self.team == "敵":
-            """
-            0,0,0,0,0,0,0
-            0,0,0,1,0,0,0
-            0,0,1,P,1,0,0
-            0,0,0,1,0,0,0
-            0,0,0,0,0,0,0
-            0,0,0,0,0,0,0
-            0,0,0,0,0,0,0 :1が索敵範囲 Pがプレイヤー
+        """update
+        update敵
+        　敵の上下左右が壁じゃないか調べる
+        　　上下左右に壁がない限り動けるリストに挿入する
+        　ループ
+            敵の情報収集enemydetection
+        　　    索敵して情報を集める  流れ1.敵にとっての敵がいるかを探す,2.敵の数を確認する　　
+            敵と戦う時のイベントenemyEvent
+                敵の戦う時の計算enemyFightCalculation
+                    相手と自分の体力で有利か不利かを調べる
+                    有利なら攻撃             2.相手の体力が自分より低ければ戦う
+                    不利なら撤退            　相手の体力が〝 より高ければ逃げる
+                    enemydetectionで調べた2体以上いるか
+                    自分が無鉄砲かビビりか
+                ↑の判断で戦うor逃げる
+                (↓戦う場合)
+                相手に攻撃を仕掛ける
+                相手が逃げた場合、相手がいた方向へ進む
+                無鉄砲は体力25%以下でも攻撃を仕掛けてくる
+                (↓逃げる場合)
+                相手と戦わずに
+                energyを0にするまで奥へと逃げる
+                直前に薬草で体力を少し回復する
+            　　ビビりなら25%以下になったら奥へと逃げ、回復する
 
-            流れ　()は更新後にやる
-            1.敵にとっての敵がいるかを探す
-            2.相手の体力及び攻撃力orどっちかが低ければ戦う
-              相手の体力及び攻撃力orどっちかが高ければ撤退
-              2体以上居るとき、↑が低い敵と高い敵がいればランダムにする。
-              　↑最終的には相手の攻撃力、体力の合計を計算して戦うか逃げるかを判断させる。
-            3.自分の体力が低い場合、逃げる
-              (自分の体力が低くなくても3体以上いれば逃げる)
-              (相手のスキルが強い場合、発動前に逃げる)
-            4.自分の体力が低く、近くに敵がいない場合は回復する。
-              体力がある程度回復した場合は戦いに戻る
-            5.
-            """
-            if mapchip[self.y-1][self.x] == "1": #上
-                self.enemyMove.append("ue")
-            else:
-                if "ue" in self.enemyMove:
-                    self.enemyMove.remove("ue")
-            if mapchip[self.y+1][self.x] == "1": #下  
-                self.enemyMove.append("sita")
-            else:
-                if "sita" in self.enemyMove:
-                    self.enemyMove.remove("sita")
-            if mapchip[self.y][self.x+1] == "1": #右
-                self.enemyMove.append("migi")
-            else:
-                if "migi" in self.enemyMove:
-                    self.enemyMove.remove("migi")
-            if mapchip[self.y][self.x-1] == "1": #左
-                self.enemyMove.append("hidari")
-            else:
-                if "hidari" in self.enemyMove:
-                    self.enemyMove.remove("hidari")
-
-            for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
-                #移動
-                if "味方" in character.team:
-                    if self.x == character.x and self.y-1 == character.y: #移上
-                        if "ue" in self.enemyMove:
-                            self.enemyMove.remove("ue")
-                    if self.x == character.x and self.y+1 == character.y: #移下  
-                        if "sita" in self.enemyMove:
-                            self.enemyMove.remove("sita")
-                    if self.x+1 == character.x and self.y == character.y: #移右
-                        if "migi" in self.enemyMove:
-                            self.enemyMove.remove("migi")
-                    if self.x-1 == character.x and self.y == character.y: #移左
-                        if "hidari" in self.enemyMove:
-                            self.enemyMove.remove("hidari")
-                    #攻撃
-                    if self.x == character.x and self.y-1 == character.y: #攻上
-                        if character.hp < self.hp:                                   #発動条件：敵HP<自分のHPであり、
-                            if character.at < self.at or character.hp+30 < self.hp:  #敵の攻撃力<自分の攻撃力又は敵のHPが自分よりも30以上高いか
-                                self.enemyFight.append("ue")
-
-                    if self.x == character.x and self.y+1 == character.y: #攻下
-                        if character.hp < self.hp:
-                            if character.at < self.at or character.hp+30 < self.hp:
-                                self.enemyFight.append("sita")
-                    if self.x+1 == character.x and self.y == character.y: #攻右
-                        if character.hp < self.hp:
-                            if character.at < self.at or character.hp+30 < self.hp:
-                                self.enemyFight.append("migi")
-                    if self.x-1 == character.x and self.y == character.y: #攻左
-                        if character.hp < self.hp:
-                            if character.at < self.at or character.hp+30 < self.hp:
-                                self.enemyFight.append("hidari")
+        update味方
+        　　索敵
+            行動をリセット
+            　動くや攻撃などが次のターンまで続かないように、
+        　　　イベントをisnotpushed(未操作状態)にする
+                ステータスを"動く"にする
+                イベント
+                    (あらかじめcircleが
+                　　索敵して相手が上下左右にいないか調べる
+                　    範囲(●)を表示)
+            　  索敵で縮められた範囲で動く
+                　動いた(動いてない時も含む)時に範囲内に敵がいる場合●を押すと攻撃する
+        """
+        self.enemyMoveDetection(mapchip)
+        for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
+            if "味方" in character.team:
+                self.enemyInfoDetection(mapchip,character)#情報収集
+                self.enemyEvent(character)
+                
+                """if "migi" in self.enemyMove:
+                    self.x += 1
+                    self.energy -= 1
                     
-                    #ターン移動
-                    if "migi" in self.enemyMove:
-                        self.x += 1
-                        self.energy -= 1
-                    if "hidari" in self.enemyMove:
-                        self.x -= 1
-                        self.energy -= 1
-                    if "sita" in self.enemyMove:
-                        self.y += 1
-                        self.energy -= 1
-                    if "ue" in self.enemyMove:
-                        self.y -= 1
-                        self.energy -= 1
-                    print(self.name,self.energy)#-2になる。
-                    #ターン攻撃
-                    if "migi" in self.enemyFight:
-                        self.hp -= character.hp
-                        self.energy -= 1
-                        print(self.name,"は",character.name,"に攻撃した！")
-                    if "hidari" in self.enemyFight:
-                        self.hp -= character.hp
-                        self.energy -= 1
-                        print(self.name,"は",character.name,"に攻撃した！")
-                    if "sita" in self.enemyFight:
-                        self.hp -= character.hp
-                        self.energy -= 1
-                        print(self.name,"は",character.name,"に攻撃した！")
-                    if "ue" in self.enemyFight:
-                        self.hp -= character.hp
-                        self.energy -= 1
-                        print(self.name,"は",character.name,"に攻撃した！")
+                if "hidari" in self.enemyMove:
+                    self.x -= 1
+                    self.energy -= 1
+                if "sita" in self.enemyMove:
+                    self.y += 1
+                    self.energy -= 1
+                if "ue" in self.enemyMove:
+                    self.y -= 1
+                    self.energy -= 1
+                print(self.name,self.energy)#-2になる。
+                print(self.enemyMove)
+                #ターン攻撃
+                if "migi" in self.enemyFight:
+                    self.hp -= character.hp
+                    self.energy -= 1
+                    print(self.name,"は",character.name,"に攻撃した！")
+                if "hidari" in self.enemyFight:
+                    self.hp -= character.hp
+                    self.energy -= 1
+                    print(self.name,"は",character.name,"に攻撃した！")
+                if "sita" in self.enemyFight:
+                    self.hp -= character.hp
+                    self.energy -= 1
+                    print(self.name,"は",character.name,"に攻撃した！")
+                if "ue" in self.enemyFight:
+                    self.hp -= character.hp
+                    self.energy -= 1
+                    print(self.name,"は",character.name,"に攻撃した！")
                 if self.energy <= 0:
                     Character.num += 1
-                    self.energy = self.tenergy
-                    
-        elif self.team == "味方":
-            self.detection(screen,mapchip,characters)
-            if self.energy <= 0:
-                Character.num += 1
-                self.energy = self.tenergy
-                self.buttonEvent = "isnotpushed"
+                    self.energy = self.tenergy"""
+    def playerUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
+        self.detection(screen,mapchip,characters)
+        if self.energy <= 0:
+            Character.num += 1
+            self.energy = self.tenergy
+            self.buttonEvent = "isnotpushed"
 
-            #-----------------------------------------------------------------------------------------ボタン・フラグ管理
-            if self.buttonStatus != "MoveLighton":#上下左右のどれかに動ける
-                if self.buttonStatus != "FightDown":#戦える
-                    self.buttonEvent = "isnotpushed"
-            self.buttonStatus = "MoveLighton"    
-            self.event(screen)
+        #-----------------------------------------------------------------------------------------ボタン・フラグ管理
+        if self.buttonStatus != "MoveLighton":#上下左右のどれかに動ける
+            if self.buttonStatus != "FightDown":#戦える
+                self.buttonEvent = "isnotpushed"
+        self.buttonStatus = "MoveLighton"    
+        self.event(screen)
             #-----------------------------------------------------------------------------------------イベント処理
     def event(self,screen):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -554,7 +578,10 @@ def main():#-----------------------------------------------------------メイン
         #---------プレイヤー-------------------
         for character in characters:
             if Character.num == character.id:
-                character.update(screen,field.mapchip,characters,font2)
+                #if character.team == "敵":
+                character.enemyUpdate(screen,field.mapchip,characters,font2)
+                #if character.team == "味方":
+                character.playerUpdate(screen,field.mapchip,characters,font2)
             character.draw(screen)
         for character2 in characters:
             if Character.num == character2.id:
@@ -563,5 +590,5 @@ def main():#-----------------------------------------------------------メイン
             
         #---------描画---------  
         pygame.display.update()         
-        ck.tick(30) #1秒間で30フレームになるように33msecのwait   
+        ck.tick(33) #1秒間で30フレームになるように33msecのwait   
 main()
