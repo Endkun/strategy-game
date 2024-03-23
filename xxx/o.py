@@ -10,19 +10,7 @@
                 　    範囲(●)を表示)
             　  索敵で縮められた範囲で動く
                 　動いた(動いてない時も含む)時に範囲内に敵がいる場合●を押すと攻撃する
-                if "migi" in self.enemyMove:
-                    self.x += 1
-                    self.energy -= 1
-                    
-                if "hidari" in self.enemyMove:
-                    self.x -= 1
-                    self.energy -= 1
-                if "sita" in self.enemyMove:
-                    self.y += 1
-                    self.energy -= 1
-                if "ue" in self.enemyMove:
-                    self.y -= 1
-                    self.energy -= 1
+
                 print(self.name,self.energy)#-2になる。
                 print(self.enemyMove)
                 #ターン攻撃
