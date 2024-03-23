@@ -83,8 +83,10 @@ class Character():
         #------------------------リセットキー                    
         self.fightFalses = False
         #------------------------索敵
-        self.characterlists = {}
-        self.wall = []
+        self.characterlists = {} 
+        """上下左右に敵がいたらキャラクターリストにキャラクターの情報入れる
+        　　　　　　　　　　　　　  例:{'左': ['敵', 'Gorotsuki'], '下': ['味方', 'Mikata1']}"""   
+        self.wall = []           
     def firstAnimation(self,screen,tick):#-----------------------------------------------------------最初のアニメーション
         self.animaionTick = tick
         if self.characterType == "Slime":   
@@ -105,7 +107,7 @@ class Character():
                 if self.animaionTick >= 500:
                     self.x = 1
         if self.characterType == "Goutou":
-            if self.name == "Yakuza Sumiyoshi":
+            if self.name == "Gorotsuki":
                 if self.animaionTick >= 400:
                     self.x = 2
                     self.y = 2
@@ -205,40 +207,11 @@ class Character():
         self.findMove.clear()
         self.findFight.clear()
         self.energy = self.tenergy
-        """update
-        update敵
-        　敵の上下左右が壁じゃないか調べる
-        　　上下左右に壁がない限り動けるリストに挿入する
-        　ループ
-            敵の情報収集enemydetection
-        　　    索敵して情報を集める  流れ1.敵にとっての敵がいるかを探す,2.敵の数を確認する　　
-            敵と戦う時のイベントenemyEvent
-                敵の戦う時の計算enemyFightCalculation
-                    相手と自分の体力で有利か不利かを調べる
-                    有利なら攻撃             2.相手の体力が自分より低ければ戦う
-                    不利なら撤退            　相手の体力が〝 より高ければ逃げる
-                    enemydetectionで調べた2体以上いるか
-                    自分が無鉄砲かビビりか
-                ↑の判断で戦うor逃げる
-                (↓戦う場合)
-                相手に攻撃を仕掛ける
-                相手が逃げた場合、相手がいた方向へ進む
-                無鉄砲は体力25%以下でも攻撃を仕掛けてくる
-                (↓逃げる場合)
-                相手と戦わずに
-                energyを0にするまで奥へと逃げる
-                直前に薬草で体力を少し回復する
-            　　ビビりなら25%以下になったら奥へと逃げ、回復する
-        """
         self.enemyMoveDetection(mapchip)
-        print(self.findMove)
         for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
             if character.team == "味方":
-                #print(f"{character.name=} {self.name=} {character.x=} {self.x=} {character.y=} {self.y-1=}")
                 self.enemyEvent(character)
             self.enemyInfoDetection(mapchip,character)#情報収集
-            #if character.team == "敵":
-            #    print(f"{character.name=} {character.x=} {character.y=} {self.name=} {self.x=} {self.y=}")
             
         if self.findFight == []:
             self.randomc = random.randint(0,4)
@@ -263,13 +236,13 @@ class Character():
                     if character.x == self.x and character.y == self.y:
                         print(f"{character.name=} {character.x=} {character.y=} {self.name=} {self.x=} {self.y=}")
                         import pdb;pdb.set_trace()
-            #print(self.name,self.energy)
             if self.energy <= 0:
                 Character.num += 1
         else:
             Character.num += 1
                 
     def playerUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
+        #print(f"@275{self.name=} {self.characterlists=}") 
         self.detection(screen,mapchip,characters)
         if self.energy <= 0:
             Character.num += 1
@@ -291,9 +264,7 @@ class Character():
                 if "sita" in self.findMove:
                     if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
                         self.y += 1 
-                        #print("MOVE") 
                         self.energy -= 1
-                #print(self.y*100+100,y,self.y*100)
                 if "hidari" in self.findMove:
                     if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
                         self.x -= 1
@@ -304,7 +275,6 @@ class Character():
                         self.energy -= 1     
                 if self.isFight == True:
                     x,y = event.pos
-                    #print("hannou")
                     if "ue" in self.findFight:
                         if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
                             self.fight()
@@ -363,9 +333,7 @@ class Character():
                     self.characterlists["左"] = ["味方",character.name]
                 else:
                     self.characterlists["左"] = ["敵",character.name]
-        #print(self.characterlists)
         #------------------------------------------------------------------壁検知
-        #print(self.characterlists)
         if mapchip[self.y-1][self.x] != "1": #上
             self.wall.append("上")
         if mapchip[self.y+1][self.x] != "1": #上
@@ -374,25 +342,7 @@ class Character():
             self.wall.append("右")
         if mapchip[self.y][self.x-1] != "1": #上
             self.wall.append("左")
-        #print("キャラクター",self.characterlists)
-        #print("壁",self.wall)
-        #-------------------黄色い丸を書く
         #--------------------------------------------------------------------------------------動き判定
-        #if mapchip[self.y-1][self.x] == "1": #上
-        #    #print("上" in self.characterlists.keys())
-        #    if "上" in self.characterlists.keys():#上に何もなければ黄色い丸を表示
-        #        self.cget = self.characterlists.get("上", [])  # キーが存在しない場合は空リストを返す
-        #        #print(self.cget)   
-        #        if self.cget[0] == "敵":
-        #            pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-        #        elif self.cget[0] == "味方":
-        #            pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y-0.5)*100),10)
-        #        self.isFight = True
-        #        self.findFight.append("ue")
-        #    else:
-        #            pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-
-        #------------------------------------------------------------------------------------------禁止用
         if mapchip[self.y-1][self.x] == "1": #上
             self.findMove.append("ue")
         #else:
@@ -426,77 +376,59 @@ class Character():
     def fight(self):
         print(self.name,"は","に攻撃をした！")
         return
-    """def fightupdate(self,screen,font2,characters):
-        for character in characters:
-            if self.x == enemy.x and self.y-1 == enemy.y or self.x == enemy.x and self.y+1 == enemy.y or self.x+1 == enemy.x and self.y == enemy.y or self.x-1 == enemy.x and self.y == enemy.y:
-                self.isFight = True
-            else:
-                self.isFight = False"""
     def place(self):#----------------------------------------------------------------アクション
         if self.characterType == "Goutou":
-            if self.name == "Yakuza Sumiyoshi":
+            if self.name == "Gorotsuki":
                 self.y = 3
     def circle(self,screen,mapchip):
         self.findMove.clear()
         self.findFight.clear()
-        #print(self.y-1,self.x)
         if mapchip[self.y-1][self.x] == "1": #上
-            #print("上" in self.characterlists.keys())
             if "上" in self.characterlists.keys():#上に何もなければ黄色い丸を表示
-                self.cget = self.characterlists.get("上", [])  # キーが存在しない場合は空リストを返す
-                #print("ue",self.cget)   
-                if self.cget[0] == "敵":
+                cget = self.characterlists.get("上", [])  # キーが存在しない場合は空リストを返す  
+                if cget[0] == "敵":
                     pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
                     self.isFight = True
                     self.findFight.append("ue")
-                elif self.cget[0] == "味方":
+                elif cget[0] == "味方":
                     pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y-0.5)*100),10)
             else:
-                    pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
+                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
+        if mapchip[self.y+1][self.x] == "1": #下
+            if "下" in self.characterlists.keys():#下に何もなければ黄色い丸を表示
+                cget = self.characterlists.get("下", [])  # キーが存在しない場合は空リストを返す
+                if cget[0] == "敵":
+                    pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+                    self.isFight = True
+                    self.findFight.append("sita")
+                elif cget[0] == "味方":
+                    pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y+1.5)*100),10)
+            else:
+                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
 
-            if mapchip[self.y-1][self.x] == "1": #下
-                #print("下" in self.characterlists.keys())
-                if "下" in self.characterlists.keys():#下に何もなければ黄色い丸を表示
-                    self.cget = self.characterlists.get("下", [])  # キーが存在しない場合は空リストを返す
-                    #print("sita",self.cget)   
-                    if self.cget[0] == "敵":
-                        pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
-                        self.isFight = True
-                        self.findFight.append("sita")
-                    elif self.cget[0] == "味方":
-                        pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y+1.5)*100),10)
-                else:
-                    pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+        if mapchip[self.y][self.x-1] == "1": #左
+            if "左" in self.characterlists.keys():#左に何もなければ黄色い丸を表示
+                cget = self.characterlists.get("左", [])  # キーが存在しない場合は空リストを返す  
+                if cget[0] == "敵":
+                    pygame.draw.circle(screen,(250,0,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
+                    self.isFight = True
+                    self.findFight.append("hidari")
+                elif cget[0] == "味方":
+                    pygame.draw.circle(screen,(0,0,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
+            else:
+                pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
 
-            if mapchip[self.y][self.x-1] == "1": #左
-                #print("左" in self.characterlists.keys())
-                if "左" in self.characterlists.keys():#左に何もなければ黄色い丸を表示
-                    self.cget = self.characterlists.get("左", [])  # キーが存在しない場合は空リストを返す
-                    #print("migi",self.cget)   
-                    if self.cget[0] == "敵":
-                        pygame.draw.circle(screen,(250,0,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-                        self.isFight = True
-                        self.findFight.append("hidari")
-                    elif self.cget[0] == "味方":
-                        pygame.draw.circle(screen,(0,0,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
-                else:
-                    pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-
-            if mapchip[self.y][self.x+1] == "1": #右
-                #print("右" in self.characterlists.keys())
-                if "右" in self.characterlists.keys():#右に何もなければ黄色い丸を表示
-                    self.cget = self.characterlists.get("右", [])  # キーが存在しない場合は空リストを返す
-                    #print("hidari",self.cget)   
-                    if self.cget[0] == "敵":
-                        pygame.draw.circle(screen,(250,0,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-                        self.isFight = True
-                        self.findFight.append("migi")
-                    elif self.cget[0] == "味方":
-                        pygame.draw.circle(screen,(0,0,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
-                else:
-                    pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-
-
+        if mapchip[self.y][self.x+1] == "1": #右
+            if "右" in self.characterlists.keys():#右に何もなければ黄色い丸を表示
+                cget = self.characterlists.get("右", [])  # キーが存在しない場合は空リストを返す
+                if cget[0] == "敵":
+                    pygame.draw.circle(screen,(250,0,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
+                    self.isFight = True
+                    self.findFight.append("migi")
+                elif cget[0] == "味方":
+                    pygame.draw.circle(screen,(0,0,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
+            else:
+                pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
         
     def draw(self,screen):#-----------------------------------------------------------描画
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
@@ -529,7 +461,7 @@ def main():#-----------------------------------------------------------メイン
     pygame.init()        
     font = pygame.font.SysFont("yumincho", 30)       
     font2 = pygame.font.SysFont("yumincho", 60)                       
-    screen = pygame.display.set_mode((500, 900))  # 800
+    screen = pygame.display.set_mode((500, 800))  # 800
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
     Cat = pygame.image.load("img/cat.png").convert_alpha()       #プレイヤー
@@ -542,11 +474,9 @@ def main():#-----------------------------------------------------------メイン
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
     slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,12,12,60)
     slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2,3,1,24,0,60)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Yakuza Sumiyoshi",font2,4,4,30,6,80)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",font2,4,4,30,6,80)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1,0,0,20)
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
-    #for i in range(len(characters)):
-        #print(characters[i].Name,":",characters[i].id)
 
     ck = pygame.time.Clock()
     animation(tick,characters,field.mapchip,screen,font,ck,field)                     
@@ -554,9 +484,6 @@ def main():#-----------------------------------------------------------メイン
         tick += 1
         screen.fill((0,0,255))
         field.draw(screen)
-        #if tick%300 == 1:
-        #    Character.num += 1
-        #    print(Character.num)
         if Character.num >= len(characters):
             Character.num = 0
         #---------プレイヤー-------------------
