@@ -126,7 +126,7 @@ class Character():
                 if self.animaionTick >= 650:
                     self.y = 9
     def enemyMoveDetection(self,mapchip):
-        print(f"{self.y-1=}")
+        #print(f"{self.y-1=}")
         if mapchip[self.y-1][self.x] == "1": #上
             self.findMove.append("ue")
         else:
@@ -160,15 +160,6 @@ class Character():
         if self.x-1 == character.x and self.y == character.y: #移左
             if "hidari" in self.findMove:
                 self.findMove.remove("hidari")
-        #攻
-        if self.x == character.x and self.y-1 == character.y: #攻上
-            self.findFight.append("ue")
-        if self.x == character.x and self.y+1 == character.y: #攻下
-            self.findFight.append("sita")
-        if self.x+1 == character.x and self.y == character.y: #攻右
-            self.findFight.append("migi")
-        if self.x-1 == character.x and self.y == character.y: #攻左
-            self.findFight.append("hidari")
 
     def enemyEvent(self,character):
         self.enemyFightCalculation(character)
@@ -178,38 +169,47 @@ class Character():
             if self.hp >= 25:
                 if self.hp+10 >= character.hp:
                     self.findFight.append("ue")
-        else:
-            if "ue" in self.findFight:
-                self.findFight.remove("ue")
+                    self.findFight.append(character.name)
+        #else:
+        #    if "ue" in self.findFight:
+        #        self.findFight.remove("ue")
+        #        self.findFight.remove(character.name)
 
         if self.x == character.x and self.y+1 == character.y: #攻下
             if self.hp >= 25:
                 if self.hp+10 >= character.hp:
                     self.findFight.append("sita")
-        else:
-            if "sita" in self.findFight:
-                self.findFight.remove("sita")
+                    self.findFight.append(character.name)
+        #else:
+        #    if "sita" in self.findFight:
+        #        self.findFight.remove("sita")
+        #        self.findFight.remove(character.name)
 
         if self.x+1 == character.x and self.y == character.y: #攻右
             if self.hp >= 25:
                 if self.hp+10 >= character.hp:
                     self.findFight.append("migi")
-        else:
-            if "migi" in self.findFight:
-                self.findFight.remove("migi") 
+                    self.findFight.append(character.name)
+        #else:
+        #    if "migi" in self.findFight:
+        #        self.findFight.remove("migi") 
+        #        self.findFight.remove(character.name)
 
         if self.x-1 == character.x and self.y == character.y: #攻左
             if self.hp >= 25:
                 if self.hp+10 >= character.hp:
                     self.findFight.append("hidari")
-        else:
-            if "hidari" in self.findFight:
-                self.findFight.remove("hidari")
+                    self.findFight.append(character.name)
+        #else:
+        #    if "hidari" in self.findFight:
+        #        self.findFight.remove("hidari")
+        #        self.findFight.remove(character.name)
+        print(self.findFight)
     def enemyUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         self.findMove.clear()
         self.findFight.clear()
-        print(self.name,"A",self.x,self.y)
+        #print(self.name,"A",self.x,self.y)
         if self.hp <= 0:
             self.x = -10
             self.y = -10
@@ -222,9 +222,8 @@ class Character():
             self.enemyInfoDetection(mapchip,character)#情報収集
             """findMoveは配列,データにmigi,hidari,sita,ueの４つが入る
                例えば['sita', 'hidari']等"""
+        #print(self.findFight)
         if self.findFight == []:
-            if self.name == "Gorotsuki":
-                print(self.energy)
             self.randomc = random.randint(0,4)
             if self.randomc == 1:
                 if "migi" in self.findMove:
@@ -243,7 +242,11 @@ class Character():
                 Character.num += 1
                 self.energy = self.tenergy
         else:
-            print("攻撃")
+            print(self.name,"が",self.findFight[1],"に攻撃")
+            for character in characters:
+                if character.name == self.findFight[1]:
+                    character.hp -= self.at
+            #print(self.addName,"に攻撃")
             Character.num += 1
             
                 
@@ -393,7 +396,7 @@ class Character():
         for character in characters:
             if character.name == self.opponent[0]:
                 print(self.opponent,"の前hpは",character.hp)
-                character.hp -= 30
+                character.hp -= self.at
                 print(self.opponent,"のhpは",character.hp,"になった")
                 if character.hp <= 0:
                     character.x = -10
