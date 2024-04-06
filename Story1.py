@@ -67,7 +67,9 @@ class Character():
         self.findMove = []#"ue" = 上へ行ける "sita" = 下にいける "migi" = "右にいける" "hidari" = "左に行ける"
         #----------------------戦えるか
         self.findFight = []#fighton + isfight
-        #----------------------敵の場合にけるか
+        #----------------------対戦相手
+        self.opponent = []
+        
         #-----------------------------------------------判別・処理
 
         
@@ -98,7 +100,7 @@ class Character():
                     self.y = 3
                 if self.animaionTick >= 400:
                     self.x = 3
-            if self.name == "GreenSlime":
+            if self.name == "YellowSlime":
                 if self.animaionTick >= 200:
                     self.x = 2
                     self.y = 2
@@ -124,6 +126,7 @@ class Character():
                 if self.animaionTick >= 650:
                     self.y = 9
     def enemyMoveDetection(self,mapchip):
+        print(f"{self.y-1=}")
         if mapchip[self.y-1][self.x] == "1": #上
             self.findMove.append("ue")
         else:
@@ -206,40 +209,43 @@ class Character():
     #----------------------------------------------------------------------------------------------------------移動アクション
         self.findMove.clear()
         self.findFight.clear()
-        self.energy = self.tenergy
-        self.enemyMoveDetection(mapchip)
+        print(self.name,"A",self.x,self.y)
+        if self.hp <= 0:
+            self.x = -10
+            self.y = -10
+            #Character.num += 1
+        if self.hp > 1:
+            self.enemyMoveDetection(mapchip)
         for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
             if character.team == "味方":
                 self.enemyEvent(character)
             self.enemyInfoDetection(mapchip,character)#情報収集
-            
+            """findMoveは配列,データにmigi,hidari,sita,ueの４つが入る
+               例えば['sita', 'hidari']等"""
         if self.findFight == []:
+            if self.name == "Gorotsuki":
+                print(self.energy)
             self.randomc = random.randint(0,4)
             if self.randomc == 1:
                 if "migi" in self.findMove:
-                    self.x += 1
-                    self.energy -= 1         
+                    self.x += 1       
             if self.randomc == 2:       
                 if "hidari" in self.findMove:
                     self.x -= 1
-                    self.energy -= 1
             if self.randomc == 3:       
                 if "sita" in self.findMove:
                     self.y += 1
-                    self.energy -= 1
             if self.randomc == 4:
                 if "ue" in self.findMove:
                     self.y -= 1
-                    self.energy -= 1
-            for character in characters:
-                if character.id != self.id:
-                    if character.x == self.x and character.y == self.y:
-                        print(f"{character.name=} {character.x=} {character.y=} {self.name=} {self.x=} {self.y=}")
-                        import pdb;pdb.set_trace()
-            if self.energy <= 0:
+            self.energy -= 1
+            if self.energy <= 1:
                 Character.num += 1
+                self.energy = self.tenergy
         else:
+            print("攻撃")
             Character.num += 1
+            
                 
     def playerUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
         #print(f"@275{self.name=} {self.characterlists=}") 
@@ -248,9 +254,9 @@ class Character():
             Character.num += 1
             self.energy = self.tenergy
 
-        self.event(screen)
+        self.event(screen,characters)
             #-----------------------------------------------------------------------------------------イベント処理
-    def event(self,screen):
+    def event(self,screen,characters):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -275,24 +281,33 @@ class Character():
                         self.energy -= 1     
                 if self.isFight == True:
                     x,y = event.pos
+                    self.opponent.clear()
                     if "ue" in self.findFight:
                         if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
-                            self.fight()
+                            sc = self.characterlists['上']
+                            self.opponent.append(sc[1])
+                            self.fight(characters)
                             self.energy -= 1
                             self.fightFalses = True
                     if "sita" in self.findFight:
                         if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
-                            self.fight()
+                            sc = self.characterlists['下']
+                            self.opponent.append(sc[1])
+                            self.fight(characters)
                             self.energy -= 1
                             self.fightFalses = True
                     if "hidari" in self.findFight:
                         if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
-                            self.fight()
+                            sc = self.characterlists['左']
+                            self.opponent.append(sc[1])
+                            self.fight(characters)
                             self.energy -= 1
                             self.fightFalses = True
                     if  "migi" in self.findFight:
                         if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
-                            self.fight()
+                            sc = self.characterlists['右']
+                            self.opponent.append(sc[1])
+                            self.fight(characters)
                             self.energy -= 1
                             self.fightFalses = True
                     if self.fightFalses == True:
@@ -373,8 +388,17 @@ class Character():
                 if "hidari" in self.findMove:
                     self.findMove.remove("hidari")
 
-    def fight(self):
-        print(self.name,"は","に攻撃をした！")
+    def fight(self,characters):
+        print(self.name,"は",self.opponent,"に攻撃をした！")
+        for character in characters:
+            if character.name == self.opponent[0]:
+                print(self.opponent,"の前hpは",character.hp)
+                character.hp -= 30
+                print(self.opponent,"のhpは",character.hp,"になった")
+                if character.hp <= 0:
+                    character.x = -10
+                    character.y = -10
+
         return
     def place(self):#----------------------------------------------------------------アクション
         if self.characterType == "Goutou":
@@ -401,6 +425,7 @@ class Character():
                     pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
                     self.isFight = True
                     self.findFight.append("sita")
+                    
                 elif cget[0] == "味方":
                     pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y+1.5)*100),10)
             else:
@@ -430,10 +455,13 @@ class Character():
             else:
                 pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
         
-    def draw(self,screen):#-----------------------------------------------------------描画
+    def draw(self,screen,font):#-----------------------------------------------------------描画
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
+        hpFont = font.render(str(self.hp), True, (255,255,255)) # 描画する文字列を画像にする
+        screen.blit(hpFont, [self.x*100+10,self.y*100+2])
 
-def animation(tick,characters,mapchip,screen,font,ck,field):
+
+def animation(tick,characters,mapchip,screen,font,ck,field,font3):
     pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
     pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
     pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
@@ -454,13 +482,14 @@ def animation(tick,characters,mapchip,screen,font,ck,field):
         #---------アニメーション---------
         for character in characters:
             character.firstAnimation(screen,tick)
-            character.draw(screen)
+            character.draw(screen,font3)
         pygame.display.update()
         ck.tick(160) #1秒間で30フレームになるように33msecのwait      
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
     font = pygame.font.SysFont("yumincho", 30)       
-    font2 = pygame.font.SysFont("yumincho", 60)                       
+    font2 = pygame.font.SysFont("yumincho", 60) 
+    font3 = pygame.font.SysFont("yumincho", 15)                        
     screen = pygame.display.set_mode((500, 800))  # 800
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
@@ -473,13 +502,13 @@ def main():#-----------------------------------------------------------メイン
     player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,3,24,12,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
     slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,12,12,60)
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","GreenSlime",font2,3,1,24,0,60)
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",font2,3,1,24,0,60)
     goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",font2,4,4,30,6,80)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1,0,0,20)
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
 
     ck = pygame.time.Clock()
-    animation(tick,characters,field.mapchip,screen,font,ck,field)                     
+    animation(tick,characters,field.mapchip,screen,font,ck,field,font3)                     
     while True:
         tick += 1
         screen.fill((0,0,255))
@@ -493,7 +522,7 @@ def main():#-----------------------------------------------------------メイン
                     character.enemyUpdate(screen,field.mapchip,characters,font2)
                 if character.team == "味方":
                     character.playerUpdate(screen,field.mapchip,characters,font2)
-            character.draw(screen)
+            character.draw(screen,font3)
         for character2 in characters:
             if Character.num == character2.id:
                 if character2.team == "味方":
