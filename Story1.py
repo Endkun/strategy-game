@@ -252,6 +252,11 @@ class Character():
                 
     def playerUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
         #print(f"@275{self.name=} {self.characterlists=}") 
+        if self.hp <= 0:
+            Character.num += 1
+            self.x = -10
+            self.y = -10
+            return
         self.detection(screen,mapchip,characters)
         if self.energy <= 0:
             Character.num += 1
