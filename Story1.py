@@ -45,9 +45,12 @@ class Character():
         #------------------キャラクターの基本変数
         self.x = x
         self.y = y
-        self.at = at
-        self.df = df
-        self.hp = hp
+        self.at = at#アタックポイント
+        self.tat = at#保存用1
+        self.df = df#ディフェンスポイント
+        self.tdf = df#保存用2
+        self.hp = hp#ヘルス
+        self.thp = hp#保存用3
         #---------------------キャラクターのタイプ変数
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム
@@ -55,7 +58,7 @@ class Character():
         self.characterType = characterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
         #--------------------キャラクターエネルギー
         self.energy = energy
-        self.tenergy = energy#保存
+        self.tenergy = energy#保存用エナジー
         #----------------------------------------------設定
         #--------------------フォント
         self.font2 = font2
@@ -160,10 +163,22 @@ class Character():
         if self.x-1 == character.x and self.y == character.y: #移左
             if "hidari" in self.findMove:
                 self.findMove.remove("hidari")
+        if (self.x - 1 == character.x and self.y == character.y and \
+            self.x + 1 == character.x and self.y == character.y) or \
+           (self.x == character.x and self.y + 1 == character.y and \
+            self.x == character.x and self.y - 1 == character.y):
+            self.at-random.randint(10,15)
+            self.df-random.randint(0,5)
+            print(f"{self.at=} {self.tat=}")
+        else:
+            self.at = self.tat
+            self.df = self.tdf
 
     def enemyEvent(self,character):
-        self.enemyFightCalculation(character)
-
+        self.enemyFightCalculation(character) 
+        if self.hp < self.thp/3:
+            print(self.name,"は薬草を使った！")
+            self.hp += random.randint(0,20)  
     def enemyFightCalculation(self,character):
         if self.x == character.x and self.y-1 == character.y: #攻上
             if self.hp >= 25:
@@ -204,7 +219,7 @@ class Character():
         #    if "hidari" in self.findFight:
         #        self.findFight.remove("hidari")
         #        self.findFight.remove(character.name)
-        print(self.findFight)
+        #print(self.findFight)
     def enemyUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         self.findMove.clear()
@@ -213,7 +228,8 @@ class Character():
         if self.hp <= 0:
             self.x = -10
             self.y = -10
-            #Character.num += 1
+            Character.num += 1
+            return
         if self.hp > 1:
             self.enemyMoveDetection(mapchip)
         for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
@@ -227,10 +243,10 @@ class Character():
             self.randomc = random.randint(0,4)
             if self.randomc == 1:
                 if "migi" in self.findMove:
-                    self.x += 1       
+                    self.x += 1   
             if self.randomc == 2:       
                 if "hidari" in self.findMove:
-                    self.x -= 1
+                    self.x -= 1  
             if self.randomc == 3:       
                 if "sita" in self.findMove:
                     self.y += 1
@@ -245,7 +261,7 @@ class Character():
             print(self.name,"が",self.findFight[1],"に攻撃")
             for character in characters:
                 if character.name == self.findFight[1]:
-                    character.hp -= self.at
+                    character.hp -= self.at-self.df
             #print(self.addName,"に攻撃")
             Character.num += 1
             
@@ -401,7 +417,7 @@ class Character():
         for character in characters:
             if character.name == self.opponent[0]:
                 print(self.opponent,"の前hpは",character.hp)
-                character.hp -= self.at
+                character.hp -= self.at-self.df
                 print(self.opponent,"のhpは",character.hp,"になった")
                 if character.hp <= 0:
                     character.x = -10
@@ -468,6 +484,42 @@ class Character():
         hpFont = font.render(str(self.hp), True, (255,255,255)) # 描画する文字列を画像にする
         screen.blit(hpFont, [self.x*100+10,self.y*100+2])
 
+class Judge():
+    def __init__(self,characters):
+        self.dummys = []
+        self.cm = 0
+        self.ct = 0
+        for i in characters:
+            self.dummys.append(i.name)
+            if i.team == "味方":
+                self.cm += 1
+            if i.team == "敵":
+                self.ct += 1
+        print(f"{self.cm=} {self.ct=}")
+        
+        self.winner = []
+    def hantei(self,characters):
+        dmikata = 0
+        dteki = 0
+        for character in characters:
+            if character.hp <= 0:
+                if character.team == "味方":
+                    dmikata += 1
+                if character.team == "敵":
+                    dteki += 1
+        if dmikata == self.cm:
+            print("負け")
+            print(f"{characters[3].hp=} {characters[3].name}")
+            print(f"{characters[4].hp=} {characters[4].name}")
+            import pdb; pdb.set_trace()
+        if dteki == self.ct:
+            print("勝ち")
+            import pdb; pdb.set_trace()
+            
+
+        #print(f"{self.dmikata} {self.dteki}")
+        #print(self.dummys)
+
 
 def animation(tick,characters,mapchip,screen,font,ck,field,font3):
     pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
@@ -494,27 +546,39 @@ def animation(tick,characters,mapchip,screen,font,ck,field,font3):
         pygame.display.update()
         ck.tick(160) #1秒間で30フレームになるように33msecのwait      
 def main():#-----------------------------------------------------------メイン
+    #初期化
     pygame.init()        
+    #フォント   
     font = pygame.font.SysFont("yumincho", 30)       
     font2 = pygame.font.SysFont("yumincho", 60) 
     font3 = pygame.font.SysFont("yumincho", 15)                        
+    #-
     screen = pygame.display.set_mode((500, 800))  # 800
+    #キャラクターの画像(image)
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
     Cat = pygame.image.load("img/cat.png").convert_alpha()       #プレイヤー
     Sl1 = pygame.image.load("img/Slime1.png").convert_alpha()       #雑魚スライム
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
-    tick = 700
+    #tick
+    tick = 0
+    #フィールド読み込み
     field = Field()
+    #キャラクターインスタンス化
     player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,3,24,12,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
     slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,12,12,60)
     slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",font2,3,1,24,0,60)
     goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",font2,4,4,30,6,80)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1,0,0,20)
+    #キャラクター
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
-
+    judge = Judge(characters)   
+    #敵味方の数
+    valMikata = 2
+    valTeki = 3
+    #死亡カウント
     ck = pygame.time.Clock()
     animation(tick,characters,field.mapchip,screen,font,ck,field,font3)                     
     while True:
@@ -535,7 +599,7 @@ def main():#-----------------------------------------------------------メイン
             if Character.num == character2.id:
                 if character2.team == "味方":
                     character2.circle(screen,field.mapchip)
-            
+        judge.hantei(characters)
         #---------描画---------  
         pygame.display.update()         
         ck.tick(33) #1秒間で30フレームになるように33msecのwait   
