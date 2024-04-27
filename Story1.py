@@ -38,7 +38,7 @@ class Field():
                     screen.blit(self.door2,Rect(self.tx+i*100,self.ty+j*100,50,50))
 class Character():
     num = 0#クラス変数
-    def __init__(self,x,y,characterType,image,team,name,font2,id,energy,at,df,hp):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,characterType,image,team,name,fonts,id,energy,at,df,hp):#-----------------------------------------------------------初期化
         #-------------------------------キャラクター
         #------------------キャラクターID
         self.id = id#id番号 
@@ -61,7 +61,7 @@ class Character():
         self.tenergy = energy#保存用エナジー
         #----------------------------------------------設定
         #--------------------フォント
-        self.font2 = font2
+        self.fonts = fonts
         #---------------------ティック秒
         self.tick = 0#全体のティック
         self.animationTick = 0#アニメーションのティック
@@ -163,13 +163,13 @@ class Character():
         if self.x-1 == character.x and self.y == character.y: #移左
             if "hidari" in self.findMove:
                 self.findMove.remove("hidari")
+        print(f"{character.x=} {character.y=}")
         if (self.x - 1 == character.x and self.y == character.y and \
             self.x + 1 == character.x and self.y == character.y) or \
            (self.x == character.x and self.y + 1 == character.y and \
             self.x == character.x and self.y - 1 == character.y):
-            self.at-random.randint(10,15)
-            self.df-random.randint(0,5)
-            print(f"{self.at=} {self.tat=}")
+            self.at=0
+            self.df-random.randint(0,10)
         else:
             self.at = self.tat
             self.df = self.tdf
@@ -220,7 +220,7 @@ class Character():
         #        self.findFight.remove("hidari")
         #        self.findFight.remove(character.name)
         #print(self.findFight)
-    def enemyUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
+    def enemyUpdate(self,screen,mapchip,characters,fonts):#移動ボタン用
     #----------------------------------------------------------------------------------------------------------移動アクション
         self.findMove.clear()
         self.findFight.clear()
@@ -266,7 +266,7 @@ class Character():
             Character.num += 1
             
                 
-    def playerUpdate(self,screen,mapchip,characters,font2):#移動ボタン用
+    def playerUpdate(self,screen,mapchip,characters,fonts):#移動ボタン用
         #print(f"@275{self.name=} {self.characterlists=}") 
         if self.hp <= 0:
             Character.num += 1
@@ -479,9 +479,9 @@ class Character():
             else:
                 pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
         
-    def draw(self,screen,font):#-----------------------------------------------------------描画
+    def draw(self,screen,fonts):#-----------------------------------------------------------描画
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
-        hpFont = font.render(str(self.hp), True, (255,255,255)) # 描画する文字列を画像にする
+        hpFont = fonts[2].render(str(self.hp), True, (255,255,255)) # 描画する文字列を画像にする
         screen.blit(hpFont, [self.x*100+10,self.y*100+2])
 
 class Judge():
@@ -521,7 +521,7 @@ class Judge():
         #print(self.dummys)
 
 
-def animation(tick,characters,mapchip,screen,font,ck,field,font3):
+def animation(tick,characters,mapchip,screen,fonts,ck,field):
     pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
     pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
     pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
@@ -531,18 +531,18 @@ def animation(tick,characters,mapchip,screen,font,ck,field,font3):
         tick += 1
         screen.fill((255,255,255))
         if tick < 500:
-            Story = font.render("喫茶店でくつろいでいたら", True, (0,0,255)) # 描画する文字列を画像にする
-            Story2 = font.render("突然強盗が入ってきた！", True, (0,0,255)) # 描画する文字列を画像にする
+            Story = fonts[0].render("喫茶店でくつろいでいたら", True, (0,0,255)) # 描画する文字列を画像にする
+            Story2 = fonts[0].render("突然強盗が入ってきた！", True, (0,0,255)) # 描画する文字列を画像にする
         if tick > 500:
-            Story = font.render("強盗だ！金を出せ！", True, (0,0,0)) # 描画する文字列を画像にする
-            Story2 = font.render("打たれたくないなら金だ！", True, (0,0,0)) # 描画する文字列を画像にする
+            Story = fonts[0].render("強盗だ！金を出せ！", True, (0,0,0)) # 描画する文字列を画像にする
+            Story2 = fonts[0].render("打たれたくないなら金だ！", True, (0,0,0)) # 描画する文字列を画像にする
         screen.blit(Story, [70,40])
         screen.blit(Story2,[70,70]) 
         field.draw(screen)
         #---------アニメーション---------
         for character in characters:
             character.firstAnimation(screen,tick)
-            character.draw(screen,font3)
+            character.draw(screen,fonts)
         pygame.display.update()
         ck.tick(160) #1秒間で30フレームになるように33msecのwait      
 def main():#-----------------------------------------------------------メイン
@@ -551,7 +551,8 @@ def main():#-----------------------------------------------------------メイン
     #フォント   
     font = pygame.font.SysFont("yumincho", 30)       
     font2 = pygame.font.SysFont("yumincho", 60) 
-    font3 = pygame.font.SysFont("yumincho", 15)                        
+    font3 = pygame.font.SysFont("yumincho", 15)
+    fonts = [font,font2,font3]                        
     #-
     screen = pygame.display.set_mode((500, 800))  # 800
     #キャラクターの画像(image)
@@ -566,12 +567,12 @@ def main():#-----------------------------------------------------------メイン
     #フィールド読み込み
     field = Field()
     #キャラクターインスタンス化
-    player1 = Character(2,5,"Player",Pl1,"味方","Player",font2,0,3,24,12,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
-    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",font2,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",font2,2,1,12,12,60)
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",font2,3,1,24,0,60)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",font2,4,4,30,6,80)
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",font2,5,1,0,0,20)
+    player1 = Character(2,5,"Player",Pl1,"味方","Player",fonts,0,3,24,15,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
+    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",fonts,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,15,5,40)
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,30,5,80)
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20)
     #キャラクター
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
     judge = Judge(characters)   
@@ -580,7 +581,7 @@ def main():#-----------------------------------------------------------メイン
     valTeki = 3
     #死亡カウント
     ck = pygame.time.Clock()
-    animation(tick,characters,field.mapchip,screen,font,ck,field,font3)                     
+    animation(tick,characters,field.mapchip,screen,fonts,ck,field)                     
     while True:
         tick += 1
         screen.fill((0,0,255))
@@ -591,10 +592,10 @@ def main():#-----------------------------------------------------------メイン
         for character in characters:
             if Character.num == character.id:
                 if character.team == "敵":
-                    character.enemyUpdate(screen,field.mapchip,characters,font2)
+                    character.enemyUpdate(screen,field.mapchip,characters,fonts)
                 if character.team == "味方":
-                    character.playerUpdate(screen,field.mapchip,characters,font2)
-            character.draw(screen,font3)
+                    character.playerUpdate(screen,field.mapchip,characters,fonts)
+            character.draw(screen,fonts)
         for character2 in characters:
             if Character.num == character2.id:
                 if character2.team == "味方":
