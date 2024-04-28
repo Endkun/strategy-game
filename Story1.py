@@ -69,6 +69,7 @@ class Character():
         self.ap = ap
         self.dp = dp
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
+        self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]        
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ Player、Slime,Animal,Goutouなどキャラクタータイプ)
         self.image = image#イメージ画像
@@ -96,11 +97,11 @@ class Character():
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
         
-    def update(self,screen,B,Cs):#更新（最初に呼ばれるところ）
+    def update(self,screen,B,Cs,E):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<0:#死んでいたら何もしないで次に送る
-            self.x=-10
+            self.x=-10#どかしておかないと死んだあとでも幽霊になるので
             self.y=-10
             Character.number=(Character.number+1)%len(Cs)#つぎのキャラに送る
             return
@@ -110,13 +111,13 @@ class Character():
 
         if self.team=="味方":
             #self.mikata_update(screen,backGround,characters)  
-            self.mikata_update2(B,Cs)  
-  
+            self.mikata_update2(B,Cs,E)  
         elif self.team=="敵":
             self.teki_update(screen,B,Cs)    
         elif self.team=="モブ":
             self.energy -=1
             pass
+
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(Cs)
             #ここで次のキャラを初期化するべし！
@@ -133,14 +134,17 @@ class Character():
         #w1:壁　w2:地形　c1:味方　c2:敵　c3:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
-        directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
+        #directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
 
-        for direction, dx, dy in directions:
-            self.check_direction(direction, dx, dy, B, Cs)
+        for directionSet in self.directions:
+            self.check_direction(directionSet, B, Cs)
 
-    def check_direction(self, direction, delta_x, delta_y, B, Cs):
-        new_x = self.x + delta_x#新しい位置＝着目点
-        new_y = self.y + delta_y
+    def check_direction(self, directionSet, B, Cs):#BはBackGround
+        direction=directionSet[0]
+        dx=directionSet[1]    
+        dy=directionSet[2]
+        new_x = self.x + dx#新しい位置＝着目点
+        new_y = self.y + dy
 
         if not (B.w1 <= new_x < B.w2 and B.h1 <= new_y < B.h2):  # 範囲外のチェック
             self.shui[direction].append("w1")
@@ -211,24 +215,23 @@ class Character():
         B.mess.append(txt2)                
 
     #---------------------------------敵周り-----------------------------------
-    def teki_update(self,screen,B,Cs):    
+    def teki_update(self,screen,B,Cs):    #B:バック　Cs:キャラクターズ（敵、味方）
         self.tick+=1
-        if self.tick % 60 == 30:
+        if self.tick % 60 == 30:#60フレーム中に１回だけ動く
             #print(f"------@172 {self.name=}-----")
             self.check(B,Cs)        #上下左右の周囲を見渡して以下のようなデータを作成する
             # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
             #self.calc_jyusin(characters)
-            if self.hp/self.hpOrg < 0.5:
-                if "薬草" in self.pocket:
+            if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
+                if "薬草" in self.pocket:#薬草を持っていたら
                     self.useYakusou(B)#薬草を使う
-                else:        #逃げるを実行    
-                    self.teki_nigeru(B) 
-            else:
-                self.teki_kougeki(B,Cs)
-            self.energy -=1
+                else:        #もってなかったら    
+                    self.teki_nigeru(B) #逃げるを実行
+            else:#hpが50%以上なら
+                self.teki_kougeki(B,Cs)#攻撃する
+            self.energy -=1#エネルギーをマイナス１
 
-
-    def teki_kougeki(self,B,Cs):
+    def teki_kougeki(self,B,Cs):#敵の攻撃
         #接敵状況を把握する
         kogekiDir=[]    
         if "c1" in self.shui["up"] and self.y-1 >=0:
@@ -335,7 +338,6 @@ class Character():
         #自分の位置（self.x,self.y）からjx,jyまでの迷路を幅優先探索（＝最短経路）で解く
         #最初の一歩を踏み出す（）
 
-
     def teki_nigeru(self,B):
         nigeDir=[]    
         if self.shui["up"]==[] and self.y-1 >=B.h1:
@@ -361,7 +363,8 @@ class Character():
         elif nigeD=="left":
             self.x-=1
 
-    def calc_jyusin(self,Cs):
+    def calc_jyusin(self,Cs):#重心位置の計算　敵に向かったり逃げたりするときに使うかも
+                            #現在：未使用
         jxsum=0
         jysum=0
         jct=0
@@ -377,12 +380,12 @@ class Character():
                 
     #=================味方周り===========================================
     #モードなしダイレクト入力
-    def mikata_update2(self,B,Cs):    
+    def mikata_update2(self,B,Cs,E):    
         self.check(B,Cs)#索敵
-        self.handle(B,Cs)          #選択肢をチョイス
+        self.handle(B,Cs,E)          #選択肢をチョイス
 
-    def handle(self,B,Cs):#移動モードでの入力
-        for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
+    def handle(self,B,Cs,E):#移動モードでの入力
+        for event in E.getEvent:  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
                 sys.exit()                # 終了（ないとエラーで終了することになる）
@@ -390,31 +393,34 @@ class Character():
                 x_pos, y_pos = event.pos
                 new_x=int(x_pos/SIZE)
                 new_y=int(y_pos/SIZE)
-                dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
-                for df in dfs:#上下左右の四方のアクションを実行
-                    self.handle_action(Cs,B,df,new_x,new_y)
+                #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
+                for directionSet in self.directions:#上下左右の四方のアクションを実行
+                    self.handle_action(Cs,B,directionSet,new_x,new_y)
 
-    def handle_action(self,Cs,B,df,new_x,new_y):#移動モードでの入力
-        if new_x-self.x== df[0] and new_y-self.y== df[1]  :#方向の特定
-            #敵がいるか
-            if "c2" in self.shui[df[2]]:
+    def handle_action(self,Cs,B,directionSet,new_x,new_y):#移動モードでの入力
+        direction=directionSet[0]
+        dx=directionSet[1]    
+        dy=directionSet[2]
+        if new_x-self.x== dx and new_y-self.y== dy  :#方向の特定
+            #敵がいるなら
+            if "c2" in self.shui[direction]:
                 #敵の同定
                 for C1 in Cs:
-                    if C1.x-self.x == df[0] and C1.y-self.y == df[1] and C1.team=="敵":
+                    if C1.x-self.x == dx and C1.y-self.y == dy and C1.team=="敵":
                         dmg=self.dmg_calc(C1)
                         self.make_text(C1,B,dmg)
                         self.energy-=1
-            #味方がいるか
-            elif "c1" in self.shui[df[2]]:
+            #味方がいるなら
+            elif "c1" in self.shui[direction]:
                 #味方の同定
                 for C1 in Cs:
-                    if C1.x-self.x == df[0] and C1.y-self.y == df[1] and C1.team=="味方":
+                    if C1.x-self.x == dx and C1.y-self.y == dy and C1.team=="味方":
                         pass
-            #移動可能か        
-            elif self.shui[df[2]]==[]:
-                self.x+=df[0]
-                self.y+=df[1]
-                self.energy-=1
+            #移動可能なら        
+            elif self.shui[direction]==[]:
+                self.x += dx
+                self.y += dy
+                self.energy -= 1
 
     #オープニング周り-------------------------------------
     def firstAnimation(self):#----------最初のアニメーション
@@ -479,6 +485,13 @@ class Judge():
             print("敵全滅")
             self.winner="mikata"
 
+
+class Event():
+    def __init__(self):
+        self.getEvent = pygame.event.get() 
+    def update(self):
+        self.getEvent = pygame.event.get()    
+
 def mainInit(): 
     pygame.init()        
     screen = pygame.display.set_mode((500, 900))  # 800
@@ -514,23 +527,25 @@ def mainInit():
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(font)
     J1 = Judge()
-    return screen,fonts,Cs,B1,J1,ck
+    E1 = Event()
+    return screen,fonts,Cs,B1,J1,ck,E1
 
 def main():#-----------------------------------------------------------メイン
     #init
-    screen,fonts,Cs,B1,J1,ck=mainInit()
+    screen,fonts,Cs,B1,J1,ck,E1 = mainInit()
     #opening
     #opening.opening(screen,fonts[0],Cs,B1)#本番用
     opening.opening2(screen,fonts[0],Cs,B1)#テスト用　オープニング省略バージョン
     Character.number=0#現在選択されているキャラ、クラス変数
     #battle 　
     while True:
+        E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
         B1.draw_tile(screen)#壁面
         B1.draw_text(screen)#メイン文字
         B1.draw_tail(screen)#補足説明用の文字
         #---------更新と描画---------
         for ch in Cs:#キャラ全員の更新と描画
-            ch.update(screen,B1,Cs)#ただし現在選択されているキャラ以外は即return
+            ch.update(screen,B1,Cs,E1)#ただし現在選択されているキャラ以外は即return
             ch.draw(screen)
         for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
             ch.new_guide(screen)
