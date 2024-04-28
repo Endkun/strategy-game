@@ -69,7 +69,7 @@ class Character():
         self.ap = ap
         self.dp = dp
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
-        self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]        
+        self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]     #indexで使いたいので辞書型にしていない   
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ Player、Slime,Animal,Goutouなどキャラクタータイプ)
         self.image = image#イメージ画像
@@ -113,7 +113,7 @@ class Character():
             #self.mikata_update(screen,backGround,characters)  
             self.mikata_update2(B,Cs,E)  
         elif self.team=="敵":
-            self.teki_update(screen,B,Cs)    
+            self.teki_update(B,Cs)    
         elif self.team=="モブ":
             self.energy -=1
             pass
@@ -130,30 +130,28 @@ class Character():
 
     def check(self, B, Cs):
         #上下左右の周囲を見渡して以下のようなデータを作成する
-        # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-        #w1:壁　w2:地形　c1:味方　c2:敵　c3:モブ
+        # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+        #壁:壁　地形:地形　味方:敵　敵:敵　モブ:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
-        #directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]
-
-        for directionSet in self.directions:
+        for directionSet in self.directions:#上下左右をスキャン
             self.check_direction(directionSet, B, Cs)
 
     def check_direction(self, directionSet, B, Cs):#BはBackGround
-        direction=directionSet[0]
-        dx=directionSet[1]    
-        dy=directionSet[2]
+        direction = directionSet[0]
+        dx = directionSet[1]    
+        dy = directionSet[2]
         new_x = self.x + dx#新しい位置＝着目点
         new_y = self.y + dy
 
         if not (B.w1 <= new_x < B.w2 and B.h1 <= new_y < B.h2):  # 範囲外のチェック
-            self.shui[direction].append("w1")
+            self.shui[direction].append("壁")
         elif int(B.mapchip[new_y][new_x]) > 1:  # 壁や建造物があるかチェック
-            self.shui[direction].append("w2")
+            self.shui[direction].append("地形")
         else:
             for C in Cs:  # キャラクターがいるかチェック
                 if new_x == C.x and new_y == C.y:
-                    code = "c1" if C.team == "味方" else "c2" if C.team == "敵" else "c3"
+                    code = "味方" if C.team == "味方" else "敵" if C.team == "敵" else "モブ"
                     self.shui[direction].append(code)
 
     #全キャラ用、新ガイドを描画するだけ
@@ -173,10 +171,10 @@ class Character():
             elif k=="left":
                 px-=1
             #敵がいるなら赤ガイド
-            if "c2" in v:
+            if "敵" in v:
                 pygame.draw.circle(screen,(250,0,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
             #味方がいるなら黄ガイド
-            elif "c1" in v:
+            elif "味方" in v:
                 pygame.draw.circle(screen,(250,255,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
             #何もないなら青ガイド
             elif v==[]:
@@ -215,13 +213,11 @@ class Character():
         B.mess.append(txt2)                
 
     #---------------------------------敵周り-----------------------------------
-    def teki_update(self,screen,B,Cs):    #B:バック　Cs:キャラクターズ（敵、味方）
+    def teki_update(self,B,Cs): #B:バック　Cs:キャラクターズ（敵、味方）
         self.tick+=1
-        if self.tick % 60 == 30:#60フレーム中に１回だけ動く
-            #print(f"------@172 {self.name=}-----")
+        if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
             self.check(B,Cs)        #上下左右の周囲を見渡して以下のようなデータを作成する
-            # self.shui= {'up': [], 'down': ['w1'], 'right': ['c3'], 'left': []}
-            #self.calc_jyusin(characters)
+            # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
             if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
                 if "薬草" in self.pocket:#薬草を持っていたら
                     self.useYakusou(B)#薬草を使う
@@ -234,13 +230,13 @@ class Character():
     def teki_kougeki(self,B,Cs):#敵の攻撃
         #接敵状況を把握する
         kogekiDir=[]    
-        if "c1" in self.shui["up"] and self.y-1 >=0:
+        if "味方" in self.shui["up"] and self.y-1 >=0:
             kogekiDir.append("up")
-        elif "c1" in self.shui["down"] and self.y+1 <len(B.mapchip):
+        elif "味方" in self.shui["down"] and self.y+1 <len(B.mapchip):
             kogekiDir.append("down")
-        elif "c1" in self.shui["left"] and self.x-1 >=0:
+        elif "味方" in self.shui["left"] and self.x-1 >=0:
             kogekiDir.append("left")
-        elif "c1" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
+        elif "味方" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
             kogekiDir.append("right")
 
         if len(kogekiDir)>0:    #接敵数が１つ以上あるならランダムで選ぶ
@@ -403,7 +399,7 @@ class Character():
         dy=directionSet[2]
         if new_x-self.x== dx and new_y-self.y== dy  :#方向の特定
             #敵がいるなら
-            if "c2" in self.shui[direction]:
+            if "敵" in self.shui[direction]:
                 #敵の同定
                 for C1 in Cs:
                     if C1.x-self.x == dx and C1.y-self.y == dy and C1.team=="敵":
@@ -411,7 +407,7 @@ class Character():
                         self.make_text(C1,B,dmg)
                         self.energy-=1
             #味方がいるなら
-            elif "c1" in self.shui[direction]:
+            elif "味方" in self.shui[direction]:
                 #味方の同定
                 for C1 in Cs:
                     if C1.x-self.x == dx and C1.y-self.y == dy and C1.team=="味方":
