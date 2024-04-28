@@ -110,8 +110,7 @@ class Character():
         B.mes_tail=txt
 
         if self.team=="味方":
-            #self.mikata_update(screen,backGround,characters)  
-            self.mikata_update2(B,Cs,E)  
+            self.mikata_update(B,Cs,E)  
         elif self.team=="敵":
             self.teki_update(B,Cs)    
         elif self.team=="モブ":
@@ -130,7 +129,7 @@ class Character():
 
     def check(self, B, Cs):
         #上下左右の周囲を見渡して以下のようなデータを作成する
-        # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+        # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': ["敵ハサミ"]}
         #壁:壁　地形:地形　味方:敵　敵:敵　モブ:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
@@ -151,8 +150,35 @@ class Character():
         else:
             for C in Cs:  # キャラクターがいるかチェック
                 if new_x == C.x and new_y == C.y:
-                    code = "味方" if C.team == "味方" else "敵" if C.team == "敵" else "モブ"
+                    #code = "味方" if C.team == "味方" else "敵" if C.team == "敵" else "モブ"
+                    if C.team == "味方" :
+                        code = "味方"
+                        #挟み撃ち攻撃のチェック
+                        hasami_x = new_x + dx
+                        hasami_y = new_y + dy
+                        if (B.w1 <= hasami_x < B.w2 and B.h1 <= hasami_y < B.h2):
+                            for Ch in Cs:  # キャラクターがいるかチェック
+                                if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id:
+                                    if Ch.team=="敵":
+                                        print(f"やばい！！！敵に挟まれた ")
+
+                    elif C.team == "敵":
+                        code = "敵"
+
+                        #挟み撃ち攻撃のチェック
+                        hasami_x = new_x + dx
+                        hasami_y = new_y + dy
+                        if (B.w1 <= hasami_x < B.w2 and B.h1 <= hasami_y < B.h2):
+                            for Ch in Cs:  # キャラクターがいるかチェック
+                                if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id:
+                                    if Ch.team=="味方":
+                                        print(f"もらったーー！！挟み撃ちだ!!!敵の防御力が1/3に")
+                                        C.dp=int(C.dp/3)
+
+                    else:
+                        "モブ"
                     self.shui[direction].append(code)
+
 
     #全キャラ用、新ガイドを描画するだけ
     def new_guide(self,screen):
@@ -358,25 +384,10 @@ class Character():
             self.x+=1
         elif nigeD=="left":
             self.x-=1
-
-    def calc_jyusin(self,Cs):#重心位置の計算　敵に向かったり逃げたりするときに使うかも
-                            #現在：未使用
-        jxsum=0
-        jysum=0
-        jct=0
-        for C in Cs:
-            if C.team=="味方":
-                jxsum+=C.x
-                jysum+=C.y
-                jct+=1
-        jx=jxsum/jct
-        jy=jysum/jct
-        print(f"{jx=} {jy=}") 
-        return jx,jy
-                
+               
     #=================味方周り===========================================
     #モードなしダイレクト入力
-    def mikata_update2(self,B,Cs,E):    
+    def mikata_update(self,B,Cs,E):    
         self.check(B,Cs)#索敵
         self.handle(B,Cs,E)          #選択肢をチョイス
 
