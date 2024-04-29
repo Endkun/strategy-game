@@ -84,7 +84,7 @@ class Character():
 
     #-------------------------------基本のやつ-----------
     def draw(self,screen):#----------------------------描画
-        if self.hp>=0:
+        if self.hp>0:
             #画像表示    
             screen.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
             #hp表示
@@ -100,7 +100,7 @@ class Character():
     def update(self,screen,B,Cs,E):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
-        if self.hp<0:#死んでいたら何もしないで次に送る
+        if self.hp<=0:#死んでいたら何もしないで次に送る
             self.x=-10#どかしておかないと死んだあとでも幽霊になるので
             self.y=-10
             Character.number=(Character.number+1)%len(Cs)#つぎのキャラに送る
