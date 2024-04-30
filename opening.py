@@ -2,24 +2,24 @@
 import pygame
 pygame.init() 
 
-def opening2(screen,font,Cs,backGround):#--------------------
-    for C1 in Cs:
-        if C1.type == "Slime":   
-            if C1.name == "BlueSlime":
-                C1.y = 4
-                C1.x = 1
-            if C1.name == "GreenSlime":
-                C1.y = 4
-                C1.x = 3
-        if C1.type == "Goutou" and C1.name == "Yakuza Sumiyoshi":
-                C1.x = 2
-                C1.y = 2
-        if C1.type == "Player" and C1.name == "girl":
-                C1.y += 1
-                C1.y += 0
-        if C1.type == "Animal" and C1.name == "Cat":
-                C1.x = 0
-                C1.y = 4
+def opening2(Cs):#--------------------
+    for C in Cs:
+        if C.type == "Slime":   
+            if C.name == "BlueSlime":
+                C.y = 4
+                C.x = 1
+            if C.name == "YelloSlime":
+                C.y = 4
+                C.x = 3
+        if C.type == "Goutou" and C.name == "Yakuza":
+                C.x = 2
+                C.y = 2
+        if C.type == "Player" and C.name == "girl":
+                C.y += 1
+                C.y += 0
+        if C.type == "Animal" and C.name == "Cat":
+                C.x = 0
+                C.y = 4
 
 def opening(screen,font,Cs,B):#--------------------
     ##オープニング

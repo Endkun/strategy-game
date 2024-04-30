@@ -68,8 +68,9 @@ class Character():
         self.hpOrg = self.hp
         self.ap = ap
         self.dp = dp
+        self.dpOrg = dp
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
-        self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]     #indexで使いたいので辞書型にしていない   
+        self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]     #indexで使いたいのであえて辞書型にしていない   
         self.pocket=pocket#持ち物
         self.type = type#キャラクタータイプ Player、Slime,Animal,Goutouなどキャラクタータイプ)
         self.image = image#イメージ画像
@@ -83,36 +84,48 @@ class Character():
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
     #-------------------------------基本のやつ-----------
+    def draw_point(self, screen, point, pos_x, pos_y):
+            txt = str(point)
+            txtg = self.fontm.render(txt, True, (0,0,0))  
+            screen.blit(txtg, [self.x*SIZE+pos_x,self.y*SIZE+pos_y])
+            txtg = self.fontm.render(txt, True, (255,255,255))  
+            screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
+
     def draw(self,screen):#----------------------------描画
         if self.hp>0:
             #画像表示    
             screen.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
             #hp表示
-            txt = str(self.hp)
-            txtg = self.fontm.render(txt, True, (0,0,0))  
-            screen.blit(txtg, [self.x*SIZE+10,self.y*SIZE+10])
-            txtg = self.fontm.render(txt, True, (255,255,255))  
-            screen.blit(txtg, [self.x*SIZE+12,self.y*SIZE+12])
-            #ガイドの表示
+            self.draw_point(screen, self.hp,5,8)
+            #energy表示
+            self.draw_point(screen, self.energy,48,8)
+
+            #ap表示
+            self.draw_point(screen, self.ap,5,48)
+
+            #dp表示
+            self.draw_point(screen, self.dp,48,48)
+
+            #黄色いガイドの表示
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
         
-    def update(self,screen,B,Cs,E):#更新（最初に呼ばれるところ）
+    def update(self,B,Cs,E,M):#更新（最初に呼ばれるところ）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
-            self.x=-10#どかしておかないと死んだあとでも幽霊になるので
+            self.x=-10#どかしておかないと死んだあとでも残っているので
             self.y=-10
             Character.number=(Character.number+1)%len(Cs)#つぎのキャラに送る
             return
 
-        txt=f"{self.name}のターン {self.energy=}"
-        B.mes_tail=txt
+        mes=f"{self.name}のターン 行動残：{self.energy}"
+        M.head_txt=mes
 
         if self.team=="味方":
-            self.mikata_update(B,Cs,E)  
+            self.mikata_update(B,Cs,E,M)  
         elif self.team=="敵":
-            self.teki_update(B,Cs)    
+            self.teki_update(B,Cs,M)    
         elif self.team=="モブ":
             self.energy -=1
             pass
@@ -122,21 +135,20 @@ class Character():
             #ここで次のキャラを初期化するべし！
             Cs[Character.number].energy = Cs[Character.number].energyOrg
             Cs[Character.number].tick = 0
+            #Cs[Character.number].dp = Cs[Character.number].dpOrg
             self.energy=self.energyOrg#自分も戻しておく
 
-
-    #----------------------------敵味方共通-------------周囲のチェック------------
-
-    def check(self, B, Cs):
+    #-------------周囲のチェック------------
+    def check(self, B, Cs, M):#敵味方共通、四方周囲に何があるか探索
         #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': ["敵ハサミ"]}
-        #壁:壁　地形:地形　味方:敵　敵:敵　モブ:モブ
+        #壁:地形:味方:敵:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
         for directionSet in self.directions:#上下左右をスキャン
-            self.check_direction(directionSet, B, Cs)
+            self.check_direction(directionSet, B, Cs, M)
 
-    def check_direction(self, directionSet, B, Cs):#BはBackGround
+    def check_direction(self, directionSet, B, Cs, M):#BはBackGround
         direction = directionSet[0]
         dx = directionSet[1]    
         dy = directionSet[2]
@@ -148,36 +160,43 @@ class Character():
         elif int(B.mapchip[new_y][new_x]) > 1:  # 壁や建造物があるかチェック
             self.shui[direction].append("地形")
         else:
-            for C in Cs:  # キャラクターがいるかチェック
-                if new_x == C.x and new_y == C.y:
-                    #code = "味方" if C.team == "味方" else "敵" if C.team == "敵" else "モブ"
-                    if C.team == "味方" :
-                        code = "味方"
-                        #挟み撃ち攻撃のチェック
-                        hasami_x = new_x + dx
-                        hasami_y = new_y + dy
-                        if (B.w1 <= hasami_x < B.w2 and B.h1 <= hasami_y < B.h2):
-                            for Ch in Cs:  # キャラクターがいるかチェック
-                                if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id:
-                                    if Ch.team=="敵":
-                                        print(f"やばい！！！敵に挟まれた ")
-
-                    elif C.team == "敵":
-                        code = "敵"
-
-                        #挟み撃ち攻撃のチェック
-                        hasami_x = new_x + dx
-                        hasami_y = new_y + dy
-                        if (B.w1 <= hasami_x < B.w2 and B.h1 <= hasami_y < B.h2):
-                            for Ch in Cs:  # キャラクターがいるかチェック
-                                if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id:
-                                    if Ch.team=="味方":
-                                        print(f"もらったーー！！挟み撃ちだ!!!敵の防御力が1/3に")
-                                        C.dp=int(C.dp/3)
-
-                    else:
-                        "モブ"
-                    self.shui[direction].append(code)
+            if self.team=="味方":
+                for C in Cs:  # キャラクタースキャン
+                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
+                        if C.team == "敵":
+                            C.dp=C.dpOrg#いったん戻しておく
+                            code = "敵"
+                            self.shui[direction].append(code)
+                            #挟み撃ち攻撃のチェック（味方ー敵ー味方）
+                            hasami_x = new_x + dx
+                            hasami_y = new_y + dy
+                            if (B.w1 <= hasami_x < B.w2 and B.h1 <= hasami_y < B.h2):
+                                for Ch in Cs:  # キャラクタースキャン
+                                    if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id and Ch.id!=self.id:
+                                        if Ch.team=="味方":
+                                            C.dp=int(C.dp/3)
+                                            mes1=f"挟み撃ち!!{C.name}の防御が{C.dp}に"
+                                            M.append_tail_line([mes1])
+                                            print(mes1)
+                        else:
+                            "モブ"
+            elif self.team=="敵":
+                for C in Cs:  # キャラクタースキャン
+                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
+                        if C.team == "味方" :#そいつが味方なら
+                            C.dp=C.dpOrg#いったん戻しておく
+                            code = "味方"
+                            self.shui[direction].append(code)
+                            #挟み撃ち攻撃のチェック（敵ー味方ー敵）
+                            hasami_x = new_x + dx
+                            hasami_y = new_y + dy
+                            if (B.w1 <= hasami_x < B.w2 and B.h1 <= hasami_y < B.h2):
+                                for Ch in Cs:  # キャラクターがいるかチェック
+                                    if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id and Ch.id!=self.id:
+                                        if Ch.team=="敵":
+                                            mes=f"やばい！！敵に挟まれた "
+                                            M.append_tail_line([mes])
+                                            print(mes)                                            
 
 
     #全キャラ用、新ガイドを描画するだけ
@@ -207,22 +226,18 @@ class Character():
                 pygame.draw.circle(screen,(0,0,255),((px+0.5)*SIZE,(py+.5)*SIZE),10)
                 #移動可能表示
 
-    def useYakusou(self,B):#薬草を使う
+    def useYakusou(self,B,M):#薬草を使う
         self.hp+=30
         if self.hp>self.hpOrg:
             self.hp=self.hpOrg
         self.pocket.remove("薬草")   
-        txt=f"{self.name}は薬草をつかった！"
-        B.mess.append(txt) 
-        txt=f"hpは{self.hp}に回復"
-        B.mess.append(txt) 
+        mes1=f"{self.name}は薬草使用！hpは{self.hp}に"
+        M.append_tail_line([mes1]) 
 
-    def dmg_calc_show(self,C):
+    def dmg_calc_show(self,C,M):
         dmg=self.dmg_calc(C)
-        txt1=f"{self.name}は{C.name}を攻撃"
-        txt2=f"{dmg}のダメージを与え、{C.hp}になった"
-        # print(txt1)
-        # print(txt2)
+        mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
+        M.append_tail_line([mes1]) 
 
     def dmg_calc(self,C):#ダメージの計算
         dmg=self.ap-C.dp
@@ -231,29 +246,27 @@ class Character():
         C.hp-=dmg  
         return dmg  
 
-    def make_text(self, C,B,dmg):
+    def make_text(self, C,B,dmg,M):
         B.mess=[]                
-        txt1=f"{self.name}は{C.name}に"
-        txt2=f"{dmg}のダメージを与えた"
-        B.mess.append(txt1)                
-        B.mess.append(txt2)                
+        mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
+        M.append_tail_line([mes1]) 
 
     #---------------------------------敵周り-----------------------------------
-    def teki_update(self,B,Cs): #B:バック　Cs:キャラクターズ（敵、味方）
+    def teki_update(self, B, Cs, M): #B:バック　Cs:キャラクターズ（敵、味方）
         self.tick+=1
         if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
-            self.check(B,Cs)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
             # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
             if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
                 if "薬草" in self.pocket:#薬草を持っていたら
-                    self.useYakusou(B)#薬草を使う
+                    self.useYakusou(B,M)#薬草を使う
                 else:        #もってなかったら    
                     self.teki_nigeru(B) #逃げるを実行
             else:#hpが50%以上なら
-                self.teki_kougeki(B,Cs)#攻撃する
+                self.teki_kougeki(B,Cs,M)#攻撃する
             self.energy -=1#エネルギーをマイナス１
 
-    def teki_kougeki(self,B,Cs):#敵の攻撃
+    def teki_kougeki(self,B,Cs,M):#敵の攻撃
         #接敵状況を把握する
         kogekiDir=[]    
         if "味方" in self.shui["up"] and self.y-1 >=0:
@@ -272,19 +285,19 @@ class Character():
             if kogekiD=="up":
                 for C1 in Cs:
                     if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
-                        self.dmg_calc_show(C1)
+                        self.dmg_calc_show(C1,M)
             elif kogekiD=="down":
                 for C1 in Cs:
                     if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
-                        self.dmg_calc_show(C1)
+                        self.dmg_calc_show(C1,M)
             elif kogekiD=="right":
                 for C1 in Cs:
                     if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
-                        self.dmg_calc_show(C1)
+                        self.dmg_calc_show(C1,M)
             elif kogekiD=="left":
                 for C1 in Cs:
                     if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
-                        self.dmg_calc_show(C1)
+                        self.dmg_calc_show(C1,M)
             B.mess=[]
             B.mess.append(txt)
 
@@ -300,7 +313,7 @@ class Character():
                 t_x=C.x
                 t_y=C.y
                 t_id=C.id
-        print(f"@274 {t_x=}  {t_y=} {t_id=}")       
+        #print(f"@274 {t_x=}  {t_y=} {t_id=}")       
         return t_x,t_y ,t_id       
 
     def calc_target_delta(self,Cs):
@@ -387,11 +400,11 @@ class Character():
                
     #=================味方周り===========================================
     #モードなしダイレクト入力
-    def mikata_update(self,B,Cs,E):    
-        self.check(B,Cs)#索敵
-        self.handle(B,Cs,E)          #選択肢をチョイス
+    def mikata_update(self,B,Cs,E,M):    
+        self.check(B,Cs,M)#索敵
+        self.handle(B,Cs,E,M)          #選択肢をチョイス
 
-    def handle(self,B,Cs,E):#移動モードでの入力
+    def handle(self,B,Cs,E,M):#移動モードでの入力
         for event in E.getEvent:  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -402,9 +415,9 @@ class Character():
                 new_y=int(y_pos/SIZE)
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
-                    self.handle_action(Cs,B,directionSet,new_x,new_y)
+                    self.handle_action(Cs,B,directionSet,new_x,new_y,M)
 
-    def handle_action(self,Cs,B,directionSet,new_x,new_y):#移動モードでの入力
+    def handle_action(self,Cs,B,directionSet,new_x,new_y,M):#移動モードでの入力
         direction=directionSet[0]
         dx=directionSet[1]    
         dy=directionSet[2]
@@ -415,7 +428,7 @@ class Character():
                 for C1 in Cs:
                     if C1.x-self.x == dx and C1.y-self.y == dy and C1.team=="敵":
                         dmg=self.dmg_calc(C1)
-                        self.make_text(C1,B,dmg)
+                        self.make_text(C1,B,dmg,M)
                         self.energy-=1
             #味方がいるなら
             elif "味方" in self.shui[direction]:
@@ -441,7 +454,7 @@ class Character():
                     self.y = 4
                 if self.tick == 400:
                     self.x = 1
-            if self.name == "GreenSlime":
+            if self.name == "YelloSlime":
                 if self.tick == 200:
                     self.x = 2
                     self.y = 2
@@ -449,7 +462,7 @@ class Character():
                     self.y = 4
                 if self.tick == 500:
                     self.x = 3
-        if self.type == "Goutou" and self.name == "Yakuza Sumiyoshi":
+        if self.type == "Goutou" and self.name == "Yakuza":
             if self.tick == 400:
                 self.x = 2
                 self.y = 2
@@ -471,27 +484,85 @@ class Judge():
     def __init__(self):
         self.winner=""
 
-    def judge(self,Cs):
-        mnum=0#全体数
-        tnum=0
-        mdead=0#死んだ数
-        tdead=0
+    def judge(self,Cs,M):
+        mikata_num=0#味方の総数
+        teki_num=0#敵の総数
+        mikata_dead=0#死んだ数(味方)
+        teki_dead=0
         for C in Cs:
             if C.team=="味方":
-                mnum+=1
-                if C.hp<0:
-                    mdead+=1
+                mikata_num+=1
+                if C.hp<=0:
+                    mikata_dead+=1
             elif C.team=="敵":
-                tnum+=1
-                if C.hp<0:
-                    tdead+=1
-        if mnum>0 and mnum==mdead:
-            print("味方全滅")
+                teki_num+=1
+                if C.hp<=0:
+                    teki_dead+=1
+        #print(f"@503:judge {mikata_dead=} {teki_dead=}")                    
+        if mikata_num>0 and mikata_num==mikata_dead:
+            mes = "味方全滅"
+            print(mes)
+            M.append_tail_line([mes])
             self.winner="teki"
-        if tnum>0 and tnum==tdead:
-            print("敵全滅")
+        if teki_num>0 and teki_num==teki_dead:
+            mes="敵全滅"
+            print(mes)
+            M.append_tail_line([mes])
             self.winner="mikata"
 
+class Messenger():
+    def __init__(self,fonts):
+        self.font30 = fonts[0]
+        self.font60 = fonts[1]
+        self.font20 = fonts[2]        
+
+        self.head_x=5
+        self.head_y=20
+        self.head_txt=""
+
+        self.tail_x=5
+        self.tail_y=650
+        self.max_line=7
+        self.tail_txt=["" for i in range(self.max_line)]
+
+        self.old_txt=[]
+
+    def draw(self,screen):
+        self.draw_head_line(screen)
+        self.draw_tail_line(screen)
+
+    def draw_head_line(self,screen):
+        g_txt = self.font30.render(self.head_txt, True, (0,0,0))   # 描画する文字列の設定
+        screen.blit(g_txt, [self.head_x, self.head_y])# 文字列の表示位置
+
+    def append_tail_line(self,txts):
+        #前回と同じならスクロールを実行しない
+        if txts[0] == self.tail_txt[self.max_line-1]:
+                return
+        #self.old_txt=txts
+
+        #スクロール動作　
+        linput=len(txts)    #行数　例えばtxtsは２行で ["x","y"]とする
+        tmp=self.tail_txt   #一時置場 ex.["a","b","c","d","e","f","g"]
+        if linput>self.max_line:        #7行までで制限
+            print("err")
+            import pdb;pdb.set_trace()
+        il = self.max_line-linput           #linput=2ならil=7-2=5
+        for i in range(il):                 #i=0,1,2
+            tmp[i]=self.tail_txt[i+linput]  #上に詰める
+            #["c","d","e","f","g","",""]
+        for i,t in enumerate(txts) :   #空いたところに入力行を挿入
+            tmp[i+il]=t  
+            #["c","d","e","f","g","x","y"]
+        self.tal_txt=tmp
+
+    def draw_tail_line(self,screen):
+        #描画
+        dy=0
+        for t in self.tail_txt:
+            g_txt = self.font20.render(t, True, (0,0,0))   # 描画する文字列の設定
+            screen.blit(g_txt, [self.tail_x, self.tail_y+dy])# 文字列の表示位置
+            dy+=30
 
 class Event():
     def __init__(self):
@@ -502,10 +573,10 @@ class Event():
 def mainInit(): 
     pygame.init()        
     screen = pygame.display.set_mode((500, 900))  # 800
-    font = pygame.font.SysFont("yumincho", 30)       
-    fontb = pygame.font.SysFont("yumincho", 60)                      
-    fontm = pygame.font.SysFont("yumincho", 20)                      
-    fonts=[font,fontb,fontm] 
+    font30 = pygame.font.SysFont("yumincho", 30)       
+    font60 = pygame.font.SysFont("yumincho", 60)                      
+    font20 = pygame.font.SysFont("yumincho", 20)                      
+    fonts=[font30,font60,font20] 
     ck = pygame.time.Clock()
 
     #image load
@@ -525,24 +596,25 @@ def mainInit():
     Db=[#キャラのデータベース
         #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
         (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
-        (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,10,10,2),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,10,20,3),
-        (-1,0,3,"Slime",Sl2,"敵","GreenSlime",fonts,["薬草"],60,30,30,4),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza Sumiyoshi",fonts,["剣","薬草"],150,60,20,3),
-        (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],10,50,50,2),
+        (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3),
+        (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],250,60,50,3),
+        (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2),
     ]
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
-    B1 = BackGround(font)
+    B1 = BackGround(fonts[0])
     J1 = Judge()
     E1 = Event()
-    return screen,fonts,Cs,B1,J1,ck,E1
+    M1 = Messenger(fonts)
+    return screen,fonts,Cs,B1,J1,ck,E1,M1
 
 def main():#-----------------------------------------------------------メイン
     #init
-    screen,fonts,Cs,B1,J1,ck,E1 = mainInit()
+    screen,fonts,Cs,B1,J1,ck,E1,M1 = mainInit()
     #opening
     #opening.opening(screen,fonts[0],Cs,B1)#本番用
-    opening.opening2(screen,fonts[0],Cs,B1)#テスト用　オープニング省略バージョン
+    opening.opening2(Cs)#テスト用　オープニング省略バージョン
     Character.number=0#現在選択されているキャラ、クラス変数
     #battle 　
     while True:
@@ -552,11 +624,12 @@ def main():#-----------------------------------------------------------メイン
         B1.draw_tail(screen)#補足説明用の文字
         #---------更新と描画---------
         for ch in Cs:#キャラ全員の更新と描画
-            ch.update(screen,B1,Cs,E1)#ただし現在選択されているキャラ以外は即return
+            ch.update(B1,Cs,E1,M1)#ただし現在選択されているキャラ以外は即return
             ch.draw(screen)
         for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
             ch.new_guide(screen)
-        J1.judge(Cs)    #判定
+        M1.draw(screen)    
+        J1.judge(Cs,M1)    #判定
         if J1.winner=="teki" or J1.winner=="mikata":
             break
         pygame.display.update() #画面更新、こいつは引数がない        
