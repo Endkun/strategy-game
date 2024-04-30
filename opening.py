@@ -21,7 +21,46 @@ def opening2(Cs):#--------------------
                 C.x = 0
                 C.y = 4
 
-def opening(screen,font,Cs,B):#--------------------
+#オープニング周り-------------------------------------
+def animeUpdate(C):#----------最初のアニメーション
+    print("first ------")
+    C.tick += 1
+    if C.type == "Slime":   
+        if C.name == "BlueSlime":
+            if C.tick == 120:
+                C.x = 2
+                C.y = 2
+            if C.tick == 200:
+                C.y = 4
+            if C.tick == 400:
+                C.x = 1
+        if C.name == "YelloSlime":
+            if C.tick == 200:
+                C.x = 2
+                C.y = 2
+            if C.tick == 400:
+                C.y = 4
+            if C.tick == 500:
+                C.x = 3
+    if C.type == "Goutou" and C.name == "Yakuza":
+        if C.tick == 400:
+            C.x = 2
+            C.y = 2
+    if C.type == "Player" and C.name == "girl":
+        if C.tick == 300:
+            C.y += 1
+        if C.tick == 400:
+            #C.y += 4
+            C.y += 0
+    if C.type == "Animal" and C.name == "Cat":
+        if C.tick == 400:
+            C.y += 1
+        if C.tick == 550:
+            C.x += 1
+        if C.tick == 650:
+            C.y += 1        
+
+def opening(screen,Cs,B,M):#--------------------
     ##オープニング
     ck = pygame.time.Clock()
     tick=0
@@ -31,23 +70,26 @@ def opening(screen,font,Cs,B):#--------------------
             break
         B.draw_tile(screen)
         if tick <= 500:
-            Story = font.render("喫茶店でくつろいでいたら", True, (0,0,255)) # 描画する文字列を画像にする
-            Story2 = font.render("突然強盗が入ってきた！", True, (0,0,255)) # 描画する文字列を画像にする
+            mes = "喫茶店でくつろいでいたら突然強盗が入ってきた！"
+            M.append_tail_line([mes])
+
         elif 500 < tick <= 700:
-            Story = font.render("強盗だ！金を出せ！", True, (0,0,0)) # 描画する文字列を画像にする
-            Story2 = font.render("56されたくないなら金だ！", True, (0,0,0)) # 描画する文字列を画像にする
+            mes = "56されたくないなら金を出せ！"
+            M.append_tail_line([mes])
         if tick > 700:
-            Story = font.render("こいつ、逆らう気だぞ！", True, (0,0,0)) # 描画する文字列を画像にする
-            Story2 = font.render("野郎ども　やっちまえ", True, (0,0,0)) # 描画する文字列を画像にする
-        screen.blit(Story, [70,40])
-        screen.blit(Story2,[70,70])   
+            mes = "こいつら逆らう気だ、やっちまえ！"
+            M.append_tail_line([mes])
+        # screen.blit(Story, [70,40])
+        # screen.blit(Story2,[70,70])   
         #---------アニメーション---------
         for C1 in Cs:
-            C1.firstAnimation()
+            #C1.firstAnimation()
+            animeUpdate(C1)
 
         #---------描画---------
         for C1 in Cs:
             C1.draw(screen)
-                          
+        M.draw(screen)                          
         pygame.display.update()         
         ck.tick(60) #1秒間で30フレームになるように33msecのwait   
+

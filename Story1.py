@@ -442,44 +442,6 @@ class Character():
                 self.y += dy
                 self.energy -= 1
 
-    #オープニング周り-------------------------------------
-    def firstAnimation(self):#----------最初のアニメーション
-        self.tick += 1
-        if self.type == "Slime":   
-            if self.name == "BlueSlime":
-                if self.tick == 120:
-                    self.x = 2
-                    self.y = 2
-                if self.tick == 200:
-                    self.y = 4
-                if self.tick == 400:
-                    self.x = 1
-            if self.name == "YelloSlime":
-                if self.tick == 200:
-                    self.x = 2
-                    self.y = 2
-                if self.tick == 400:
-                    self.y = 4
-                if self.tick == 500:
-                    self.x = 3
-        if self.type == "Goutou" and self.name == "Yakuza":
-            if self.tick == 400:
-                self.x = 2
-                self.y = 2
-        if self.type == "Player" and self.name == "girl":
-            if self.tick == 300:
-                self.y += 1
-            if self.tick == 400:
-                #self.y += 4
-                self.y += 0
-        if self.type == "Animal" and self.name == "Cat":
-            if self.tick == 400:
-                self.y += 1
-            if self.tick == 550:
-                self.x += 2
-            if self.tick == 650:
-                self.y += 4
-
 class Judge():
     def __init__(self):
         self.winner=""
@@ -613,8 +575,8 @@ def main():#-----------------------------------------------------------メイン
     #init
     screen,fonts,Cs,B1,J1,ck,E1,M1 = mainInit()
     #opening
-    #opening.opening(screen,fonts[0],Cs,B1)#本番用
-    opening.opening2(Cs)#テスト用　オープニング省略バージョン
+    opening.opening(screen,Cs,B1,M1)#本番用
+    #opening.opening2(Cs)#テスト用　オープニング省略バージョン
     Character.number=0#現在選択されているキャラ、クラス変数
     #battle 　
     while True:
