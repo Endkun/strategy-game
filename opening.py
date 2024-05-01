@@ -60,8 +60,8 @@ def animeUpdate(C):#----------最初のアニメーション
         if C.tick == 650:
             C.y += 1        
 
+#オープニング
 def opening(screen,Cs,B,M):#--------------------
-    ##オープニング
     ck = pygame.time.Clock()
     tick=0
     while True:
@@ -69,23 +69,19 @@ def opening(screen,Cs,B,M):#--------------------
         if tick>800:
             break
         B.draw_tile(screen)
+        #---------キャプション---------
         if tick <= 500:
             mes = "喫茶店でくつろいでいたら突然強盗が入ってきた！"
             M.append_tail_line([mes])
-
         elif 500 < tick <= 700:
             mes = "56されたくないなら金を出せ！"
             M.append_tail_line([mes])
         if tick > 700:
             mes = "こいつら逆らう気だ、やっちまえ！"
             M.append_tail_line([mes])
-        # screen.blit(Story, [70,40])
-        # screen.blit(Story2,[70,70])   
         #---------アニメーション---------
         for C1 in Cs:
-            #C1.firstAnimation()
             animeUpdate(C1)
-
         #---------描画---------
         for C1 in Cs:
             C1.draw(screen)

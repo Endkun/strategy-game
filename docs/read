@@ -1,3 +1,60 @@
+2024/05/01
+課題
+	成長システムを作る
+		内部的に経験値をもっていて一定以上になったらレベルが上がる
+		レベルが上がるとhp,ap,dp,epのOrgが上昇していく
+	2面3面目を作る
+		いまのところ１面しかないので続きをつくる
+	間がほしい
+		細かいところでは攻撃をしたときに「ｘがｙを攻撃」といったところで0.5秒くらいの間がほしい、死んだときも同様でなにか重要イベントが発生したときの間を作る	
+  薬草を使う機能を追加
+
+	フローチャートを作る
+	  ３次受けくらいになると、関数を見ただけでわからない
+	  どこから呼ばれているのか何次受けナノカを明確にしておく
+    基本４次受けくらいまでにしておく
+
+以下はchatGPTで書かせたヒエラルキーグラフ
+（かなり使える印象）
+Character Class:
+│
+├─ update(B, Cs, E, M)
+│  ├─ mikata_update(B, Cs, E, M)
+│  │  ├─ check(B, Cs, M)
+│  │  └─ handle(B, Cs, E, M)
+│  │     └─ handle_action(Cs, B, directionSet, new_x, new_y, M)
+│  │        ├─ dmg_calc(C1)
+│  │        └─ make_text(C1, B, dmg, M)
+│  │
+│  └─ teki_update(B, Cs, M)
+│     ├─ check(B, Cs, M)
+│     ├─ useYakusou(B, M)
+│     ├─ teki_nigeru(B)
+│     └─ teki_kougeki(B, Cs, M)
+│        ├─ dmg_calc_show(C1, M)
+│        │  └─ dmg_calc(C)
+│        └─ easy_koteki(B, Cs)
+│           └─ calc_target_delta(Cs)
+│
+└─ draw(screen)
+   └─ draw_point(screen, point, pos_x, pos_y)
+
+Messengerクラス:
+│
+├─ __init__(fonts)
+│   └─ [変数初期化] (font30, font60, font20, head_x, head_y, head_txt, tail_x, tail_y, max_line, tail_txt)
+│
+├─ draw(screen)
+│   ├─ draw_head_line(screen)
+│   │   └─ [テキスト描画]
+│   │
+│   └─ draw_tail_line(screen)
+│       └─ [テキスト描画]
+│
+└─ append_tail_line(txts)
+    └─ [スクロールロジックとテキスト更新]
+
+
 
 2024/01/20
 	アイデア：敵のhpが０のときはどんなに攻撃力が弱くてもワンパンで倒せる、倒すと経験値がアップする。これを利用して	弱キャラの経験値をアップさせたいときは、強キャラがわざと０でとどめておいて、最後のワンパンを弱キャラにやらせる、といった戦略が可能になる

@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 import sys
 import random
-import math
+import time
 import opening
 class BackGround():
     def __init__(self,font):
@@ -84,14 +84,8 @@ class Character():
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
     #-------------------------------基本のやつ-----------
-    def draw_point(self, screen, point, pos_x, pos_y):
-            txt = str(point)
-            txtg = self.fontm.render(txt, True, (0,0,0))  
-            screen.blit(txtg, [self.x*SIZE+pos_x,self.y*SIZE+pos_y])
-            txtg = self.fontm.render(txt, True, (255,255,255))  
-            screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
 
-    def draw(self,screen):#----------------------------描画
+    def draw(self,screen):#----------------------------描画（１次）
         if self.hp>0:
             #画像表示    
             screen.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
@@ -109,8 +103,16 @@ class Character():
             #黄色いガイドの表示
             if Character.number==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
-        
-    def update(self,B,Cs,E,M):#更新（最初に呼ばれるところ）
+
+    def draw_point(self, screen, point, pos_x, pos_y):#（２次）
+            txt = str(point)
+            txtg = self.fontm.render(txt, True, (0,0,0))  
+            screen.blit(txtg, [self.x*SIZE+pos_x,self.y*SIZE+pos_y])
+            txtg = self.fontm.render(txt, True, (255,255,255))  
+            screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
+
+
+    def update(self,B,Cs,E,M):#更新（最初に呼ばれるところ＝１次受け）
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
@@ -128,20 +130,18 @@ class Character():
             self.teki_update(B,Cs,M)    
         elif self.team=="モブ":
             self.energy -=1
-            pass
 
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(Cs)
             #ここで次のキャラを初期化するべし！
             Cs[Character.number].energy = Cs[Character.number].energyOrg
             Cs[Character.number].tick = 0
-            #Cs[Character.number].dp = Cs[Character.number].dpOrg
             self.energy=self.energyOrg#自分も戻しておく
 
     #-------------周囲のチェック------------
     def check(self, B, Cs, M):#敵味方共通、四方周囲に何があるか探索
         #上下左右の周囲を見渡して以下のようなデータを作成する
-        # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': ["敵ハサミ"]}
+        # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': []}
         #壁:地形:味方:敵:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
@@ -226,7 +226,7 @@ class Character():
                 pygame.draw.circle(screen,(0,0,255),((px+0.5)*SIZE,(py+.5)*SIZE),10)
                 #移動可能表示
 
-    def useYakusou(self,B,M):#薬草を使う
+    def useYakusou(self,B,M):#薬草を使う(3次)
         self.hp+=30
         if self.hp>self.hpOrg:
             self.hp=self.hpOrg
@@ -234,25 +234,31 @@ class Character():
         mes1=f"{self.name}は薬草使用！hpは{self.hp}に"
         M.append_tail_line([mes1]) 
 
-    def dmg_calc_show(self,C,M):
+    def dmg_calc_show(self,C,M):#（4次）
         dmg=self.dmg_calc(C)
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
+        if C.hp<=0:
+            print("@243ーーーーーーーーーーーーーーー")
+            mes1=mes1+"死んだ"
+            time.sleep(1)
         M.append_tail_line([mes1]) 
 
-    def dmg_calc(self,C):#ダメージの計算
+    def dmg_calc(self,C):#ダメージの計算（５次）
         dmg=self.ap-C.dp
         if dmg <0:
             dmg=0
         C.hp-=dmg  
         return dmg  
 
-    def make_text(self, C,B,dmg,M):
+    def make_text(self, C,B,dmg,M):#（５次）
         B.mess=[]                
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         M.append_tail_line([mes1]) 
 
     #---------------------------------敵周り-----------------------------------
-    def teki_update(self, B, Cs, M): #B:バック　Cs:キャラクターズ（敵、味方）
+    def teki_update(self, B, Cs, M): 
+        #updateから呼ばれる　（２次受け）
+        #B:バック　Cs:キャラクターズ（敵、味方）
         self.tick+=1
         if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
             self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
@@ -266,7 +272,8 @@ class Character():
                 self.teki_kougeki(B,Cs,M)#攻撃する
             self.energy -=1#エネルギーをマイナス１
 
-    def teki_kougeki(self,B,Cs,M):#敵の攻撃
+    def teki_kougeki(self,B,Cs,M):
+        #敵の攻撃　teki_updateから呼ばれる（３次受け）
         #接敵状況を把握する
         kogekiDir=[]    
         if "味方" in self.shui["up"] and self.y-1 >=0:
@@ -281,31 +288,42 @@ class Character():
         if len(kogekiDir)>0:    #接敵数が１つ以上あるならランダムで選ぶ
             kogekiD=random.choice(kogekiDir)
             #実行    
-            txt=""
-            if kogekiD=="up":
-                for C1 in Cs:
-                    if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
-                        self.dmg_calc_show(C1,M)
-            elif kogekiD=="down":
-                for C1 in Cs:
-                    if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
-                        self.dmg_calc_show(C1,M)
-            elif kogekiD=="right":
-                for C1 in Cs:
-                    if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
-                        self.dmg_calc_show(C1,M)
-            elif kogekiD=="left":
-                for C1 in Cs:
-                    if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
-                        self.dmg_calc_show(C1,M)
-            B.mess=[]
-            B.mess.append(txt)
+            #txt=""
+            for d in self.directions:
+                if kogekiD==d[0]:
+                    dx=d[1]
+                    dy=d[2]
+                    for C in Cs:
+                        if C.x==self.x+dx and C.y == self.y+dy and C.team=="味方":
+                            self.dmg_calc_show(C,M)
+
+            # if kogekiD=="up":
+            #     for C1 in Cs:
+            #         if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
+            #             self.dmg_calc_show(C1,M)
+            # elif kogekiD=="down":
+            #     for C1 in Cs:
+            #         if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
+            #             self.dmg_calc_show(C1,M)
+            # elif kogekiD=="right":
+            #     for C1 in Cs:
+            #         if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
+            #             self.dmg_calc_show(C1,M)
+            # elif kogekiD=="left":
+            #     for C1 in Cs:
+            #         if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
+            #             self.dmg_calc_show(C1,M)
+            #B.mess=[]
+            #B.mess.append(txt)
 
         else:#接敵がないときの向敵アルゴリズム
             self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
-    def search_target(self,Cs):#一番弱い、生きているキャラを狙う,
+    def search_target(self,Cs):#
+        #calc_target_deltaから呼ばれる（６次受け）
+        #Csの中で一番弱い、生きているキャラを探す
+        #目的：一番弱いキャラを狙うため
         t_hp=9999
         for C in Cs:
             if C.hp>0 and C.team=="味方" and t_hp>C.hp:#生きているかつ一番弱いか
@@ -317,6 +335,7 @@ class Character():
         return t_x,t_y ,t_id       
 
     def calc_target_delta(self,Cs):
+        #easy_koteki　から呼ばれる（５次受け）
         t_x,t_y,t_id = self.search_target(Cs)#一番弱いやつを狙う
         dx = t_x-self.x#差分を取る
         dy = t_y-self.y
@@ -341,7 +360,9 @@ class Character():
         return delta        
 
 
-    def easy_koteki(self,B,Cs):#向敵の最初の一歩を計算
+    def easy_koteki(self,B,Cs):
+        #teki_kougekiから呼ばれる　（４次受け）
+        #向敵の最初の一歩を計算
         deltas=[]
         #動ける方向を収集する
         if self.shui["up"] ==[] :
@@ -472,37 +493,29 @@ class Judge():
             M.append_tail_line([mes])
             self.winner="mikata"
 
-class Messenger():
+class Messenger():#draw()は毎フレーム呼ばれ、self.tail_txtをスクロール表示
     def __init__(self,fonts):
         self.font30 = fonts[0]
         self.font60 = fonts[1]
         self.font20 = fonts[2]        
 
+        #ヘッドライン
         self.head_x=5
         self.head_y=20
         self.head_txt=""
 
-        self.tail_x=5
+        #スクロール画面
+        self.tail_x=5   
         self.tail_y=650
         self.max_line=7
         self.tail_txt=["" for i in range(self.max_line)]
 
-        self.old_txt=[]
 
-    def draw(self,screen):
-        self.draw_head_line(screen)
-        self.draw_tail_line(screen)
-
-    def draw_head_line(self,screen):
-        g_txt = self.font30.render(self.head_txt, True, (0,0,0))   # 描画する文字列の設定
-        screen.blit(g_txt, [self.head_x, self.head_y])# 文字列の表示位置
-
+    #スクロール用の文字列の追加（ロジックのみで描画しない）
     def append_tail_line(self,txts):
         #前回と同じならスクロールを実行しない
         if txts[0] == self.tail_txt[self.max_line-1]:
                 return
-        #self.old_txt=txts
-
         #スクロール動作　
         linput=len(txts)    #行数　例えばtxtsは２行で ["x","y"]とする
         tmp=self.tail_txt   #一時置場 ex.["a","b","c","d","e","f","g"]
@@ -518,6 +531,15 @@ class Messenger():
             #["c","d","e","f","g","x","y"]
         self.tal_txt=tmp
 
+    #実際の描画
+    def draw(self,screen):
+        self.draw_head_line(screen)
+        self.draw_tail_line(screen)
+
+    def draw_head_line(self,screen):
+        g_txt = self.font30.render(self.head_txt, True, (0,0,0))   # 描画する文字列の設定
+        screen.blit(g_txt, [self.head_x, self.head_y])# 文字列の表示位置
+
     def draw_tail_line(self,screen):
         #描画
         dy=0
@@ -526,10 +548,10 @@ class Messenger():
             screen.blit(g_txt, [self.tail_x, self.tail_y+dy])# 文字列の表示位置
             dy+=30
 
-class Event():
+class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに入れる
     def __init__(self):
         self.getEvent = pygame.event.get() 
-    def update(self):
+    def update(self):#毎フレーム呼ばれる
         self.getEvent = pygame.event.get()    
 
 def mainInit(): 
@@ -575,8 +597,8 @@ def main():#-----------------------------------------------------------メイン
     #init
     screen,fonts,Cs,B1,J1,ck,E1,M1 = mainInit()
     #opening
-    opening.opening(screen,Cs,B1,M1)#本番用
-    #opening.opening2(Cs)#テスト用　オープニング省略バージョン
+    #opening.opening(screen,Cs,B1,M1)#本番用
+    opening.opening2(Cs)#テスト用　オープニング省略バージョン
     Character.number=0#現在選択されているキャラ、クラス変数
     #battle 　
     while True:
