@@ -51,6 +51,8 @@ class Character():
         self.tdf = df#保存用2
         self.hp = hp#ヘルス
         self.thp = hp#保存用3
+        #---------------------包囲用
+        self.kat = at+15 #覚醒at
         #---------------------キャラクターのタイプ変数
         self.image = image#イメージ画像
         self.team = team#チーム   味方チーム、敵チーム
@@ -72,10 +74,7 @@ class Character():
         self.findFight = []#fighton + isfight
         #----------------------対戦相手
         self.opponent = []
-        
         #-----------------------------------------------判別・処理
-
-        
         """ステータス
           ・Downは未稼働
         　・MoveLightonの場合は移動ができる   
@@ -89,6 +88,7 @@ class Character():
         self.fightFalses = False
         #------------------------索敵
         self.characterlists = {} 
+        #------------------------情報保存
         """上下左右に敵がいたらキャラクターリストにキャラクターの情報入れる
         　　　　　　　　　　　　　  例:{'左': ['敵', 'Gorotsuki'], '下': ['味方', 'Mikata1']}"""   
         self.wall = []           
@@ -128,6 +128,110 @@ class Character():
                     self.x = 3
                 if self.animaionTick >= 650:
                     self.y = 9
+    def hasamiuti(self,characters):
+        for charactera in characters:
+            if self.x == charactera.x-1 and charactera.y == self.y:
+                for characterb in characters:
+                    if self.x == characterb.x-2 and characterb.y == self.y:
+                        #if self.team == "味方" and charactera.team == "味方" and characterb.team == "味方" or self.team == "味方" and charactera.team == "敵" and characterb.team == "敵": 
+                        if self.team == "敵":
+                            if charactera.team == "味方":
+                                if characterb.team == "敵":
+                                    if self.at != self.kat:
+                                        print("味方が包囲された！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                        elif self.team == "味方":
+                            if charactera.team == "敵":
+                                if characterb.team == "味方":
+                                    if self.at != self.kat:
+                                        print("敵を包囲した！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                    else:
+                        self.at = self.tat
+                        charactera.at == charactera.tat
+                        characterb.at == characterb.tat
+            if self.x == charactera.x+1 and charactera.y == self.y:
+                for characterb in characters:
+                    if self.x == characterb.x+2 and characterb.y == self.y:
+                        #if self.team == "味方" and charactera.team == "味方" and characterb.team == "味方" or self.team == "味方" and charactera.team == "敵" and characterb.team == "敵": 
+                        if self.team == "敵":
+                            if charactera.team == "味方":
+                                if characterb.team == "敵":
+                                    if self.at != self.kat:
+                                        print("味方が包囲された！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                        elif self.team == "味方":
+                            if charactera.team == "敵":
+                                if characterb.team == "味方":
+                                    if self.at != self.kat:
+                                        print("敵を包囲した！")
+                                    self.at = self.kat
+                                    charactera.at = 0                   
+                                    characterb.at = characterb.kat
+                    else:
+                        self.at = self.tat
+                        charactera.at == charactera.tat
+                        characterb.at == characterb.tat
+            if self.y == charactera.y-1 and charactera.x == self.x:
+                for characterb in characters:
+                    if self.y == characterb.y-2 and characterb.x == self.x:
+                        #if self.team == "敵" and charactera.team == "味方" and characterb.team == "味方" or self.team == "味方" and charactera.team == "敵" and characterb.team == "敵": 
+                        if self.team == "敵":
+                            if charactera.team == "味方":
+                                if characterb.team == "敵":
+                                    if self.at != self.kat:
+                                        print("味方が包囲された！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                        elif self.team == "味方":
+                            if charactera.team == "敵":
+                                if characterb.team == "味方":
+                                    if self.at != self.kat:
+                                        print("敵を包囲した！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                    else:
+                        self.at = self.tat
+                        charactera.at == charactera.tat
+                        characterb.at == characterb.tat
+            if self.y == charactera.y+1 and charactera.x == self.x:
+                for characterb in characters:
+                    if self.y == characterb.y+2 and characterb.x == self.x:
+                        #if self.team == "敵" and charactera.team == "味方" and characterb.team == "味方" or self.team == "味方" and charactera.team == "敵" and characterb.team == "敵": 
+                        if self.team == "敵":
+                            if charactera.team == "味方":
+                                if characterb.team == "敵":
+                                    if self.at != self.kat:
+                                        print("味方が包囲された！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                        elif self.team == "味方":
+                            if charactera.team == "敵":
+                                if characterb.team == "味方":
+                                    if self.at != self.kat:
+                                        print("敵を包囲した！")
+                                    self.at = self.kat
+                                    charactera.at = 0
+                                    characterb.at = characterb.kat
+                    else:
+                        self.at = self.tat
+                        charactera.at == charactera.tat
+                        characterb.at == characterb.tat
+                
+
+
+                    
+
+        
     def enemyMoveDetection(self,mapchip):
         #print(f"{self.y-1=}")
         if mapchip[self.y-1][self.x] == "1": #上
@@ -163,17 +267,6 @@ class Character():
         if self.x-1 == character.x and self.y == character.y: #移左
             if "hidari" in self.findMove:
                 self.findMove.remove("hidari")
-        print(f"{character.x=} {character.y=}")
-        if (self.x - 1 == character.x and self.y == character.y and \
-            self.x + 1 == character.x and self.y == character.y) or \
-           (self.x == character.x and self.y + 1 == character.y and \
-            self.x == character.x and self.y - 1 == character.y):
-            self.at=0
-            self.df-random.randint(0,10)
-        else:
-            self.at = self.tat
-            self.df = self.tdf
-
     def enemyEvent(self,character):
         self.enemyFightCalculation(character) 
         if self.hp < self.thp/3:
@@ -203,7 +296,7 @@ class Character():
         if self.x+1 == character.x and self.y == character.y: #攻右
             if self.hp >= 25:
                 if self.hp+10 >= character.hp:
-                    self.findFight.append("migi")
+                    self.findFight.append("migi")  
                     self.findFight.append(character.name)
         #else:
         #    if "migi" in self.findFight:
@@ -225,6 +318,7 @@ class Character():
         self.findMove.clear()
         self.findFight.clear()
         #print(self.name,"A",self.x,self.y)
+        print(f"@323 {self.at=}")
         if self.hp <= 0:
             self.x = -10
             self.y = -10
@@ -264,6 +358,7 @@ class Character():
                     character.hp -= self.at-self.df
             #print(self.addName,"に攻撃")
             Character.num += 1
+        self.hasamiuti(characters)
             
                 
     def playerUpdate(self,screen,mapchip,characters,fonts):#移動ボタン用
@@ -277,8 +372,8 @@ class Character():
         if self.energy <= 0:
             Character.num += 1
             self.energy = self.tenergy
-
         self.event(screen,characters)
+        self.hasamiuti(characters)
             #-----------------------------------------------------------------------------------------イベント処理
     def event(self,screen,characters):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -495,7 +590,7 @@ class Judge():
                 self.cm += 1
             if i.team == "敵":
                 self.ct += 1
-        print(f"{self.cm=} {self.ct=}")
+        #print(f"{self.cm=} {self.ct=}")
         
         self.winner = []
     def hantei(self,characters):
@@ -571,7 +666,7 @@ def main():#-----------------------------------------------------------メイン
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",fonts,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
     slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,15,5,40)
     slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,30,5,80)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,1,5,680)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20)
     #キャラクター
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
@@ -593,6 +688,7 @@ def main():#-----------------------------------------------------------メイン
             if Character.num == character.id:
                 if character.team == "敵":
                     character.enemyUpdate(screen,field.mapchip,characters,fonts)
+                    #print(f"@685 {character.at=} {character.name=}")
                 if character.team == "味方":
                     character.playerUpdate(screen,field.mapchip,characters,fonts)
             character.draw(screen,fonts)
@@ -603,5 +699,6 @@ def main():#-----------------------------------------------------------メイン
         judge.hantei(characters)
         #---------描画---------  
         pygame.display.update()         
-        ck.tick(33) #1秒間で30フレームになるように33msecのwait   
+        ck.tick(60) #1秒間で30フレームになるように33msecのwait   
 main()
+ 
