@@ -318,7 +318,6 @@ class Character():
         self.findMove.clear()
         self.findFight.clear()
         #print(self.name,"A",self.x,self.y)
-        print(f"@323 {self.at=}")
         if self.hp <= 0:
             self.x = -10
             self.y = -10
@@ -355,7 +354,7 @@ class Character():
             print(self.name,"が",self.findFight[1],"に攻撃")
             for character in characters:
                 if character.name == self.findFight[1]:
-                    character.hp -= self.at-self.df
+                    character.hp -= max(0,self.at-character.df)
             #print(self.addName,"に攻撃")
             Character.num += 1
         self.hasamiuti(characters)
@@ -512,7 +511,7 @@ class Character():
         for character in characters:
             if character.name == self.opponent[0]:
                 print(self.opponent,"の前hpは",character.hp)
-                character.hp -= self.at-self.df
+                character.hp -= max(0,self.at-character.df)
                 print(self.opponent,"のhpは",character.hp,"になった")
                 if character.hp <= 0:
                     character.x = -10
@@ -666,7 +665,7 @@ def main():#-----------------------------------------------------------メイン
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",fonts,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
     slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,15,5,40)
     slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,1,5,680)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,10,5,680)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20)
     #キャラクター
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
