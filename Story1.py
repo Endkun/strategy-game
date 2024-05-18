@@ -373,6 +373,12 @@ class Character():
             self.energy = self.tenergy
         self.event(screen,characters)
         self.hasamiuti(characters)
+    def temp(self,characters,sc):
+        self.opponent.append(sc[1])
+        self.fight(characters)
+        self.energy -= 1
+        self.fightFalses = True
+
             #-----------------------------------------------------------------------------------------イベント処理
     def event(self,screen,characters):
         for event in pygame.event.get():  # イベントキューからキーボードやマウスの動きを取得
@@ -403,31 +409,19 @@ class Character():
                     if "ue" in self.findFight:
                         if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
                             sc = self.characterlists['上']
-                            self.opponent.append(sc[1])
-                            self.fight(characters)
-                            self.energy -= 1
-                            self.fightFalses = True
+                            self.temp(characters,sc)
                     if "sita" in self.findFight:
                         if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
                             sc = self.characterlists['下']
-                            self.opponent.append(sc[1])
-                            self.fight(characters)
-                            self.energy -= 1
-                            self.fightFalses = True
+                            self.temp(characters,sc)
                     if "hidari" in self.findFight:
                         if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
                             sc = self.characterlists['左']
-                            self.opponent.append(sc[1])
-                            self.fight(characters)
-                            self.energy -= 1
-                            self.fightFalses = True
+                            self.temp(characters,sc)
                     if  "migi" in self.findFight:
                         if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
                             sc = self.characterlists['右']
-                            self.opponent.append(sc[1])
-                            self.fight(characters)
-                            self.energy -= 1
-                            self.fightFalses = True
+                            self.temp(characters,sc)
                     if self.fightFalses == True:
                         if "ue" in self.findFight:
                             self.findFight.remove("ue")
@@ -539,8 +533,8 @@ class Character():
         if mapchip[self.y+1][self.x] == "1": #下
             if "下" in self.characterlists.keys():#下に何もなければ黄色い丸を表示
                 cget = self.characterlists.get("下", [])  # キーが存在しない場合は空リストを返す
-                if cget[0] == "敵":
-                    pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
+                if cget[0] == "敵": 
+                    pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10) 
                     self.isFight = True
                     self.findFight.append("sita")
                     
@@ -663,9 +657,9 @@ def main():#-----------------------------------------------------------メイン
     #キャラクターインスタンス化
     player1 = Character(2,5,"Player",Pl1,"味方","Player",fonts,0,3,24,15,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
     player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",fonts,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,15,5,40)
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,12,6,40)
     slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40)
-    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,10,5,680)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,12,5,80)
     cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20)
     #キャラクター
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
