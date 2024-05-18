@@ -83,9 +83,9 @@ class Character():
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
 
-    #-------------------------------基本のやつ-----------
+    #-------------------------------　敵味方共通----------
 
-    def draw(self,screen):#----------------------------描画（１次）
+    def draw(self,screen):#--------描画（１次）
         if self.hp>0:
             #画像表示    
             screen.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
@@ -112,7 +112,7 @@ class Character():
             screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
 
 
-    def update(self,B,Cs,E,M):#更新（最初に呼ばれるところ＝１次受け）
+    def update(self,B,Cs,E,M):#更新（１次受け）#敵味方共通
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
@@ -138,7 +138,6 @@ class Character():
             Cs[Character.number].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
-    #-------------周囲のチェック------------
     def check(self, B, Cs, M):#敵味方共通、四方周囲に何があるか探索
         #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': []}
@@ -148,7 +147,7 @@ class Character():
         for directionSet in self.directions:#上下左右をスキャン
             self.check_direction(directionSet, B, Cs, M)
 
-    def check_direction(self, directionSet, B, Cs, M):#BはBackGround
+    def check_direction(self, directionSet, B, Cs, M):#敵味方共通
         direction = directionSet[0]
         dx = directionSet[1]    
         dy = directionSet[2]
@@ -160,7 +159,7 @@ class Character():
         elif int(B.mapchip[new_y][new_x]) > 1:  # 壁や建造物があるかチェック
             self.shui[direction].append("地形")
         else:
-            if self.team=="味方":
+            if self.team=="味方":#味敵味
                 for C in Cs:  # キャラクタースキャン
                     if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
                         if C.team == "敵":
@@ -177,10 +176,10 @@ class Character():
                                             C.dp=int(C.dp/3)
                                             mes1=f"挟み撃ち!!{C.name}の防御が{C.dp}に"
                                             M.append_tail_line([mes1])
-                                            print(mes1)
+                                            #print(mes1)
                         else:
                             "モブ"
-            elif self.team=="敵":
+            elif self.team=="敵":#敵味敵
                 for C in Cs:  # キャラクタースキャン
                     if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
                         if C.team == "味方" :#そいつが味方なら
@@ -196,10 +195,10 @@ class Character():
                                         if Ch.team=="敵":
                                             mes=f"やばい！！敵に挟まれた "
                                             M.append_tail_line([mes])
-                                            print(mes)                                            
+                                           
 
 
-    #全キャラ用、新ガイドを描画するだけ
+    #全キャラ用、新ガイドを描画するだけ　#敵味方共通
     def new_guide(self,screen):
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
@@ -226,7 +225,7 @@ class Character():
                 pygame.draw.circle(screen,(0,0,255),((px+0.5)*SIZE,(py+.5)*SIZE),10)
                 #移動可能表示
 
-    def useYakusou(self,B,M):#薬草を使う(3次)
+    def useYakusou(self,B,M):#薬草を使う(3次)　#敵味方共通
         self.hp+=30
         if self.hp>self.hpOrg:
             self.hp=self.hpOrg
@@ -234,28 +233,25 @@ class Character():
         mes1=f"{self.name}は薬草使用！hpは{self.hp}に"
         M.append_tail_line([mes1]) 
 
-    def dmg_calc_show(self,C,M):#（4次）
+    def dmg_calc_show(self,C,M):#ダメージ計算と表示（4次）敵味方共通
         dmg=self.dmg_calc(C)
+        print(f"@239ー{dmg=}")
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         if C.hp<=0:
-            print("@243ーーーーーーーーーーーーーーー")
+            print(f"@243ー{C.hp=}")
             mes1=mes1+"死んだ"
             time.sleep(1)
         M.append_tail_line([mes1]) 
 
-    def dmg_calc(self,C):#ダメージの計算（５次）
+    def dmg_calc(self,C):#ダメージの計算（５次）敵味方共通
         dmg=self.ap-C.dp
         if dmg <0:
             dmg=0
         C.hp-=dmg  
         return dmg  
 
-    def make_text(self, C,B,dmg,M):#（５次）
-        B.mess=[]                
-        mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
-        M.append_tail_line([mes1]) 
 
-    #---------------------------------敵周り-----------------------------------
+    #-----------------------------敵----------------------------------
     def teki_update(self, B, Cs, M): 
         #updateから呼ばれる　（２次受け）
         #B:バック　Cs:キャラクターズ（敵、味方）
@@ -296,25 +292,6 @@ class Character():
                     for C in Cs:
                         if C.x==self.x+dx and C.y == self.y+dy and C.team=="味方":
                             self.dmg_calc_show(C,M)
-
-            # if kogekiD=="up":
-            #     for C1 in Cs:
-            #         if C1.x==self.x and C1.y == self.y-1 and C1.team=="味方":
-            #             self.dmg_calc_show(C1,M)
-            # elif kogekiD=="down":
-            #     for C1 in Cs:
-            #         if C1.x==self.x and C1.y == self.y+1 and C1.team=="味方":
-            #             self.dmg_calc_show(C1,M)
-            # elif kogekiD=="right":
-            #     for C1 in Cs:
-            #         if C1.x ==self.x+1 and C1.y == self.y and C1.team=="味方":
-            #             self.dmg_calc_show(C1,M)
-            # elif kogekiD=="left":
-            #     for C1 in Cs:
-            #         if C1.x ==self.x-1 and C1.y == self.y and C1.team=="味方":
-            #             self.dmg_calc_show(C1,M)
-            #B.mess=[]
-            #B.mess.append(txt)
 
         else:#接敵がないときの向敵アルゴリズム
             self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
@@ -419,7 +396,7 @@ class Character():
         elif nigeD=="left":
             self.x-=1
                
-    #=================味方周り===========================================
+    #=================味方==========================================
     #モードなしダイレクト入力
     def mikata_update(self,B,Cs,E,M):    
         self.check(B,Cs,M)#索敵
@@ -448,8 +425,7 @@ class Character():
                 #敵の同定
                 for C1 in Cs:
                     if C1.x-self.x == dx and C1.y-self.y == dy and C1.team=="敵":
-                        dmg=self.dmg_calc(C1)
-                        self.make_text(C1,B,dmg,M)
+                        self.dmg_calc_show(C1,M)
                         self.energy-=1
             #味方がいるなら
             elif "味方" in self.shui[direction]:
@@ -554,9 +530,8 @@ class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに�
     def update(self):#毎フレーム呼ばれる
         self.getEvent = pygame.event.get()    
 
-def mainInit(): 
-    pygame.init()        
-    screen = pygame.display.set_mode((500, 900))  # 800
+def mainInit(level): 
+    print (f"{level=}")
     font30 = pygame.font.SysFont("yumincho", 30)       
     font60 = pygame.font.SysFont("yumincho", 60)                      
     font20 = pygame.font.SysFont("yumincho", 20)                      
@@ -576,48 +551,64 @@ def mainInit():
     Sl2 = pygame.transform.scale(Sl2, (SIZE, SIZE)) 
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
     Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
-
-    Db=[#キャラのデータベース
-        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
-        (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
-        (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3),
-        (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],250,60,50,3),
-        (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2),
-    ]
+    if level==2:
+        Db=[#キャラのデータベース
+            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5),
+            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3),
+            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4),
+            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],250,60,50,3),
+            (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2),
+        ]
+    elif level==1:
+        Db=[#キャラのデータベース
+            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5),
+            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3),
+            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4)
+        ]
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(fonts[0])
     J1 = Judge()
     E1 = Event()
     M1 = Messenger(fonts)
-    return screen,fonts,Cs,B1,J1,ck,E1,M1
+    return Cs, B1, J1, ck, E1, M1
 
 def main():#-----------------------------------------------------------メイン
     #init
-    screen,fonts,Cs,B1,J1,ck,E1,M1 = mainInit()
-    #opening
+    pygame.init()        
+    screen = pygame.display.set_mode((500, 900))  # 800
+    ck = pygame.time.Clock()
+    level=1
     #opening.opening(screen,Cs,B1,M1)#本番用
-    opening.opening2(Cs)#テスト用　オープニング省略バージョン
-    Character.number=0#現在選択されているキャラ、クラス変数
-    #battle 　
     while True:
-        E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
-        B1.draw_tile(screen)#壁面
-        B1.draw_text(screen)#メイン文字
-        B1.draw_tail(screen)#補足説明用の文字
-        #---------更新と描画---------
-        for ch in Cs:#キャラ全員の更新と描画
-            ch.update(B1,Cs,E1,M1)#ただし現在選択されているキャラ以外は即return
-            ch.draw(screen)
-        for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
-            ch.new_guide(screen)
-        M1.draw(screen)    
-        J1.judge(Cs,M1)    #判定
-        if J1.winner=="teki" or J1.winner=="mikata":
-            break
-        pygame.display.update() #画面更新、こいつは引数がない        
-        ck.tick(60) #1秒間で60フレームになるように16msecのwait
-
+        Cs,B1,J1,ck,E1,M1 = mainInit(level)
+        print(f"{len(Cs)=}")
+        opening.opening2(Cs)#初期配置
+        Character.number=0#現在選択されているキャラ、クラス変数
+        #battle 　
+        while True:
+            E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
+            B1.draw_tile(screen)#壁面
+            B1.draw_text(screen)#メイン文字
+            B1.draw_tail(screen)#補足説明用の文字
+            #---------更新と描画---------
+            for ch in Cs:#キャラ全員の更新と描画
+                ch.update(B1,Cs,E1,M1)#ただし現在選択されているキャラ以外は即return
+                ch.draw(screen)
+            for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
+                ch.new_guide(screen)
+            M1.draw(screen)    
+            J1.judge(Cs,M1)    #判定
+            if J1.winner=="teki" or J1.winner=="mikata":
+                break
+            pygame.display.update() #画面更新、こいつは引数がない        
+            ck.tick(60) #1秒間で60フレームになるように16msecのwait
+        if J1.winner=="mikata":
+            level+=1 
+        else:
+            break           
 SIZE=70#画面での１マスの大きさ
 main()
