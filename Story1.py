@@ -378,6 +378,15 @@ class Character():
         self.fight(characters)
         self.energy -= 1
         self.fightFalses = True
+    def move(self,houkou,dy,dy2,dx,dx2,setnum,setnum2,x,y):
+        if houkou in self.findMove: 
+            if self.y*100+dy < y < self.y*100+dy2 and self.x*100+dx < x < self.x*100+dx2:
+                self.y += setnum
+                self.x += setnum2
+                self.energy -= 1
+    def fightremove(self,houkou):
+        if houkou in self.findFight:
+            self.findFight.remove(houkou)
 
             #-----------------------------------------------------------------------------------------イベント処理
     def event(self,screen,characters):
@@ -387,22 +396,10 @@ class Character():
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
                 x, y = event.pos 
-                if "ue" in self.findMove: 
-                    if self.y*100-100 < y < self.y*100 and self.x*100 < x < self.x*100+100:
-                        self.y -= 1  
-                        self.energy -= 1
-                if "sita" in self.findMove:
-                    if self.y*100+100 < y < self.y*100+200 and self.x*100 < x < self.x*100+100:
-                        self.y += 1 
-                        self.energy -= 1
-                if "hidari" in self.findMove:
-                    if self.x*100-100 < x < self.x*100 and self.y*100 < y < self.y*100+100:
-                        self.x -= 1
-                        self.energy -= 1
-                if "migi" in self.findMove:
-                    if self.x*100+100 < x < self.x*100+200 and self.y*100 < y < self.y*100+100:
-                        self.x += 1    
-                        self.energy -= 1     
+                self.move("ue",-100,0,0,100,-1,0,x,y)
+                self.move("sita",100,200,0,100,1,0,x,y)
+                self.move("hidari",0,100,-100,0,0,-1,x,y)
+                self.move("migi",0,100,100,200,0,1,x,y)  
                 if self.isFight == True:
                     x,y = event.pos
                     self.opponent.clear()
@@ -423,82 +420,52 @@ class Character():
                             sc = self.characterlists['右']
                             self.temp(characters,sc)
                     if self.fightFalses == True:
-                        if "ue" in self.findFight:
-                            self.findFight.remove("ue")
-                        if "sita" in self.findFight:
-                            self.findFight.remove("sita")
-                        if "hidari" in self.findFight:
-                            self.findFight.remove("hidari")
-                        if "migi" in self.findFight:
-                            self.findFight.remove("migi")
+                        self.fightremove("ue")
+                        self.fightremove("sita")
+                        self.fightremove("migi")
+                        self.fightremove("hidari")
+    def detection_check(self,character,houkou,dx,dy):
+        if self.x + dx == character.x and self.y + dy == character.y: #上
+            if houkou in self.findMove:
+                self.findMove.remove(houkou)
+    def characterlist_check(self,character,houkou,dx,dy):
+        if self.x+dx == character.x and self.y+dy == character.y:
+            if character.team == "味方":
+                self.characterlists[houkou] = ["味方",character.name]
+            else:
+                self.characterlists[houkou] = ["敵",character.name]
+    def wall_check(self,houkou,dx,dy,mapchip):
+        if mapchip[self.y+dy][self.x+dx] != "1": #上
+            self.wall.append(houkou)
+    def move_check(self,houkou,dx,dy,mapchip):
+        if mapchip[self.y+dy][self.x+dx] == "1": #上
+            self.findMove.append(houkou)
     def detection(self,screen,mapchip,characters):#動くときに周囲をチェックする関数
+
     #-----------------------------------------------------------------------------------------動ける所の検出
         self.wall = []
         self.characterlists = {}
         for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
             #-----------------------------------------------------------索敵(敵)
-            if self.x == character.x and self.y-1 == character.y:
-                if character.team == "味方":
-                    self.characterlists["上"] = ["味方",character.name]
-                else:
-                    self.characterlists["上"] = ["敵",character.name]
-
-            if self.x == character.x and self.y+1 == character.y:
-                if character.team == "味方":
-                    self.characterlists["下"] = ["味方",character.name]
-                else:
-                    self.characterlists["下"] = ["敵",character.name]
-
-            if self.x+1 == character.x and self.y == character.y:
-                if character.team == "味方":
-                    self.characterlists["右"] = ["味方",character.name]
-                else:
-                    self.characterlists["右"] = ["敵",character.name]
-
-            if self.x-1 == character.x and self.y == character.y:
-                if character.team == "味方":
-                    self.characterlists["左"] = ["味方",character.name]
-                else:
-                    self.characterlists["左"] = ["敵",character.name]
+            self.characterlist_check(character,"上",0,-1)
+            self.characterlist_check(character,"下",0,1)
+            self.characterlist_check(character,"右",1,0)
+            self.characterlist_check(character,"左",-1,0)
         #------------------------------------------------------------------壁検知
-        if mapchip[self.y-1][self.x] != "1": #上
-            self.wall.append("上")
-        if mapchip[self.y+1][self.x] != "1": #上
-            self.wall.append("下")
-        if mapchip[self.y][self.x+1] != "1": #上
-            self.wall.append("右")
-        if mapchip[self.y][self.x-1] != "1": #上
-            self.wall.append("左")
+        self.wall_check("ue",0,-1,mapchip)
+        self.wall_check("sita",0,1,mapchip)
+        self.wall_check("migi",1,0,mapchip)
+        self.wall_check("hidari",-1,0,mapchip)
         #--------------------------------------------------------------------------------------動き判定
-        if mapchip[self.y-1][self.x] == "1": #上
-            self.findMove.append("ue")
-        #else:
-        #    self.canMoveUp = False
-        if mapchip[self.y+1][self.x] == "1": #下  
-            self.findMove.append("sita")
-        #else:
-        #    self.canMoveDown = False
-        if mapchip[self.y][self.x+1] == "1": #右
-            self.findMove.append("migi")
-        #else:
-        #    self.canMoveRight = False
-        if mapchip[self.y][self.x-1] == "1": #左
-            self.findMove.append("hidari")
-        #else:
-        #    self.canMoveLeft = False
+        self.move_check("ue",0,-1,mapchip)
+        self.move_check("sita",0,1,mapchip)
+        self.move_check("migi",1,0,mapchip)
+        self.move_check("hidari",-1,0,mapchip)
         for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
-            if self.x == character.x and self.y-1 == character.y: #上
-                if "ue" in self.findMove:
-                    self.findMove.remove("ue")
-            if self.x == character.x and self.y+1 == character.y: #下  
-                if "sita" in self.findMove:
-                    self.findMove.remove("sita")
-            if self.x+1 == character.x and self.y == character.y: #右
-                if "migi" in self.findMove:
-                    self.findMove.remove("migi")
-            if self.x-1 == character.x and self.y == character.y: #左
-                if "hidari" in self.findMove:
-                    self.findMove.remove("hidari")
+            self.detection_check(character,"ue",0,-1)
+            self.detection_check(character,"sita",0,1)
+            self.detection_check(character,"migi",1,0)
+            self.detection_check(character,"hidari",-1,0)
 
     def fight(self,characters):
         print(self.name,"は",self.opponent,"に攻撃をした！")
@@ -516,56 +483,25 @@ class Character():
         if self.characterType == "Goutou":
             if self.name == "Gorotsuki":
                 self.y = 3
+    def direction_check(self, dx, dy, direction_key, fight_key, mapchip, screen):
+        if mapchip[self.y + dy][self.x + dx]== "1":
+            if direction_key in self.characterlists.keys():
+                cget = self.characterlists.get(direction_key, [])  # キーが存在しない場合は空リストを返す
+                if cget[0] == "敵":
+                    pygame.draw.circle(screen, (250, 0, 0), ((self.x + dx + 0.5) * 100, (self.y + dy + 0.5) * 100), 10)
+                    self.isFight = True
+                    self.findFight.append(fight_key)
+                elif cget[0] == "味方":
+                    pygame.draw.circle(screen, (0, 0, 250), ((self.x + dx + 0.5) * 100, (self.y + dy + 0.5) * 100), 10)
+            else:
+                pygame.draw.circle(screen, (250, 250, 0), ((self.x + dx + 0.5) * 100, (self.y + dy + 0.5) * 100), 10)
     def circle(self,screen,mapchip):
         self.findMove.clear()
         self.findFight.clear()
-        if mapchip[self.y-1][self.x] == "1": #上
-            if "上" in self.characterlists.keys():#上に何もなければ黄色い丸を表示
-                cget = self.characterlists.get("上", [])  # キーが存在しない場合は空リストを返す  
-                if cget[0] == "敵":
-                    pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-                    self.isFight = True
-                    self.findFight.append("ue")
-                elif cget[0] == "味方":
-                    pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y-0.5)*100),10)
-            else:
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y-0.5)*100),10)
-        if mapchip[self.y+1][self.x] == "1": #下
-            if "下" in self.characterlists.keys():#下に何もなければ黄色い丸を表示
-                cget = self.characterlists.get("下", [])  # キーが存在しない場合は空リストを返す
-                if cget[0] == "敵": 
-                    pygame.draw.circle(screen,(250,0,0),((self.x+0.5)*100,(self.y+1.5)*100),10) 
-                    self.isFight = True
-                    self.findFight.append("sita")
-                    
-                elif cget[0] == "味方":
-                    pygame.draw.circle(screen,(0,0,250),((self.x+0.5)*100,(self.y+1.5)*100),10)
-            else:
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*100,(self.y+1.5)*100),10)
-
-        if mapchip[self.y][self.x-1] == "1": #左
-            if "左" in self.characterlists.keys():#左に何もなければ黄色い丸を表示
-                cget = self.characterlists.get("左", [])  # キーが存在しない場合は空リストを返す  
-                if cget[0] == "敵":
-                    pygame.draw.circle(screen,(250,0,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-                    self.isFight = True
-                    self.findFight.append("hidari")
-                elif cget[0] == "味方":
-                    pygame.draw.circle(screen,(0,0,255),((self.x-0.5)*100,(self.y+0.5)*100),10)
-            else:
-                pygame.draw.circle(screen,(250,250,0),((self.x-0.5)*100,(self.y+0.5)*100),10)
-
-        if mapchip[self.y][self.x+1] == "1": #右
-            if "右" in self.characterlists.keys():#右に何もなければ黄色い丸を表示
-                cget = self.characterlists.get("右", [])  # キーが存在しない場合は空リストを返す
-                if cget[0] == "敵":
-                    pygame.draw.circle(screen,(250,0,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
-                    self.isFight = True
-                    self.findFight.append("migi")
-                elif cget[0] == "味方":
-                    pygame.draw.circle(screen,(0,0,255),((self.x+1.5)*100,(self.y+0.5)*100),10)
-            else:
-                pygame.draw.circle(screen,(250,250,0),((self.x+1.5)*100,(self.y+0.5)*100),10)
+        self.direction_check(0, -1, "上", "ue",mapchip,screen)
+        self.direction_check(0, 1, "下", "sita",mapchip,screen)
+        self.direction_check(1, 0, "右", "migi",mapchip,screen)
+        self.direction_check(-1, 0, "左", "hidari",mapchip,screen)
         
     def draw(self,screen,fonts):#-----------------------------------------------------------描画
         screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
