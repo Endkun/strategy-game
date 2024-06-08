@@ -237,36 +237,39 @@ class Character():
                         characterb.at == characterb.tat
                 
 
-    def ctDetection(self,character,houkou,dx,dy):
-        if self.x+dx == character.x and self.y+dy == character.y:
-            self.chtype[houkou] = [character.hp,character.x,character.y]
+    def ctDetection(self,character,dd):
+        if self.x+dd[1] == character.x and self.y+dd[2] == character.y:
+            #self.chtype[dd[0]] = [character.hp,dd[1],dd[2]]# ex) {"上":[50,3,7],"下":[30,9,7]}
+            self.chtype[character.name] = [dd[0],character.hp,dd[1],dd[2]]# ex) {"上":[50,3,7],"下":[30,9,7]}
     def enemyDetection(self,mapchip,character):
         self.ataix = []
         self.ataiy = []
-        ctDetection(character,"上",0,-1)
-        ctDetection(character,"下",0,1)
-        ctDetection(character,"右",1,0)
-        ctDetection(character,"左",-1,0)
-        ctDetection(character,"上",0,-2)
-        ctDetection(character,"下",0,2)
-        ctDetection(character,"右",2,0)
-        ctDetection(character,"左",-2,0)
-        ctDetection(character,"左上",-1,-1)
-        ctDetection(character,"左下",-1,1)
-        ctDetection(character,"右上",1,-1)
-        ctDetection(character,"右下",-1,1)
-        ctDetection(character,"上",0,-3)
-        ctDetection(character,"下",0,3)
-        ctDetection(character,"右",3,0)
-        ctDetection(character,"左",-3,0)
-        ctDetection(character,"左左上",-2,-1)
-        ctDetection(character,"左左下",-2,1)
-        ctDetection(character,"右右上",2,-1)
-        ctDetection(character,"右右下",-2,1)
-        ctDetection(character,"左上上",-1,-2)
-        ctDetection(character,"左下下",-1,2)
-        ctDetection(character,"右上上",1,-2)
-        ctDetection(character,"右下下",-1,2)
+        self.detecionDirection = [["上",0,-1],
+                                  ["下",0,1],
+                                  ["右",1,0],
+                                  ["左",-1,0],
+                                  ["上2",0,-2],
+                                  ["下2",0,2],
+                                  ["右2",2,0],
+                                  ["左2",-2,0],
+                                  ["左上",-1,-1],
+                                  ["左下",-1,1],
+                                  ["右上",1,-1],
+                                  ["右下",-1,1],
+                                  ["上3",0,-3],
+                                  ["下3",0,3],
+                                  ["右3",3,0],
+                                  ["左3",-3,0],
+                                  ["左左上",-2,-1],
+                                  ["左左下",-2,1],
+                                  ["右右上",2,-1],
+                                  ["右右下",-2,1],
+                                  ["左上上",-1,-2],
+                                  ["左下下",-1,2],
+                                  ["右上上",1,-2],
+                                  ["右下下",-1,2]]
+        for i in self.detecionDirection:
+            self.ctDetection(character,i)
         #-----------------------キャラクタータイプ
         #for ct in self.chtype:#名前:[hp,x,y] 辞書
         #    #print(character.name)
@@ -296,11 +299,7 @@ class Character():
         #    if "hidari" in self.findMove:
         #        self.findMove.remove("hidari")
         if self.pss == "fierce": #狂暴
-            if self.ataix[0] < self.ataix[1]:
-                self.x = character.x
-            if self.ataiy[0] < self.ataiy[1]:
-                self.y = character.y
-            print(self.ataix,ataiy)
+            print(self.chtype)
 
         if self.pss == "timid": #臆病
             pass
