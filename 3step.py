@@ -3,7 +3,7 @@ playerから３step（マンハッタン距離で３歩）以内に敵がいた�
     敵リストを返す関数
 """
 
-SIZE = 8  #フィールドの大きさ8x8
+SIZE = 18  #フィールドの大きさ8x8
 
 
 class Characters():  #ダミーのクラス
@@ -32,6 +32,7 @@ def search_area(grid, start_x, start_y, Cs, steps=3):
                     if C.x == ix and C.y == jy and C.team == "enemy":
                         print(f"Found {C.team} at ({ix}, {jy}) HP= {C.hp}")
                         E_list.append(C)
+    print(f"{E_list=}")                      
     return E_list
 
 

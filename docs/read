@@ -1,11 +1,120 @@
 
+
+●タイトル：FM　敵の攻撃部分
+日付：2024/06/08 Sat
+	とにかく敵を見つけたら突っ込んでくる
+	まずは１歩目の近いところの弱いやつを叩きに来る
+	次に３歩以内で弱い順に叩きに来る感じ
+-------------- 
+self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+
+teki_update(self, B, Cs, M):        #updateから呼ばれる　（２次受け）        #B:バック　Cs:キャラクターズ（敵、味方）
+    self.tick+=1
+    if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
+        self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する        # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+        if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
+            if "薬草" in self.pocket:#薬草を持っていたら
+                self.useYakusou(B,M)#薬草を使う
+            else:        #もってなかったら    
+                self.teki_nigeru(B) #逃げるを実行
+        else:#hpが50%以上なら
+            self.teki_kougeki(B,Cs,M)#攻撃する
+        self.energy -=1#エネルギーをマイナス１
+--------------
+
+
+
+●タイトル：全体として敵にも2,3タイプいるようにする
+	１：単純
+	２：臆病
+	３：バランス
+
+１：単純
+	自分のhpに関係なく敵を見つけたら突っ込んでくる
+	自分のhpが0%をきったら、逃げる、または薬草を使う（これはありえないので）
+	戦う場合
+		まずは１歩目の近いところの弱いやつを叩きに来る
+		次に３歩以内で弱い順に敵に向かう
+
+２：臆病
+	自分のhpが70%をきったら、逃げる、または薬草を使う
+	戦う場合
+		まずは１歩目の近いところの弱いやつを叩きに来る
+		次に３歩以内で弱い順に敵に向かう
+
+
+３：バランス
+	自分のhpが40%をきったら、逃げる、または薬草を使う
+	戦う場合
+		まずは１歩目の近いところの弱いやつを叩きに来る
+		次に３歩以内で弱い順に敵に向かう
+
+
+日付：分類：場所：行動：本質：参考：疑問：詳細：感想：症状：仮説：検証：結果：
+
+
+
+●タイトル：FM　敵の攻撃部分
+日付：2024/06/08 Sat
+-------------- 
+self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+
+teki_update(self, B, Cs, M):        #updateから呼ばれる　（２次受け）        #B:バック　Cs:キャラクターズ（敵、味方）
+    self.tick+=1
+    if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
+        self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する        # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+        if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
+            if "薬草" in self.pocket:#薬草を持っていたら
+                self.useYakusou(B,M)#薬草を使う
+            else:        #もってなかったら    
+                self.teki_nigeru(B) #逃げるを実行
+        else:#hpが50%以上なら
+            self.teki_kougeki(B,Cs,M)#攻撃する
+        self.energy -=1#エネルギーをマイナス１
+--------------
+
+
+
+
+●タイトル：FM　敵の攻撃部分
+日付：2024/06/01 Sat
+-------------- 
+self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+
+teki_update(self, B, Cs, M):        #updateから呼ばれる　（２次受け）        #B:バック　Cs:キャラクターズ（敵、味方）
+    self.tick+=1
+    if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
+        self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する        # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+        if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
+            if "薬草" in self.pocket:#薬草を持っていたら
+                self.useYakusou(B,M)#薬草を使う
+            else:        #もってなかったら    
+                self.teki_nigeru(B) #逃げるを実行
+        else:#hpが50%以上なら
+            self.teki_kougeki(B,Cs,M)#攻撃する
+        self.energy -=1#エネルギーをマイナス１
+--------------
+
+
 2024/05/18
 ●タイトル：	３歩以内の敵を見つけ出す	3step.py
 日付：2024/05/18
 分類：場所：行動：本質：参考：疑問：
 詳細：playerから３step（マンハッタン距離で３歩）以内に敵がいたら、リストに放り込んで、敵リストを返す関数
-
-感想：症状：仮説：検証：結果：
+呼ぶ方：
+	search_area(grid, C.x, C.y, Cs)
+引数のサンプル：
+		grid	マップ
+		C.x		味方の座標
+		C.y
+		Cs		キャラクタ全員分のリスト
+戻り値のサンプル：
+	E_list=[<__main__.Characters object at 0x0000012EB3F23310>, 
+					<__main__.Characters object at 0x0000012EB3F233D0>
+					]
 
 
 
