@@ -83,6 +83,7 @@ class Character():
         self.enemyxy = []
         self.ataix = []
         self.ataiy = []
+        self.hpl = []
         #-----------------------------------------------判別・処理
         """ステータス
           ・Downは未稼働
@@ -244,6 +245,7 @@ class Character():
         if self.x+dd[1] == character.x and self.y+dd[2] == character.y:
             #self.chtype[dd[0]] = [character.hp,dd[1],dd[2]]# ex) {"上":[50,3,7],"下":[30,9,7]}
             self.chtype[character.name] = [dd[0],character.hp,dd[1],dd[2]]# ex) {"Player":[上,50,3,7],"Mikata1":[下,30,9,7]}
+            print(self.chtype)
     def enemyDetection(self,mapchip,character):
         self.ataix = []
         self.ataiy = []
@@ -266,7 +268,7 @@ class Character():
                                   ["左左上",-2,-1],
                                   ["左左下",-2,1],
                                   ["右右上",2,-1],
-                                  ["右右下",-2,1],
+                                  ["右右下",2,1],
                                   ["左上上",-1,-2],
                                   ["左下下",-1,2],
                                   ["右上上",1,-2],
@@ -302,6 +304,8 @@ class Character():
         #else:
         #    if "hidari" in self.findMove:
         #        self.findMove.remove("hidari")
+        #-------------------------------------------------------------------
+        # chtype.ex) {"Endo":[上,50,3,7],"Sora":[下,30,9,7]}
         if self.pss == "fierce": #狂暴
             if self.chtype != {}:
                 if character.name in self.chtype:
@@ -309,20 +313,24 @@ class Character():
                     key = self.chtype.keys()
                     x = val[2]
                     y = val[3]
-                    if x < self.oldx:
-                        self.x = character.x
-                    if x > self.oldx:
-                        self.x = character.x
-                    if y < self.oldy:
-                        self.y = character.y
-                    if y > self.oldy:
-                        self.y = character.y
-                    self.oldx = val[2]
-                    self.oldy = val[3]
-                #if 0 < :
-                    #pass
+                    self.x = character.x
+                    self.y = character.y
         if self.pss == "timid": #臆病
-            pass
+            if character.name in self.chtype:
+                val = self.chtype[character.name]#[下,30,9,7]等
+                x = val[2]#ex)9
+                y = val[3]#ex)7
+                self.hpl.append(val[1])
+                min_val = 10000000000000000000 #最小値を数えるための限定数
+                min_index = 0
+                for i in range(len(self.hpl)):
+                    if self.hpl[i] < min_val:
+                        min_val = self.hpl[i]
+                        min_index = i
+                        print("b",character.name,min_val)
+                if val[1] == min_val:
+                    self.x = character.x
+                    self.y = character.y
         if self.pss == "balance":#バランス
             pass
     def enemyInfoDetection(self,mapchip,character):
@@ -388,6 +396,7 @@ class Character():
     #----------------------------------------------------------------------------------------------------------移動アクション
         self.findMove.clear()
         self.findFight.clear()
+        self.hpl.clear()
         self.chtype = {}
         #print(self.name,"A",self.x,self.y)
         if self.hp <= 0:
@@ -664,14 +673,16 @@ def main():#-----------------------------------------------------------メイン
     #フィールド読み込み
     field = Field()
     #キャラクターインスタンス化
-    player1 = Character(6,5,"Player",Pl1,"味方","Endo",fonts,0,3,12,15,50,"fierce")#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
-    player2 = Character(7,4,"Player",Pl2,"味方","sora",fonts,1,2,6,6,30,"fierce")#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,12,6,50,"fierce")
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40,"timid")
-    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,30,5,80,"balance")
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20,"timid")#fierceは無鉄砲,timidは臆病タイプ
+    player1 = Character(6,5,"Player",Pl1,"味方","Endo",fonts,0,3,12,12,50,"fierce")#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
+    player2 = Character(7,4,"Player",Pl2,"味方","Sora",fonts,1,2,6,6,30,"fierce")#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
+    #player3 = Character(8,4,"Player",Pl1,"味方","Nao",fonts,2,2,12,12,80,"fierce")
+    #player4 = Character(9,5,"Player",Pl2,"味方","Soushi",fonts,3,2,6,12,10,"fierce")#何かあった時の追加用
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,4,1,12,6,50,"fierce")
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,5,2,12,3,40,"timid")
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,6,5,30,5,80,"balance")
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,7,1,0,0,20,"timid")#fierceは無鉄砲,timidは臆病タイプ
     #キャラクター
-    characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
+    characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない,[,player3,player4]追加
     judge = Judge(characters)   
     #敵味方の数
     valMikata = 2
