@@ -283,39 +283,32 @@ class Character():
         #    self.ataix.append(abs(self.x)-abs(character.x))
         #    self.ataiy.append(abs(self.y)-abs(character.y))#距離
     def enemyMove(self,mapchip,character):
-        #print(f"{self.y-1=}")
-        #if mapchip[self.y-1][self.x] == "1": #上
-        #    self.findMove.append("ue")
-        #else:
-        #    if "ue" in self.findMove:
-        #        self.findMove.remove("ue")
-        #if mapchip[self.y+1][self.x] == "1": #下  
-        #    self.findMove.append("sita")
-        #else:
-        #    if "sita" in self.findMove:
-        #        self.findMove.remove("sita")
-        #if mapchip[self.y][self.x+1] == "1": #右
-        #    self.findMove.append("migi")
-        #else:
-        #    if "migi" in self.findMove:
-        #        self.findMove.remove("migi")
-        #if mapchip[self.y][self.x-1] == "1": #左
-        #    self.findMove.append("hidari")
-        #else:
-        #    if "hidari" in self.findMove:
-        #        self.findMove.remove("hidari")
-        #-------------------------------------------------------------------
-        # chtype.ex) {"Endo":[上,50,3,7],"Sora":[下,30,9,7]}
-        if self.pss == "fierce": #狂暴
-            if self.chtype != {}:
-                if character.name in self.chtype:
-                    val = self.chtype[character.name]
-                    key = self.chtype.keys()
-                    x = val[2]
-                    y = val[3]
-                    self.x = character.x
-                    self.y = character.y
-        if self.pss == "timid": #臆病
+        #if self.pss == "fierce": #狂暴
+        #    if self.chtype != {}:
+        #        if character.name in self.chtype:
+        #            val = self.chtype[character.name]
+        #            key = self.chtype.keys()
+        xs = [character.x,self.x]
+        ys = [character.y,self.y]
+        if max(xs)-min(xs) > max(ys)-min(ys):
+            if self.x > character.x:#上下左右は敵視点で
+                print("左")
+                self.x-=1
+            elif self.x < character.x:
+                print("右")
+                self.x+=1
+            print(self.x)
+        else:
+            if self.y > character.y:
+                print("上")
+                self.y-=1
+            else:
+                print("下")
+                self.y+=1
+            print(self.y)
+                    #if character.x == self.x and character.y == self.y:
+                    #    break
+        """if self.pss == "timid": #臆病
             if character.name in self.chtype:
                 val = self.chtype[character.name]#[下,30,9,7]等
                 x = val[2]#ex)9
@@ -329,8 +322,8 @@ class Character():
                         min_index = i
                         print("b",character.name,min_val)
                 if val[1] == min_val:
-                    self.x = character.x
-                    self.y = character.y
+                    self.x += 1
+                    self.y += 1 """
         if self.pss == "balance":#バランス
             pass
     def enemyInfoDetection(self,mapchip,character):
@@ -677,10 +670,10 @@ def main():#-----------------------------------------------------------メイン
     player2 = Character(7,4,"Player",Pl2,"味方","Sora",fonts,1,2,6,6,30,"fierce")#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
     #player3 = Character(8,4,"Player",Pl1,"味方","Nao",fonts,2,2,12,12,80,"fierce")
     #player4 = Character(9,5,"Player",Pl2,"味方","Soushi",fonts,3,2,6,12,10,"fierce")#何かあった時の追加用
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,4,1,12,6,50,"fierce")
-    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,5,2,12,3,40,"timid")
-    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,6,5,30,5,80,"balance")
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,7,1,0,0,20,"timid")#fierceは無鉄砲,timidは臆病タイプ
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,12,6,50,"fierce")
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40,"timid")
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,30,5,80,"balance")
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20,"timid")#fierceは無鉄砲,timidは臆病タイプ
     #キャラクター
     characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない,[,player3,player4]追加
     judge = Judge(characters)   
