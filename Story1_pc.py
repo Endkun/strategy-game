@@ -242,68 +242,65 @@ class Character():
                         characterb.at == characterb.tat
                 
 
-    def ctDetection(self,character,dd):
-        if self.x+dd[1] == character.x and self.y+dd[2] == character.y:
-            #self.chtype[dd[0]] = [character.hp,dd[1],dd[2]]# ex) {"上":[50,3,7],"下":[30,9,7]}
-            self.chtype[character.name] = [dd[0],character.hp,dd[1],dd[2]]# ex) {"Player":[上,50,3,7],"Mikata1":[下,30,9,7]}
-            #print(self.chtype)
-    def enemyDetection(self,mapchip,character):
+    def ctDetection(self,character,direction):
+        if self.x+direction[1] == character.x and self.y+direction[2] == character.y:#eチームに差分をたしたところにpチームがいるかを✅
+            self.chtype[character.name] = [direction[0],character.hp,direction[1],direction[2]]# ex) {"Player":[上,50,3,7],"Mikata1":[下,30,9,7]}
+    def enemyDetection(self,mapchip,character):#eteamがpteamを索敵
         self.ataix = []
         self.ataiy = []
-        self.detecionDirection = [["上",0,-1],
-                                  ["下",0,1],
-                                  ["右",1,0],
-                                  ["左",-1,0],
-                                  ["上2",0,-2],
-                                  ["下2",0,2],
-                                  ["右2",2,0],
-                                  ["左2",-2,0],
-                                  ["左上",-1,-1],
-                                  ["左下",-1,1],
-                                  ["右上",1,-1],
-                                  ["右下",-1,1],
-                                  ["上3",0,-3],
-                                  ["下3",0,3],
-                                  ["右3",3,0],
-                                  ["左3",-3,0],
-                                  ["左左上",-2,-1],
-                                  ["左左下",-2,1],
-                                  ["右右上",2,-1],
-                                  ["右右下",2,1],
-                                  ["左上上",-1,-2],
-                                  ["左下下",-1,2],
-                                  ["右上上",1,-2],
-                                  ["右下下",1,2]]
+        self.directions = [["上",0,-1],#索敵範囲
+                            ["下",0,1],
+                            ["右",1,0],
+                            ["左",-1,0],
+                            ["上2",0,-2],
+                            ["下2",0,2],
+                            ["右2",2,0],
+                            ["左2",-2,0],
+                            ["左上",-1,-1],
+                            ["左下",-1,1],
+                            ["右上",1,-1],
+                            ["右下",-1,1],
+                            ["上3",0,-3],
+                            ["下3",0,3],
+                            ["右3",3,0],
+                            ["左3",-3,0],
+                            ["左左上",-2,-1],
+                            ["左左下",-2,1],
+                            ["右右上",2,-1],
+                            ["右右下",2,1],
+                            ["左上上",-1,-2],
+                            ["左下下",-1,2],
+                            ["右上上",1,-2],
+                            ["右下下",1,2]]
 
-        for i in self.detecionDirection:
-            self.ctDetection(character,i)
+        for direction in self.directions:
+            self.ctDetection(character,direction)
         #-----------------------キャラクタータイプ
         #for ct in self.chtype:#名前:[hp,x,y] 辞書
         #    #print(character.name)
         #    self.enemyxy = [self.chtype[ct][1],self.chtype[ct][2]]#座標
         #    self.ataix.append(abs(self.x)-abs(character.x))
         #    self.ataiy.append(abs(self.y)-abs(character.y))#距離
-    def enemyMove(self,mapchip,character):
+    def enemyMove(self,mapchip,character):#敵の動き
         if self.pss == "fierce": #狂暴
-            if self.energy <= self.eCount:
-                print(self.name,"broke")
+            if self.energy <= self.eCount:#エネルギーがなかったら動かない
                 pass
             else:
                 if self.chtype != {}:
-                    if character.name in self.chtype:
+                    if character.name in self.chtype:#chtypeにキャラクターが居たら
                         val = self.chtype[character.name]
                         key = self.chtype.keys()
                         xs = [character.x,self.x]
                         ys = [character.y,self.y]
-                        if max(xs)-min(xs) > max(ys)-min(ys):
-                            if self.x > character.x:#上下左右は敵視点で
+                        if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
+                            if self.x > character.x:
                                 print("左")
                                 self.x-=1
                             elif self.x < character.x:
                                 print("右")
                                 self.x+=1
                             print(self.x)
-                        else:
+                        else:#縦
                             if self.y > character.y:
                                 print("上")
                                 self.y-=1
@@ -324,27 +321,25 @@ class Character():
                 self.hpl.append(val[1])
                 min_val = 10000000000000000000 #最小値を数えるための限定数
                 min_index = 0
-
-                
-                for i in range(len(self.hpl)):
+                for i in range(len(self.hpl)):#体力が小さいpチームを探す
                     if self.hpl[i] < min_val:
                         min_val = self.hpl[i]
                         min_index = i
                         print("b",character.name,min_val)
                 print(f"{min_val=}")
-                if self.energy <= self.eCount:
+                if self.energy <= self.eCount:#エネルギーがなかったら動かない
                     print(self.name,"broke")
                     pass
                 else:
                     if val[1] == min_val:
-                        if max(xs)-min(xs) > max(ys)-min(ys):
-                            if self.x > character.x:#上下左右は敵視点で
+                        if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
+                            if self.x > character.x:
                                 print(self.name,"左")
                                 self.x-=1
                             elif self.x < character.x:
                                 print(self.name,"右")
                                 self.x+=1
-                        else:
+                        else:#縦
                             if self.y > character.y:
                                 print(self.name,"上")
                                 self.y-=1
@@ -356,88 +351,76 @@ class Character():
                 self.eCount += 1
         if self.pss == "balance":#バランス
             pass
-    def enemyInfoDetection(self,mapchip,character):
-        if self.x == character.x and self.y-1 == character.y: #移上
-            if "ue" in self.findMove:
-                self.findMove.remove("ue")
-        if self.x == character.x and self.y+1 == character.y: #移下  
-            if "sita" in self.findMove:
-                self.findMove.remove("sita")
-        if self.x+1 == character.x and self.y == character.y: #移右
-            if "migi" in self.findMove:
-                self.findMove.remove("migi")
-        if self.x-1 == character.x and self.y == character.y: #移左
-            if "hidari" in self.findMove:
-                self.findMove.remove("hidari")
     def enemyEvent(self,character):
-        self.enemyFightCalculation(character) 
-        if self.hp < self.thp/3:
+        self.enemyFightCalculation(character)#上下左右で戦えるところを探す 
+        if self.hp < self.thp/4:#自身の体力が4割以下になったら薬草を使って回復する
             print(self.name,"は薬草を使った！")
-            self.hp += random.randint(10,30)  
-    def enemyFightCalculation(self,character):
-        if self.x == character.x and self.y-1 == character.y: #攻上
-            if self.hp >= 25:
-                if self.hp+10 >= character.hp:
+            self.hp += random.randint(10,40)#10~40までのランダムな数を回復  
+    def enemyFightCalculation(self,character):#戦えるところを探す
+        if self.x == character.x and self.y-1 == character.y: #上方向にpチームがいるか判別
+            if self.hp >= 25:#自身の体力が25以上で
+                if self.hp+10 >= character.hp:#相手より10体力が高い場合
                     self.findFight.append("ue")
-                    self.findFight.append(character.name)
+                    self.findFight.append(character.name)#上方向を攻撃するのと、攻撃をするキャラクター
         #else:
         #    if "ue" in self.findFight:
         #        self.findFight.remove("ue")
         #        self.findFight.remove(character.name)
 
-        if self.x == character.x and self.y+1 == character.y: #攻下
-            if self.hp >= 25:
-                if self.hp+10 >= character.hp:
+        if self.x == character.x and self.y+1 == character.y: #下方向にpチームがいるか判別
+            if self.hp >= 25:#自身の体力が25以上で
+                if self.hp+10 >= character.hp:#相手より10体力が高い場合
                     self.findFight.append("sita")
-                    self.findFight.append(character.name)
+                    self.findFight.append(character.name)#下方向を攻撃するのと、攻撃をするキャラクター
         #else:
         #    if "sita" in self.findFight:
         #        self.findFight.remove("sita")
         #        self.findFight.remove(character.name)
 
-        if self.x+1 == character.x and self.y == character.y: #攻右
-            if self.hp >= 25:
-                if self.hp+10 >= character.hp:
+        if self.x+1 == character.x and self.y == character.y: #右方向にpチームがいるか判別
+            if self.hp >= 25:#自身の体力が25以上で
+                if self.hp+10 >= character.hp:#相手より10体力が高い場合
                     self.findFight.append("migi")  
-                    self.findFight.append(character.name)
+                    self.findFight.append(character.name)#右方向を攻撃するのと、攻撃をするキャラクター
         #else:
         #    if "migi" in self.findFight:
         #        self.findFight.remove("migi") 
         #        self.findFight.remove(character.name)
 
-        if self.x-1 == character.x and self.y == character.y: #攻左
-            if self.hp >= 25:
-                if self.hp+10 >= character.hp:
+        if self.x-1 == character.x and self.y == character.y: #左方向にpチームがいるか判別
+            if self.hp >= 25:#自身の体力が25以上で
+                if self.hp+10 >= character.hp:#相手より10体力が高い場合
                     self.findFight.append("hidari")
-                    self.findFight.append(character.name)
+                    self.findFight.append(character.name)#右方向を攻撃するのと、攻撃をするキャラクター
         #else:
         #    if "hidari" in self.findFight:
         #        self.findFight.remove("hidari")
         #        self.findFight.remove(character.name)
         #print(self.findFight)
-    def enemyUpdate(self,screen,mapchip,characters,fonts):#移動ボタン用
-    #----------------------------------------------------------------------------------------------------------移動アクション
+    def enemyUpdate(self,screen,mapchip,characters,fonts):#敵の処理の核
+        #-------------------初期化
         self.findMove.clear()
         self.findFight.clear()
         self.hpl.clear()
         self.chtype = {}
         self.eCount = 0
-        #print(self.name,"A",self.x,self.y)
+        #-------------------体力が0以下の時にプログラムから追い出す
         if self.hp <= 0:
             self.x = -10
             self.y = -10
             Character.num += 1
             return
-        for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
-            if character.team == "味方":
-                self.enemyDetection(mapchip,character)
-                self.enemyMove(mapchip,character)
-                self.enemyEvent(character)
-            self.enemyInfoDetection(mapchip,character)#情報収集
+        #----------------------------pチームの索敵、eチームの動きなど
+        for character in characters:
+            if character.team == "味方":#pチームだけ呼び出す
+                self.enemyDetection(mapchip,character)#eチームがpチームを索敵
+                self.enemyMove(mapchip,character)#索敵に基づいたeチームの動き
+                self.enemyEvent(character)#eチーム細かな設定など(例：アイテムの処理や回復等)
             """findMoveは配列,データにmigi,hidari,sita,ueの４つが入る
                例えば['sita', 'hidari']等"""
         #print(self.findFight)
         if self.findFight == []:
+            #-----------------------------旧式の動き
             self.randomc = random.randint(0,4)
             if self.randomc == 1:
                 if "migi" in self.findMove:
@@ -456,6 +439,7 @@ class Character():
                 Character.num += 1
                 self.energy = self.tenergy
         else:
+            #-----------------------------攻撃
             print(self.name,"が",self.findFight[1],"に攻撃")
             for character in characters:
                 if character.name == self.findFight[1]:
