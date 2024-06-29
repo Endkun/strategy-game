@@ -65,6 +65,7 @@ class Character():
         #--------------------キャラクターエネルギー
         self.energy = energy
         self.tenergy = energy#保存用エナジー
+        self.eCount = 0
         #----------------------------------------------設定
         #--------------------フォント
         self.fonts = fonts
@@ -245,7 +246,7 @@ class Character():
         if self.x+dd[1] == character.x and self.y+dd[2] == character.y:
             #self.chtype[dd[0]] = [character.hp,dd[1],dd[2]]# ex) {"上":[50,3,7],"下":[30,9,7]}
             self.chtype[character.name] = [dd[0],character.hp,dd[1],dd[2]]# ex) {"Player":[上,50,3,7],"Mikata1":[下,30,9,7]}
-            print(self.chtype)
+            #print(self.chtype)
     def enemyDetection(self,mapchip,character):
         self.ataix = []
         self.ataiy = []
@@ -283,47 +284,76 @@ class Character():
         #    self.ataix.append(abs(self.x)-abs(character.x))
         #    self.ataiy.append(abs(self.y)-abs(character.y))#距離
     def enemyMove(self,mapchip,character):
-        #if self.pss == "fierce": #狂暴
-        #    if self.chtype != {}:
-        #        if character.name in self.chtype:
-        #            val = self.chtype[character.name]
-        #            key = self.chtype.keys()
-        xs = [character.x,self.x]
-        ys = [character.y,self.y]
-        if max(xs)-min(xs) > max(ys)-min(ys):
-            if self.x > character.x:#上下左右は敵視点で
-                print("左")
-                self.x-=1
-            elif self.x < character.x:
-                print("右")
-                self.x+=1
-            print(self.x)
-        else:
-            if self.y > character.y:
-                print("上")
-                self.y-=1
+        if self.pss == "fierce": #狂暴
+            if self.energy <= self.eCount:
+                print(self.name,"broke")
+                pass
             else:
-                print("下")
-                self.y+=1
-            print(self.y)
-                    #if character.x == self.x and character.y == self.y:
-                    #    break
-        """if self.pss == "timid": #臆病
+                if self.chtype != {}:
+                    if character.name in self.chtype:
+                        val = self.chtype[character.name]
+                        key = self.chtype.keys()
+                        xs = [character.x,self.x]
+                        ys = [character.y,self.y]
+                        if max(xs)-min(xs) > max(ys)-min(ys):
+                            if self.x > character.x:#上下左右は敵視点で
+                                print("左")
+                                self.x-=1
+                            elif self.x < character.x:
+                                print("右")
+                                self.x+=1
+                            print(self.x)
+                        else:
+                            if self.y > character.y:
+                                print("上")
+                                self.y-=1
+                            else:
+                                print("下")
+                                self.y+=1
+                            print(self.y)
+                        self.eCount += 1
+                        #if character.x == self.x and character.y == self.y:
+                        #    break
+        if self.pss == "timid": #臆病
             if character.name in self.chtype:
                 val = self.chtype[character.name]#[下,30,9,7]等
                 x = val[2]#ex)9
                 y = val[3]#ex)7
+                xs = [character.x,self.x]
+                ys = [character.y,self.y]
                 self.hpl.append(val[1])
                 min_val = 10000000000000000000 #最小値を数えるための限定数
                 min_index = 0
+
+                
                 for i in range(len(self.hpl)):
                     if self.hpl[i] < min_val:
                         min_val = self.hpl[i]
                         min_index = i
                         print("b",character.name,min_val)
-                if val[1] == min_val:
-                    self.x += 1
-                    self.y += 1 """
+                print(f"{min_val=}")
+                if self.energy <= self.eCount:
+                    print(self.name,"broke")
+                    pass
+                else:
+                    if val[1] == min_val:
+                        if max(xs)-min(xs) > max(ys)-min(ys):
+                            if self.x > character.x:#上下左右は敵視点で
+                                print(self.name,"左")
+                                self.x-=1
+                            elif self.x < character.x:
+                                print(self.name,"右")
+                                self.x+=1
+                        else:
+                            if self.y > character.y:
+                                print(self.name,"上")
+                                self.y-=1
+                            elif self.y < character.y:
+                                print(self.name,"下")
+                                self.y+=1
+                    oldx = self.x
+                    oldy = self.y 
+                self.eCount += 1
         if self.pss == "balance":#バランス
             pass
     def enemyInfoDetection(self,mapchip,character):
@@ -391,6 +421,7 @@ class Character():
         self.findFight.clear()
         self.hpl.clear()
         self.chtype = {}
+        self.eCount = 0
         #print(self.name,"A",self.x,self.y)
         if self.hp <= 0:
             self.x = -10
