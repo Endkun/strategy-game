@@ -293,21 +293,21 @@ class Character():
                         xs = [character.x,self.x]
                         ys = [character.y,self.y]
                         if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
-                            if self.x > character.x:
-                                print("左")
+                            if self.x > character.x+1:
+                                #print("左")
                                 self.x-=1
-                            elif self.x < character.x:
-                                print("右")
+                            elif self.x < character.x-1:
+                                #print("右")
                                 self.x+=1
-                            print(self.x)
                         else:#縦
-                            if self.y > character.y:
-                                print("上")
+                            if self.y > character.y+1:
+                                #print("上")
                                 self.y-=1
-                            else:
-                                print("下")
+                            elif self.y < character.y-1:
+                                #print("下")
                                 self.y+=1
-                            print(self.y)
+                        print(f"@309 {self.x=} {self.y=} {self.name=}" )
+                        print(f"@310 {character.x=} {character.y=} {character.name=}" )
                         self.eCount += 1
                         #if character.x == self.x and character.y == self.y:
                         #    break
@@ -325,27 +325,26 @@ class Character():
                     if self.hpl[i] < min_val:
                         min_val = self.hpl[i]
                         min_index = i
-                        print("b",character.name,min_val)
-                print(f"{min_val=}")
                 if self.energy <= self.eCount:#エネルギーがなかったら動かない
                     print(self.name,"broke")
                     pass
                 else:
                     if val[1] == min_val:
                         if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
-                            if self.x > character.x:
+                            if self.x > character.x+1:#１歩前は動けないようにする理由はキャラが動いて重ならないようにするため。
                                 print(self.name,"左")
                                 self.x-=1
-                            elif self.x < character.x:
+                            elif self.x < character.x-1:
                                 print(self.name,"右")
                                 self.x+=1
                         else:#縦
-                            if self.y > character.y:
+                            if self.y > character.y+1:
                                 print(self.name,"上")
                                 self.y-=1
-                            elif self.y < character.y:
+                            elif self.y < character.y-1:
                                 print(self.name,"下")
                                 self.y+=1
+                    #print(f"@346 {self.x=} {self.y=} {self.name=}" )
                     oldx = self.x
                     oldy = self.y 
                 self.eCount += 1
