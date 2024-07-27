@@ -512,7 +512,7 @@ class Enemy():
                     character.hp -= max(0,self.at-character.df)
             #print(self.addName,"に攻撃")
             Character.num += 1
-        self.seige(characters)
+        Character.seige(characters)
             
 class Ally:
     def __init__(self,x,y,characterType,image,team,name,fonts,id,energy,at,df,hp,personality):#-----------------------------------------------------------初期化
@@ -564,7 +564,7 @@ class Ally:
             Character.num += 1
             self.energy = self.tenergy
         self.event(screen,characters)
-        self.seige(characters)
+        Character.seige(characters)
     def temp(self,characters,sc):
         self.opponent.append(sc[1])
         self.fight(characters)
