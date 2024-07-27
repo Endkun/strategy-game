@@ -147,6 +147,8 @@ class Character():
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
         for directionSet in self.directions:#上下左右をスキャン
             self.check_direction(directionSet, B, Cs, M)
+        if self.team=="敵":
+            print(f"@150 {self.shui=}")    
 
     def check_direction(self, directionSet, B, Cs, M):#敵味方共通
         direction = directionSet[0]
@@ -269,7 +271,7 @@ class Character():
                 self.teki_kougeki(B,Cs,M)#攻撃する
             self.energy -=1#エネルギーをマイナス１
 
-    def teki_kougeki(self,B,Cs,M):
+    def teki_kougeki(self,B,Cs,M):#B:バック　Cs:キャラクターズ（敵、味方）
         #敵の攻撃　teki_updateから呼ばれる（３次受け）
         #接敵状況を把握する
         kogekiDir=[]    
@@ -298,50 +300,17 @@ class Character():
             self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
-    def search_target(self,Cs):#
-        #calc_target_deltaから呼ばれる（６次受け）
-        #Csの中で一番弱い、生きているキャラを探す
-        #目的：一番弱いキャラを狙うため
-        t_hp=9999
-        for C in Cs:
-            if C.hp>0 and C.team=="味方" and t_hp>C.hp:#生きているかつ一番弱いか
-                t_hp=C.hp
-                t_x=C.x
-                t_y=C.y
-                t_id=C.id
-        #print(f"@274 {t_x=}  {t_y=} {t_id=}")       
-        return t_x,t_y ,t_id       
 
-    def calc_target_delta(self,Cs):
-        #easy_koteki　から呼ばれる（５次受け）
-        t_x,t_y,t_id = self.search_target(Cs)#一番弱いやつを狙う
-        dx = t_x-self.x#差分を取る
-        dy = t_y-self.y
-        if dx==0:
-            if dy<0:
-                delta=(0,-1) 
-            else:
-                delta=(0,1)     
-            return  delta                
-
-        a=dy/dx#傾きを計算
-        if -1<a<1:
-            if dx>0:
-                delta=(1,0)
-            else:
-                delta=(-1,0)
-        else:
-            if dy<0:
-                delta=(0,-1) 
-            else:
-                delta=(0,1)                   
-        return delta        
+   
 
 
     def easy_koteki(self,B,Cs):
         #teki_kougekiから呼ばれる　（４次受け）
         #向敵の最初の一歩を計算
-        deltas=[]
+
+        deltas=[]#x,yの移動分だけ、集めたもの
+
+        #まずは１歩だけ（上下左右）
         #動ける方向を収集する
         if self.shui["up"] ==[] :
             if self.y-1 >=B.h1:
@@ -363,6 +332,45 @@ class Character():
             delta = random.choice(deltas)    
         self.x+=delta[0]#移動する
         self.y+=delta[1]
+
+
+    def calc_target_delta(self,Cs):   #easy_koteki　から呼ばれる（５次受け）
+        t_x,t_y,t_id = self.search_target(Cs)#盤面上にいる一番弱いやつを狙う
+        dx = t_x-self.x#盤面上にいる最弱の味方キャラとの座標の差分を取る
+        dy = t_y-self.y
+        if dx==0:
+            if dy<0:
+                delta=(0,-1) #上に行く
+            else:
+                delta=(0,1)  #下に行く   
+            return  delta                
+
+        a=dy/dx#傾きを計算
+        if -1<a<1:
+            if dx>0:
+                delta=(1,0)
+            else:
+                delta=(-1,0)
+        else:
+            if dy<0:
+                delta=(0,-1) 
+            else:
+                delta=(0,1)                   
+        return delta     
+
+
+    def search_target(self,Cs):  #calc_target_deltaから呼ばれる（６次受け）
+        #Csの味方の中で一番弱い、生きているキャラを探す
+        #目的：敵が味方の一番弱いキャラを狙うため
+        t_hp=9999
+        for C in Cs:
+            if C.hp>0 and C.team=="味方" and t_hp>C.hp:#生きているかつ一番弱いか
+                t_hp=C.hp
+                t_x=C.x
+                t_y=C.y
+                t_id=C.id
+        #print(f"@274 {t_x=}  {t_y=} {t_id=}")       
+        return t_x,t_y ,t_id       
 
     def koteki(self,B):
         pass
@@ -601,8 +609,8 @@ def main():#-----------------------------------------------------------メイン
                 ch.draw(screen)
             for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
                 ch.new_guide(screen)
-            M1.draw(screen)    
-            J1.judge(Cs,M1)    #判定
+            M1.draw(screen)    #メッセージくん
+            J1.judge(Cs,M1)    #判定くん
             if J1.winner=="teki" or J1.winner=="mikata":
                 break
             pygame.display.update() #画面更新、こいつは引数がない        

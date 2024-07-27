@@ -1,5 +1,14 @@
 
 
+●タイトル：状況確認
+日付：分類：場所：行動：本質：参考：疑問：詳細：感想：症状：仮説：検証：結果：
+なんか勝手に追いかけてくるなー、作った覚えはないのだが
+	→
+	敵は盤面全体を見ていたのだ、
+	def easy_koteki(self,B,Cs):ここで索敵していたのだ
+		敵が味方に接していないときは、ここが呼ばれる
+
+
 ●タイトル：FM　敵の攻撃部分
 日付：2024/06/08 Sat
 	とにかく敵を見つけたら突っ込んでくる
@@ -155,7 +164,7 @@ Character Class:
 │        │  └─ dmg_calc(C)
 │        └─ easy_koteki(B, Cs)
 │           └─ calc_target_delta(Cs)
-│
+│									└─search_target(Cs)#一番弱いやつ
 └─ draw(screen)
    └─ draw_point(screen, point, pos_x, pos_y)
 
