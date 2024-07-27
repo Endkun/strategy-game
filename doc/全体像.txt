@@ -23,3 +23,43 @@
                 直前に薬草で体力を少し回復する
             　　ビビりなら25%以下になったら奥へと逃げ、回復する
         """
+
+   """
+   main() 
+    初期化
+    ファイル読み込み
+    キャラのインスタンス化
+    マップの設定
+    while True:
+        tick += 1
+        画面消去
+        バックグラウンド画面作成（マス目）
+        if tick < 500:
+            アニメの文字表示
+        if tick > 500:
+            アニメ２文字表示
+        アニメーション
+      
+        #---------描画---------
+        #---------敵-------------------
+        for enemy in enemys:
+            enemy.draw(screen)
+        #---------プレイヤー-------------------
+        for character in characters:#キャラクタ全員をスキャンする
+            if Character.num == character.id:#唯一のクラス変数Character.num==スキャンしたキャラクタのidなら、（ そのキャラクタの番になったら、以下を実行する）
+                if character.team == "敵":      #eチームなら（eチームのupdate）
+                    character.enemyUpdate(screen,field.mapchip,characters,fonts)
+                if character.team == "味方":    #pチームなら（pチームのupdate）
+                    character.playerUpdate(screen,field.mapchip,characters,fonts)
+            character.draw(screen,fonts)        #キャラクタの描画
+        for character2 in characters:#サークルを描く
+            if Character.num == character2.id:
+                if character2.team == "味方":
+                    character2.circle(screen,field.mapchip)
+        judge.hantei(characters)#審判
+        #---------描画---------  
+        pygame.display.update()         
+        ck.tick(60) #1秒間で30フレームになるように33msecのwait   
+
+
+    """
