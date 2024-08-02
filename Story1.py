@@ -139,19 +139,19 @@ class Character():
             Cs[Character.number].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
-    def check(self, B, Cs, M):#敵味方共通、四方周囲に何があるか探索
+    def check_4directions(self, B, Cs, M):#敵味方共通、四方周囲に何があるか探索
         #上下左右の周囲を見渡して以下のようなデータを作成する
         # self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': []}
         #壁:地形:味方:敵:モブ
 
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
-        for directionSet in self.directions:#上下左右をスキャン
-            self.check_direction(directionSet, B, Cs, M)
+        for directionSet in self.directions:#上下左右をスキャン self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]   
+            self.check_1direction(directionSet, B, Cs, M)#directionSetはこんな形("up", 0, -1)
         if self.team=="敵":
-            print(f"@150 {self.shui=}")    
+            print(f"@150 self.team==敵のとき、{self.name=}  {self.shui=}")    
 
-    def check_direction(self, directionSet, B, Cs, M):#敵味方共通
-        direction = directionSet[0]
+    def check_1direction(self, directionSet, B, Cs, M):#敵味方共通　#directionSetはこんな形("up", 0, -1)
+        direction = directionSet[0]#directionSetはこんな形("up", 0, -1)
         dx = directionSet[1]    
         dy = directionSet[2]
         new_x = self.x + dx#新しい位置＝着目点
@@ -164,11 +164,13 @@ class Character():
         else:
             if self.team=="味方":#味敵味
                 for C in Cs:  # キャラクタースキャン
-                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
+                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら、以下でそいつが何者か調べる
                         if C.team == "敵":
-                            C.dp=C.dpOrg#いったん戻しておく
+                            C.dp=C.dpOrg#いったんdpを初期状態に戻しておく、dpは挟まれると1/3になるので
                             code = "敵"
-                            self.shui[direction].append(code)
+                            self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
+                            # こんなやつ　self.shui= {'up': ['敵'], 'down': ['壁'], 'right': ['モブ'], 'left': []}
+
                             #挟み撃ち攻撃のチェック（味方ー敵ー味方）
                             hasami_x = new_x + dx
                             hasami_y = new_y + dy
@@ -178,15 +180,18 @@ class Character():
                                         if Ch.team=="味方":
                                             C.dp=int(C.dp/3)
                                             mes1=f"挟み撃ち!!{C.name}の防御が{C.dp}に"
-                                            M.append_tail_line([mes1])
+                                            M.append_tail_line([mes1])#メッセージ追加
                                             #print(mes1)
-                        else:
-                            "モブ"
+                        elif C.team == "味方":
+                            code = "味方"
+                            self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
+                        else: #"モブ"はあとまわし
+                            pass
             elif self.team=="敵":#敵味敵
                 for C in Cs:  # キャラクタースキャン
                     if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
                         if C.team == "味方" :#そいつが味方なら
-                            C.dp=C.dpOrg#いったん戻しておく
+                            C.dp=C.dpOrg#いったんdpを初期状態に戻しておく、dpは挟まれると1/3になるので
                             code = "味方"
                             self.shui[direction].append(code)
                             #挟み撃ち攻撃のチェック（敵ー味方ー敵）
@@ -197,9 +202,10 @@ class Character():
                                     if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id and Ch.id!=self.id:
                                         if Ch.team=="敵":
                                             mes=f"やばい！！敵に挟まれた "
-                                            M.append_tail_line([mes])
-                                           
-
+                                            M.append_tail_line([mes])#メッセージ追加
+                        elif C.team == "敵":
+                            code = "敵"
+                            self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
 
     #全キャラ用、新ガイドを描画するだけ　#敵味方共通
     def new_guide(self,screen):
@@ -260,7 +266,7 @@ class Character():
         #B:バック　Cs:キャラクターズ（敵、味方）
         self.tick+=1
         if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
-            self.check(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            self.check_4directions(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
             # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
             if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
                 if "薬草" in self.pocket:#薬草を持っていたら
@@ -300,21 +306,17 @@ class Character():
             self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
-
-   
-
-
     def easy_koteki(self,B,Cs):
         #teki_kougekiから呼ばれる　（４次受け）
         #向敵の最初の一歩を計算
 
-        deltas=[]#x,yの移動分だけ、集めたもの
+        deltas=[]#動ける場所の集合（＝x,yの移動分(dx,dy)）を集めたもの deltas=[(0, -1),  (1, 0), (-1, 0)]だったら上、右、左みたいな感じ
 
         #まずは１歩だけ（上下左右）
         #動ける方向を収集する
         if self.shui["up"] ==[] :
             if self.y-1 >=B.h1:
-                deltas.append((0,-1))
+                deltas.append((0,-1))#上への移動分（デルタ＝(0,1)）を追加
         if self.shui["down"] ==[]: 
             if self.y+1 <B.h2:
                 deltas.append((0,1))
@@ -324,6 +326,7 @@ class Character():
         if self.shui["left"] ==[] :
             if self.x+1 >= B.w1:
                 deltas.append((-1,0))
+        print(f"@333 {deltas=}")#deltas=[(0, -1),  (1, 0), (-1, 0)]
     
         d = self.calc_target_delta(Cs)#ターゲットのdeltaを計算
         if d in deltas:#動ける方向に入っていればそこに向かう
@@ -333,11 +336,11 @@ class Character():
         self.x+=delta[0]#移動する
         self.y+=delta[1]
 
-
-    def calc_target_delta(self,Cs):   #easy_koteki　から呼ばれる（５次受け）
+    def calc_target_delta(self,Cs):   #easy_koteki　から呼ばれる（５次受け）戻り値はデルタ
         t_x,t_y,t_id = self.search_target(Cs)#盤面上にいる一番弱いやつを狙う
         dx = t_x-self.x#盤面上にいる最弱の味方キャラとの座標の差分を取る
         dy = t_y-self.y
+        #傾き計算の前にdx=0の場合をやっておく
         if dx==0:
             if dy<0:
                 delta=(0,-1) #上に行く
@@ -346,18 +349,26 @@ class Character():
             return  delta                
 
         a=dy/dx#傾きを計算
-        if -1<a<1:
-            if dx>0:
-                delta=(1,0)
+        if -1<a<1:#傾きが-1から+1の範囲内（45度未満）なら
+            if dx>0:# t_x-self.x 
+                delta=(1,0)#右
             else:
-                delta=(-1,0)
-        else:
+                delta=(-1,0)#左
+        else:#傾きが45度以上なら
             if dy<0:
                 delta=(0,-1) 
             else:
                 delta=(0,1)                   
         return delta     
-
+        """
+        selfが敵(e)、t_xは味方(p)の座標だとして、この位置関係
+        ..p.....  p(2,0)
+        ...e....  e(3,1)
+        ........
+        なら
+        dx=-1 dy=-1
+        de
+        """
 
     def search_target(self,Cs):  #calc_target_deltaから呼ばれる（６次受け）
         #Csの味方の中で一番弱い、生きているキャラを探す
@@ -408,7 +419,7 @@ class Character():
     #=================味方==========================================
     #モードなしダイレクト入力
     def mikata_update(self,B,Cs,E,M):    
-        self.check(B,Cs,M)#索敵
+        self.check_4directions(B,Cs,M)#索敵
         self.handle(B,Cs,E,M)          #選択肢をチョイス
 
     def handle(self,B,Cs,E,M):#移動モードでの入力
