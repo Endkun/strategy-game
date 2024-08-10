@@ -329,6 +329,7 @@ class Character():
         print(f"@333 {deltas=}")#deltas=[(0, -1),  (1, 0), (-1, 0)]
     
         d = self.calc_target_delta(Cs)#ターゲットのdeltaを計算
+
         if d in deltas:#動ける方向に入っていればそこに向かう
             delta=d
         else:#なければランダムで選ぶ
@@ -338,29 +339,33 @@ class Character():
 
     def calc_target_delta(self,Cs):   #easy_koteki　から呼ばれる（５次受け）戻り値はデルタ
         t_x,t_y,t_id = self.search_target(Cs)#盤面上にいる一番弱いやつを狙う
-        dx = t_x-self.x#盤面上にいる最弱の味方キャラとの座標の差分を取る
-        dy = t_y-self.y
-        #傾き計算の前にdx=0の場合をやっておく
-        if dx==0:
-            if dy<0:
-                delta=(0,-1) #上に行く
-            else:
-                delta=(0,1)  #下に行く   
-            return  delta                
+        if t_id==-1:#該当がない時
+            print("@342　相手が見つからず")
+            return (-999,-999)
+        else:
+            dx = t_x-self.x#盤面上にいる最弱の味方キャラとの座標の差分を取る
+            dy = t_y-self.y
+            #傾き計算の前にdx=0の場合をやっておく
+            if dx==0:
+                if dy<0:
+                    delta=(0,-1) #上に行く
+                else:
+                    delta=(0,1)  #下に行く   
+                return  delta                
 
-        a=dy/dx#傾きを計算
-        if -1<a<1:#傾きが-1から+1の範囲内（45度未満）なら
-            if dx>0:# t_x-self.x 
-                delta=(1,0)#右
-            else:
-                delta=(-1,0)#左
-        else:#傾きが45度以上なら
-            if dy<0:
-                delta=(0,-1) 
-            else:
-                delta=(0,1)                   
-        return delta     
-        """
+            a=dy/dx#傾きを計算
+            if -1<a<1:#傾きが-1から+1の範囲内（45度未満）なら
+                if dx>0:# t_x-self.x 
+                    delta=(1,0)#右
+                else:
+                    delta=(-1,0)#左
+            else:#傾きが45度以上なら
+                if dy<0:
+                    delta=(0,-1) #下
+                else:
+                    delta=(0,1) #上                  
+            return delta     
+            """
         selfが敵(e)、t_xは味方(p)の座標だとして、この位置関係
         ..p.....  p(2,0)
         ...e....  e(3,1)
@@ -374,14 +379,19 @@ class Character():
         #Csの味方の中で一番弱い、生きているキャラを探す
         #目的：敵が味方の一番弱いキャラを狙うため
         t_hp=9999
+        steps=1
+        t_id=-1#該当がない時
         for C in Cs:
-            if C.hp>0 and C.team=="味方" and t_hp>C.hp:#生きているかつ一番弱いか
+            if C.hp>0 and C.team=="味方" and t_hp>C.hp and(abs(C.x - self.x) + abs(C.y - self.y) <= steps):#(生きている)かつ(味方チーム)かつ（これまででたCの中で一番弱いよりも小さい）かつ（マンハッタン距離以内）か
                 t_hp=C.hp
                 t_x=C.x
                 t_y=C.y
                 t_id=C.id
         #print(f"@274 {t_x=}  {t_y=} {t_id=}")       
-        return t_x,t_y ,t_id       
+        if t_id==-1:
+            return -999,-999,t_id
+        else:
+            return t_x,t_y ,t_id       
 
     def koteki(self,B):
         pass
