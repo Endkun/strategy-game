@@ -1,5 +1,25 @@
-import pygame
+"""8/17
+   
+   8/10
+   仮説(miss)
+   t_hp>c_hpで
 
+   t_hp>c_hpで一番hpの低い奴が選ばれる
+   しかし、一番hpの低い奴が自分の範囲に居ないときに「相手が見つからず」になる
+   本当は範囲内でt_hp>c_hpをやって範囲内で一番体力が少ないやつを追いかけるようにする
+   来週やる事
+   ・検証
+     t_hp>c_hpで体力が一番低いキャラクターをprintで調べる
+     その一番低いキャラクターが範囲内にいるか調べる
+     範囲内に居なかった場合この仮説は合ってることになる
+    結果---------
+    仮説は間違いである
+    なぜなら、範囲内にいても体力の低いキャラクターが追いかけれること
+
+"""
+
+
+import pygame
 from pygame.locals import *
 import sys
 import random
@@ -60,7 +80,7 @@ class BackGround():
 
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
-    def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy,steps):#-----------------------------------------------------------初期化
         self.id = id
         self.name = name#名前
         self.x = x      #キャラの座標
@@ -70,6 +90,7 @@ class Character():
         self.ap = ap
         self.dp = dp
         self.dpOrg = dp
+        self.steps = steps
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
         self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]     #indexで使いたいのであえて辞書型にしていない   
         self.pocket=pocket#持ち物
@@ -147,8 +168,8 @@ class Character():
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
         for directionSet in self.directions:#上下左右をスキャン self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]   
             self.check_1direction(directionSet, B, Cs, M)#directionSetはこんな形("up", 0, -1)
-        if self.team=="敵":
-            print(f"@150 self.team==敵のとき、{self.name=}  {self.shui=}")    
+        #if self.team=="敵":
+            #print(f"@150 self.team==敵のとき、{self.name=}  {self.shui=}")    
 
     def check_1direction(self, directionSet, B, Cs, M):#敵味方共通　#directionSetはこんな形("up", 0, -1)
         direction = directionSet[0]#directionSetはこんな形("up", 0, -1)
@@ -244,7 +265,7 @@ class Character():
 
     def dmg_calc_show(self,C,M):#ダメージ計算と表示（4次）敵味方共通
         dmg=self.dmg_calc(C)
-        print(f"@239ー{dmg=}")
+        #print(f"@239ー{dmg=}")
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         if C.hp<=0:
             print(f"@243ー{C.hp=}")
@@ -326,7 +347,7 @@ class Character():
         if self.shui["left"] ==[] :
             if self.x+1 >= B.w1:
                 deltas.append((-1,0))
-        print(f"@333 {deltas=}")#deltas=[(0, -1),  (1, 0), (-1, 0)]
+        #print(f"@333 {deltas=}")#deltas=[(0, -1),  (1, 0), (-1, 0)]
     
         d = self.calc_target_delta(Cs)#ターゲットのdeltaを計算
 
@@ -379,10 +400,13 @@ class Character():
         #Csの味方の中で一番弱い、生きているキャラを探す
         #目的：敵が味方の一番弱いキャラを狙うため
         t_hp=9999
-        steps=1
+        #steps=2
         t_id=-1#該当がない時
         for C in Cs:
-            if C.hp>0 and C.team=="味方" and t_hp>C.hp and(abs(C.x - self.x) + abs(C.y - self.y) <= steps):#(生きている)かつ(味方チーム)かつ（これまででたCの中で一番弱いよりも小さい）かつ（マンハッタン距離以内）か
+            #temp = abs(C.x-self.x)+abs(C.y-self.y)
+            print(f"@386 {self.name=} {C.name=},{w>C.hp}")
+            if C.hp>0 and C.team=="味方" and t_hp>C.hp and(abs(C.x - self.x) + abs(C.y - self.y) <= C.steps):#(生きている)かつ(味方チーム)かつ（これまででたCの中で一番弱いよりも小さい）かつ（マンハッタン距離以内）か
+                print(f"@388 {self.name=} {C.name=}")
                 t_hp=C.hp
                 t_x=C.x
                 t_y=C.y
@@ -583,21 +607,21 @@ def mainInit(level):
     Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
     if level==2:
         Db=[#キャラのデータベース
-            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5),
-            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3),
-            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4),
-            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],250,60,50,3),
-            (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2),
+            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
+            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
+            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],250,60,50,5,5),
+            (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
         ]
     elif level==1:
         Db=[#キャラのデータベース
-            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy)
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,3),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5),
-            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3),
-            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4)
+            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,1,1),
+            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,2,2)
         ]
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(fonts[0])
@@ -609,13 +633,13 @@ def mainInit(level):
 def main():#-----------------------------------------------------------メイン
     #init
     pygame.init()        
-    screen = pygame.display.set_mode((1500, 900))  # 800
+    screen = pygame.display.set_mode((1000, 800))  # 800
     ck = pygame.time.Clock()
     level=1
     #opening.opening(screen,Cs,B1,M1)#本番用
     while True:
         Cs,B1,J1,ck,E1,M1 = mainInit(level)
-        print(f"{len(Cs)=}")
+        #print(f"{len(Cs)=}")
         opening.opening2(Cs)#初期配置
         Character.number=0#現在選択されているキャラ、クラス変数
         #battle 　
