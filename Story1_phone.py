@@ -7,29 +7,26 @@ class Field():
     def __init__(self):
         self.tx = 0
         self.ty = 0
-        self.mapWidth = 15 #マスの幅(個数)
-        self.mapHeight = 9 #マスの高さ(1マス多い理由は字幕用を稼ぐため)
-        self.massSize = 100
         self.pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 全て100x100
         self.pt2 = pygame.image.load("img/PlotTile2.png").convert_alpha()   #モブタイル　
         self.pt3 = pygame.image.load("img/PlotTile3.png").convert_alpha()   #字幕タイル
         self.door = pygame.image.load("img/door.png").convert_alpha()   #ドアタイル
         self.door2 = pygame.image.load("img/door2.png").convert_alpha()   #裏口タイル
         self.mapchip = [
-        ["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"],
-        ["0","0","0","0","0","0","0","3","0","0","0","0","0","0","0"],
-        ["0","0","1","1","1","1","1","1","1","1","1","1","1","0","0"],
-        ["0","0","1","1","1","1","1","1","1","1","1","1","1","0","0"],
-        ["0","0","1","1","1","1","1","1","1","1","1","1","1","0","0"],
-        ["0","0","1","1","1","1","1","1","1","1","1","1","1","0","0"],
-        ["0","0","1","1","1","1","1","1","1","1","1","1","1","0","0"],
-        ["0","0","0","0","0","0","0","0","0","0","4","0","0","0","0"],
-        ["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+        ["2","2","2","2","2"],
+        ["0","0","3","0","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","1","1","1","0"],
+        ["0","0","0","4","0"],
+        ["0","0","0","0","0"],
         ]
     def draw(self,screen):
-        for i in range(self.mapWidth):
-            for j in range(self.mapHeight):
-                if self.mapchip[j][i] == "1":#床
+        for i in range(5):
+            for j in range(9):
+                if self.mapchip[j][i] == "1":#動けるタイル
                     screen.blit(self.pt1 ,Rect(self.tx+i*100,self.ty+j*100,50,50))
                 elif self.mapchip[j][i] == "0":#壁
                     screen.blit(self.pt2 ,Rect(self.tx+i*100,self.ty+j*100,50,50))  
@@ -40,31 +37,9 @@ class Field():
                 elif self.mapchip[j][i] == "4":#ドア
                     screen.blit(self.door2,Rect(self.tx+i*100,self.ty+j*100,50,50))
 class Character():
-    """
-    cキャラクタークラス cがクラス mがメソッド
-        m最初のアニメ firstAnimation
-        m包囲(挟み撃ち) seige
-        c敵クラス anEnemy
-            c?索敵 detection
-              m方向確認 oriented
-            m攻撃・動き behavior
-            m本体 update
-        c味方クラス ally
-            m本体 update
-            mイベント(操作など) event
-            c?索敵 detection
-              m方向確認 oriented
-            m壁チェック wallCheck
-            m動きチェック moveCheck
-            m攻撃 attack
-            m赤・黄・青点表示 point 
-        m描画 draw
-    """
     num = 0#クラス変数
-    def __init__(self,x,y,characterType,image,team,name,fonts,id,energy,at,df,hp,personality):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,characterType,image,team,name,fonts,id,energy,at,df,hp):#-----------------------------------------------------------初期化
         #-------------------------------キャラクター
-        self.enemy = Enemy(x,y,characterType,image,team,name,fonts,id,energy,at,df,hp,personality)
-        self.ally = Ally(x,y,characterType,image,team,name,fonts,id,energy,at,df,hp,personality)
         #------------------キャラクターID
         self.id = id#id番号 
         #------------------キャラクターの基本変数
@@ -76,7 +51,6 @@ class Character():
         self.tdf = df#保存用2
         self.hp = hp#ヘルス
         self.thp = hp#保存用3
-        self.pss = personality
         #---------------------包囲用
         self.kat = at+15 #覚醒at
         #---------------------キャラクターのタイプ変数
@@ -87,7 +61,6 @@ class Character():
         #--------------------キャラクターエネルギー
         self.energy = energy
         self.tenergy = energy#保存用エナジー
-        self.eCount = 0
         #----------------------------------------------設定
         #--------------------フォント
         self.fonts = fonts
@@ -101,12 +74,6 @@ class Character():
         self.findFight = []#fighton + isfight
         #----------------------対戦相手
         self.opponent = []
-        #----------------------
-        self.chtype = {} #キャラクタータイプのデータ(x,y,体力)
-        self.enemyxy = []
-        self.ataix = []
-        self.ataiy = []
-        self.hpl = []
         #-----------------------------------------------判別・処理
         """ステータス
           ・Downは未稼働
@@ -124,33 +91,30 @@ class Character():
         #------------------------情報保存
         """上下左右に敵がいたらキャラクターリストにキャラクターの情報入れる
         　　　　　　　　　　　　　  例:{'左': ['敵', 'Gorotsuki'], '下': ['味方', 'Mikata1']}"""   
-        #------------------------enemy
-        self.oldx = 0
-        self.oldy = 0
         self.wall = []           
-    def firstAnimation(self,screen,tick):#分ける1
+    def firstAnimation(self,screen,tick):#-----------------------------------------------------------最初のアニメーション
         self.animaionTick = tick
         if self.characterType == "Slime":   
             if self.name == "BlueSlime":
                 if self.animaionTick >= 120:
-                    self.x = 7
+                    self.x = 2
                     self.y = 2
                 if self.animaionTick >= 200:
                     self.y = 3
                 if self.animaionTick >= 400:
-                    self.x = 8
+                    self.x = 3
             if self.name == "YellowSlime":
                 if self.animaionTick >= 200:
-                    self.x = 7
+                    self.x = 2
                     self.y = 2
                 if self.animaionTick >= 400:
                     self.y = 3
                 if self.animaionTick >= 500:
-                    self.x = 6
+                    self.x = 1
         if self.characterType == "Goutou":
             if self.name == "Gorotsuki":
                 if self.animaionTick >= 400:
-                    self.x = 7
+                    self.x = 2
                     self.y = 2
         if self.characterType == "Player":
             if self.name == "Mikata1":
@@ -161,10 +125,10 @@ class Character():
                 if self.animaionTick >= 400:
                     self.y = 5
                 if self.animaionTick >= 550:
-                    self.x = 8
+                    self.x = 3
                 if self.animaionTick >= 650:
                     self.y = 9
-    def seige(self,characters):
+    def hasamiuti(self,characters):
         for charactera in characters:
             if self.x == charactera.x-1 and charactera.y == self.y:
                 for characterb in characters:
@@ -262,231 +226,113 @@ class Character():
                         self.at = self.tat
                         charactera.at == charactera.tat
                         characterb.at == characterb.tat
-    def draw(self,screen,fonts):#-----------------------------------------------------------描画
-        screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
-        hpFont = fonts[2].render(str(self.hp), True, (255,255,255)) # 描画する文字列を画像にする
-        screen.blit(hpFont, [self.x*100+10,self.y*100+2])
+                
 
-class Enemy():
-    def __init__(self,x,y,characterType,image,team,name,fonts,id,energy,at,df,hp,personality):#-----------------------------------------------------------初期化
-        #-------------------------------キャラクター
-        #------------------キャラクターID
-        self.id = id#id番号 
-        #------------------キャラクターの基本変数
-        self.x = x
-        self.y = y
-        self.at = at#アタックポイント
-        self.tat = at#保存用1
-        self.df = df#ディフェンスポイント
-        self.tdf = df#保存用2
-        self.hp = hp#ヘルス
-        self.thp = hp#保存用3
-        self.pss = personality
-        #---------------------包囲用
-        self.kat = at+15 #覚醒at
-        #---------------------キャラクターのタイプ変数
-        self.image = image#イメージ画像
-        self.team = team#チーム   味方チーム、敵チーム
-        self.name = name#名前
-        self.characterType = characterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
-    def ctDetection(self,character,direction):
-        if self.x+direction[1] == character.x and self.y+direction[2] == character.y:#eチームに差分をたしたところにpチームがいるかを✅
-            self.chtype[character.name] = [direction[0],character.hp,direction[1],direction[2]]# ex) {"Player":[上,50,3,7],"Mikata1":[下,30,9,7]}
-    def enemyDetection(self,mapchip,character):#eteamがpteamを索敵
-        self.ataix = []
-        self.ataiy = []
-        self.directions = [["上",0,-1],#索敵範囲
-                            ["下",0,1],
-                            ["右",1,0],
-                            ["左",-1,0],
-                            ["上2",0,-2],
-                            ["下2",0,2],
-                            ["右2",2,0],
-                            ["左2",-2,0],
-                            ["左上",-1,-1],
-                            ["左下",-1,1],
-                            ["右上",1,-1],
-                            ["右下",-1,1],
-                            ["上3",0,-3],
-                            ["下3",0,3],
-                            ["右3",3,0],
-                            ["左3",-3,0],
-                            ["左左上",-2,-1],
-                            ["左左下",-2,1],
-                            ["右右上",2,-1],
-                            ["右右下",2,1],
-                            ["左上上",-1,-2],
-                            ["左下下",-1,2],
-                            ["右上上",1,-2],
-                            ["右下下",1,2]]
-        if character.team == "味方":#pチームだけ呼び出す
-            for direction in self.directions:
-                self.ctDetection(character,direction)
-    def enemyMove(self,mapchip,character):#敵の動き
 
-        if self.pss == "fierce": #狂暴
-            if self.energy <= self.eCount:#エネルギーがなかったら動かない
-                pass
-            else:
-                if self.chtype != {}:
-                    if character.name in self.chtype:#chtypeにキャラクターが居たら
-                        val = self.chtype[character.name]
-                        key = self.chtype.keys()
-                        xs = [character.x,self.x]
-                        ys = [character.y,self.y]
-                        #print(self.tick)
-                        if self.tick >= 70:
-                            self.tick = 0
-                            if character.team == "味方":#pチームだけ呼び出す
-                                if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
-                                    if self.x > character.x+1:
-                                        self.x-=1
-                                    elif self.x < character.x-1:
-                                        self.x+=1
-                                else:#縦
-                                    if self.y > character.y+1:
-                                        self.y-=1
-                                    elif self.y < character.y-1:
-                                        self.y+=1
-                                self.eCount += 1
-                """if character.team == "敵":#eチームだけ呼び出す
-                    if self.x-2 == character.x:
-                        self.x-=1
-                    elif self.x+2 == character.x:
-                        self.x+=1
-                    if self.y-2 == character.y:
-                        self.y-=1
-                    elif self.y+2 == character.y:
-                        self.y+=1
-                    self.eCount += 1"""
-                """青をe1,黄をe2,ごろつきをe3とする
-                　  e1がe2に被らないようにするには、e2<e1+1またはe1<e2+1の場合が必要
-                　  if self.x > character.x:
-                        self.x+=1の時は、どんどんxが離れて行って、画面外に飛んでったりするから✖
-                    if self.x == character.x:
-                        self.x-=1の時は、被った時にself.x-1しかの選択肢がなくなるから✖
-                        oldを使うことも出来るが、コードが複雑になる
-                        フラグも↑から✖
-                    if self.x == character.x+1:
-                        self.x-=1はキャラクターが自分の+1の時に自分に-1にするが、2マス移動になるので✖
+                    
 
-                        """
-                        
-
-                                
-        if self.pss == "timid": #臆病
-            if character.name in self.chtype:
-                val = self.chtype[character.name]#[下,30,9,7]等
-                x = val[2]#ex)9
-                y = val[3]#ex)7
-                xs = [character.x,self.x]
-                ys = [character.y,self.y]
-                self.hpl.append(val[1])
-                min_val = 10000000000000000000 #最小値を数えるための限定数
-                min_index = 0
-                for i in range(len(self.hpl)):#体力が小さいpチームを探す
-                    if self.hpl[i] < min_val:
-                        min_val = self.hpl[i]
-                        min_index = i
-                if self.energy <= self.eCount:#エネルギーがなかったら動かない
-                    print(self.name,"broke")
-                    pass
-                else:
-                    if val[1] == min_val:
-                        if character.team == "味方":#pチームだけ呼び出す
-                            if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
-                                if self.x > character.x+1:#１歩前は動けないようにする理由はキャラが動いて重ならないようにするため。
-                                    print(self.name,"左")
-                                    self.x-=1
-                                elif self.x < character.x-1:
-                                    print(self.name,"右")
-                                    self.x+=1
-                            else:#縦
-                                if self.y > character.y+1:
-                                    print(self.name,"上")
-                                    self.y-=1
-                                elif self.y < character.y-1:
-                                    print(self.name,"下")
-                                    self.y+=1
-                self.eCount += 1
-        if self.pss == "balance":#バランス
-            if self.energy <= self.eCount:#エネルギーがなかったら動かない
-                pass
-            else:
-                if self.chtype != {}:
-                    if character.name in self.chtype:#chtypeにキャラクターが居たら
-                        val = self.chtype[character.name]
-                        key = self.chtype.keys()
-                        xs = [character.x,self.x]
-                        ys = [character.y,self.y]
-                        if character.team == "味方":#pチームだけ呼び出す
-                            if max(xs)-min(xs) > max(ys)-min(ys):#pチームに行く際に縦横で直線距離が近いほうを取る(この場合は横)
-                                if self.x > character.x+1:
-                                    self.x-=1
-                                elif self.x < character.x-1:
-                                    self.x+=1
-                            else:#縦
-                                if self.y > character.y+1:
-                                    self.y-=1
-                                elif self.y < character.y-1:
-                                    self.y+=1
-                self.eCount += 1
+        
+    def enemyMoveDetection(self,mapchip):
+        #print(f"{self.y-1=}")
+        if mapchip[self.y-1][self.x] == "1": #上
+            self.findMove.append("ue")
+        else:
+            if "ue" in self.findMove:
+                self.findMove.remove("ue")
+        if mapchip[self.y+1][self.x] == "1": #下  
+            self.findMove.append("sita")
+        else:
+            if "sita" in self.findMove:
+                self.findMove.remove("sita")
+        if mapchip[self.y][self.x+1] == "1": #右
+            self.findMove.append("migi")
+        else:
+            if "migi" in self.findMove:
+                self.findMove.remove("migi")
+        if mapchip[self.y][self.x-1] == "1": #左
+            self.findMove.append("hidari")
+        else:
+            if "hidari" in self.findMove:
+                self.findMove.remove("hidari")
+    def enemyInfoDetection(self,mapchip,character):
+        if self.x == character.x and self.y-1 == character.y: #移上
+            if "ue" in self.findMove:
+                self.findMove.remove("ue")
+        if self.x == character.x and self.y+1 == character.y: #移下  
+            if "sita" in self.findMove:
+                self.findMove.remove("sita")
+        if self.x+1 == character.x and self.y == character.y: #移右
+            if "migi" in self.findMove:
+                self.findMove.remove("migi")
+        if self.x-1 == character.x and self.y == character.y: #移左
+            if "hidari" in self.findMove:
+                self.findMove.remove("hidari")
     def enemyEvent(self,character):
-        self.enemyFightCalculation(character)#上下左右で戦えるところを探す 
-        if self.hp < self.thp/4:#自身の体力が4割以下になったら薬草を使って回復する
+        self.enemyFightCalculation(character) 
+        if self.hp < self.thp/3:
             print(self.name,"は薬草を使った！")
-            self.hp += random.randint(10,40)#10~40までのランダムな数を回復  
-    def enemyFightCalculation(self,character):#戦えるところを探す
-        if character.team == "味方":#pチームだけ呼び出す
-            if self.x == character.x and self.y-1 == character.y: #上方向にpチームがいるか判別
-                if self.hp >= 25:#自身の体力が25以上で
-                    if self.hp+10 >= character.hp:#相手より10体力が高い場合
-                        self.findFight.append("ue")
-                        self.findFight.append(character.name)#上方向を攻撃するのと、攻撃をするキャラクター
+            self.hp += random.randint(0,20)  
+    def enemyFightCalculation(self,character):
+        if self.x == character.x and self.y-1 == character.y: #攻上
+            if self.hp >= 25:
+                if self.hp+10 >= character.hp:
+                    self.findFight.append("ue")
+                    self.findFight.append(character.name)
+        #else:
+        #    if "ue" in self.findFight:
+        #        self.findFight.remove("ue")
+        #        self.findFight.remove(character.name)
 
-            if self.x == character.x and self.y+1 == character.y: #下方向にpチームがいるか判別
-                if self.hp >= 25:#自身の体力が25以上で
-                    if self.hp+10 >= character.hp:#相手より10体力が高い場合
-                        self.findFight.append("sita")
-                        self.findFight.append(character.name)#下方向を攻撃するのと、攻撃をするキャラクター
+        if self.x == character.x and self.y+1 == character.y: #攻下
+            if self.hp >= 25:
+                if self.hp+10 >= character.hp:
+                    self.findFight.append("sita")
+                    self.findFight.append(character.name)
+        #else:
+        #    if "sita" in self.findFight:
+        #        self.findFight.remove("sita")
+        #        self.findFight.remove(character.name)
 
-            if self.x+1 == character.x and self.y == character.y: #右方向にpチームがいるか判別
-                if self.hp >= 25:#自身の体力が25以上で
-                    if self.hp+10 >= character.hp:#相手より10体力が高い場合
-                        self.findFight.append("migi")  
-                        self.findFight.append(character.name)#右方向を攻撃するのと、攻撃をするキャラクター
+        if self.x+1 == character.x and self.y == character.y: #攻右
+            if self.hp >= 25:
+                if self.hp+10 >= character.hp:
+                    self.findFight.append("migi")  
+                    self.findFight.append(character.name)
+        #else:
+        #    if "migi" in self.findFight:
+        #        self.findFight.remove("migi") 
+        #        self.findFight.remove(character.name)
 
-            if self.x-1 == character.x and self.y == character.y: #左方向にpチームがいるか判別
-                if self.hp >= 25:#自身の体力が25以上で
-                    if self.hp+10 >= character.hp:#相手より10体力が高い場合
-                        self.findFight.append("hidari")
-                        self.findFight.append(character.name)#右方向を攻撃するのと、攻撃をするキャラクター
-    def enemyUpdate(self,screen,mapchip,characters,fonts):#敵の処理の核
-        #-------------------初期化
+        if self.x-1 == character.x and self.y == character.y: #攻左
+            if self.hp >= 25:
+                if self.hp+10 >= character.hp:
+                    self.findFight.append("hidari")
+                    self.findFight.append(character.name)
+        #else:
+        #    if "hidari" in self.findFight:
+        #        self.findFight.remove("hidari")
+        #        self.findFight.remove(character.name)
+        #print(self.findFight)
+    def enemyUpdate(self,screen,mapchip,characters,fonts):#移動ボタン用
+    #----------------------------------------------------------------------------------------------------------移動アクション
         self.findMove.clear()
         self.findFight.clear()
-        self.hpl.clear()
-        self.chtype = {}
-        self.eCount = 0
-        #-------------------体力が0以下の時にプログラムから追い出す
+        #print(self.name,"A",self.x,self.y)
         if self.hp <= 0:
             self.x = -10
             self.y = -10
             Character.num += 1
             return
-        #----------------------------pチームの索敵、eチームの動きなど
-        for character in characters:
-            self.tick += 1
-            print(self.tick)
-            self.enemyDetection(mapchip,character)#eチームがキャラクター索敵
-            self.enemyMove(mapchip,character)#索敵に基づいたeチームの動き
-            self.enemyEvent(character)#eチーム細かな設定など(例：アイテムの処理や回復等)
-            
+        if self.hp > 1:
+            self.enemyMoveDetection(mapchip)
+        for character in characters:#他のキャラクターを呼び出して上下左右にキャラクターが居るかを判別する。
+            if character.team == "味方":
+                self.enemyEvent(character)
+            self.enemyInfoDetection(mapchip,character)#情報収集
             """findMoveは配列,データにmigi,hidari,sita,ueの４つが入る
                例えば['sita', 'hidari']等"""
         #print(self.findFight)
         if self.findFight == []:
-            #-----------------------------旧式の動き
             self.randomc = random.randint(0,4)
             if self.randomc == 1:
                 if "migi" in self.findMove:
@@ -500,58 +346,20 @@ class Enemy():
             if self.randomc == 4:
                 if "ue" in self.findMove:
                     self.y -= 1
-            #self.energy -= 1
-            #if self.energy <= 1:
-            #    Character.num += 1
-            #    self.energy = self.tenergy
+            self.energy -= 1
+            if self.energy <= 1:
+                Character.num += 1
+                self.energy = self.tenergy
         else:
-            #-----------------------------攻撃
             print(self.name,"が",self.findFight[1],"に攻撃")
             for character in characters:
                 if character.name == self.findFight[1]:
                     character.hp -= max(0,self.at-character.df)
             #print(self.addName,"に攻撃")
             Character.num += 1
-        Character.seige(characters)
+        self.hasamiuti(characters)
             
-class Ally:
-    def __init__(self,x,y,characterType,image,team,name,fonts,id,energy,at,df,hp,personality):#-----------------------------------------------------------初期化
-        #-------------------------------キャラクター
-        #------------------キャラクターID
-        self.id = id#id番号 
-        #------------------キャラクターの基本変数
-        self.x = x
-        self.y = y
-        self.at = at#アタックポイント
-        self.tat = at#保存用1
-        self.df = df#ディフェンスポイント
-        self.tdf = df#保存用2
-        self.hp = hp#ヘルス
-        self.thp = hp#保存用3
-        self.pss = personality
-        #---------------------包囲用
-        self.kat = at+15 #覚醒at
-        #---------------------キャラクターのタイプ変数
-        self.image = image#イメージ画像
-        self.team = team#チーム   味方チーム、敵チーム
-        self.name = name#名前
-        self.energy = energy
-        self.tenergy = energy#保存用エナジー
-        self.eCount = 0
-        #----------------------------------------------設定
-        #--------------------フォント
-        self.fonts = fonts
-        #---------------------ティック秒
-        self.tick = 0#全体のティック
-        self.animationTick = 0#アニメーションのティック
-        #----------------------------------------------演算
-        #----------------------味方の場合に動けるか
-        self.findMove = []#"ue" = 上へ行ける "sita" = 下にいける "migi" = "右にいける" "hidari" = "左に行ける"
-        #----------------------戦えるか
-        self.findFight = []#fighton + isfight
-        #----------------------対戦相手
-        self.opponent = []
-        self.characterType = characterType#キャラクタータイプ プレイヤー、動物、モブ人、敵(スライム、ゾンビなどといったキャラクタータイプ)
+                
     def playerUpdate(self,screen,mapchip,characters,fonts):#移動ボタン用
         #print(f"@275{self.name=} {self.characterlists=}") 
         if self.hp <= 0:
@@ -564,7 +372,7 @@ class Ally:
             Character.num += 1
             self.energy = self.tenergy
         self.event(screen,characters)
-        Character.seige(characters)
+        self.hasamiuti(characters)
     def temp(self,characters,sc):
         self.opponent.append(sc[1])
         self.fight(characters)
@@ -695,6 +503,10 @@ class Ally:
         self.direction_check(1, 0, "右", "migi",mapchip,screen)
         self.direction_check(-1, 0, "左", "hidari",mapchip,screen)
         
+    def draw(self,screen,fonts):#-----------------------------------------------------------描画
+        screen.blit(self.image,Rect(self.x*100,self.y*100,50,50))#キャラクターの描画
+        hpFont = fonts[2].render(str(self.hp), True, (255,255,255)) # 描画する文字列を画像にする
+        screen.blit(hpFont, [self.x*100+10,self.y*100+2])
 
 class Judge():
     def __init__(self,characters):
@@ -765,9 +577,8 @@ def main():#-----------------------------------------------------------メイン
     font2 = pygame.font.SysFont("yumincho", 60) 
     font3 = pygame.font.SysFont("yumincho", 15)
     fonts = [font,font2,font3]                        
-    SCREEN_X = 1500
-    SCREEN_Y = 800
-    screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))  # 800
+    #-
+    screen = pygame.display.set_mode((500, 800))  # 800
     #キャラクターの画像(image)
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl2 = pygame.image.load("img/player2.png").convert_alpha()       #プレイヤー
@@ -777,20 +588,17 @@ def main():#-----------------------------------------------------------メイン
     Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
     #tick
     tick = 0
-    tick2 = 0
     #フィールド読み込み
     field = Field()
     #キャラクターインスタンス化
-    player1 = Character(6,5,"Player",Pl1,"味方","Endo",fonts,0,3,12,12,50,"fierce")#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
-    player2 = Character(7,4,"Player",Pl2,"味方","Sora",fonts,1,2,6,6,30,"fierce")#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
-    #player3 = Character(8,4,"Player",Pl1,"味方","Nao",fonts,2,2,12,12,80,"fierce")
-    #player4 = Character(9,5,"Player",Pl2,"味方","Soushi",fonts,3,2,6,12,10,"fierce")#何かあった時の追加用
-    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,5,12,6,50,"fierce")
-    #slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40,"fierce")
-    #goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,30,5,80,"fierce")
-    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20,"timid")#fierceは無鉄砲,timidは臆病タイプ
+    player1 = Character(2,5,"Player",Pl1,"味方","Player",fonts,0,3,24,15,50)#x、y、タイプ、画像、チーム、名前、フォント、id,行動力、攻撃力、防御力、体力
+    player2 = Character(3,4,"Player",Pl2,"味方","Mikata1",fonts,1,2,6,6,30)#攻撃力、防御力は6,行動力は1ずつ増えていく。最大30(行動力は最大5)
+    slime1 = Character(-1,0,"Slime",Sl1,"敵","BlueSlime",fonts,2,1,12,6,40)
+    slime2 = Character(-1,0,"Slime",Sl2,"敵","YellowSlime",fonts,3,2,12,3,40)
+    goutou = Character(-1,0,"Goutou",Man,"敵","Gorotsuki",fonts,4,5,12,5,80)
+    cat = Character(1,4,"Animal",Cat,"モブ","Cat",fonts,5,1,0,0,20)
     #キャラクター
-    characters = [slime1,player1,player2]#catは戦わないから入れない,[,player3,player4]追加
+    characters = [slime1,slime2,goutou,player1,player2]#catは戦わないから入れない
     judge = Judge(characters)   
     #敵味方の数
     valMikata = 2
@@ -800,7 +608,6 @@ def main():#-----------------------------------------------------------メイン
     animation(tick,characters,field.mapchip,screen,fonts,ck,field)                     
     while True:
         tick += 1
-        tick2 +=1
         screen.fill((0,0,255))
         field.draw(screen)
         if Character.num >= len(characters):
@@ -809,17 +616,15 @@ def main():#-----------------------------------------------------------メイン
         for character in characters:
             if Character.num == character.id:
                 if character.team == "敵":
-                    #if tick2 >= 30:
-                    #    tick2 = 0
-                    character.enemy.enemyUpdate(screen,field.mapchip,characters,fonts)
+                    character.enemyUpdate(screen,field.mapchip,characters,fonts)
                     #print(f"@685 {character.at=} {character.name=}")
                 if character.team == "味方":
-                    character.ally.playerUpdate(screen,field.mapchip,characters,fonts)
+                    character.playerUpdate(screen,field.mapchip,characters,fonts)
             character.draw(screen,fonts)
         for character2 in characters:
             if Character.num == character2.id:
                 if character2.team == "味方":
-                    character2.ally.circle(screen,field.mapchip)
+                    character2.circle(screen,field.mapchip)
         judge.hantei(characters)
         #---------描画---------  
         pygame.display.update()         
