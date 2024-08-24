@@ -1,5 +1,33 @@
-"""8/17
-   
+"""8/18 1
+   「Goutouのstepsが5のはずなのに、2マス程度しか見えてない。」解決。
+   数える変数が、敵ではなくキャラクターだった。C.steps -> self.steps
+   8/18 2
+   症状
+   ・オーバーキル(味方が敵npc倒されてもまだ攻撃判定になる。)
+   仮説
+   ・攻撃して倒した後も、攻撃判定になっているかも
+   検証
+   ・倒したら倒した判定にして次に進ませる
+   8/17 1
+   ブランチをsarからmainに変更
+       青木さんが作ったsarから共同用のmainに反映させた。
+       sarでやった変更をmainに反映させるときの手順
+        1branchをmainに入れ替えた。 git checkout main
+        2sarブランチをマージする git merge sar
+        (マージをすると競合が起こる)
+        3競合が起きたとき、古いほう(選んで良いほう)の競合プログラムを削除する
+        4リモートリポジトリの変更をローカルに取り込む git pull origin main
+        (pullすると競合が起こる)
+        5再度コミットする git status -> git add . -> gid status -> git commit -m "入れたい奴"
+        6プッシュする git push
+   昔のコードをoldfileに入れて本来のコードを分かりやすくした。
+   8/17 2
+   Goutouのsteps(視認距離)が変数で指定した値より見えてないところを修正
+   症状
+   Goutouのstepsが5のはずなのに、2マス程度しか見えてない。
+   仮説
+   キャラクターx,キャラクターyの範囲がGoutouの視認距離と連動していない
+
    8/10
    仮説(miss)
    t_hp>c_hpで
@@ -361,7 +389,7 @@ class Character():
     def calc_target_delta(self,Cs):   #easy_koteki　から呼ばれる（５次受け）戻り値はデルタ
         t_x,t_y,t_id = self.search_target(Cs)#盤面上にいる一番弱いやつを狙う
         if t_id==-1:#該当がない時
-            print("@342　相手が見つからず")
+            print("@382　相手が見つからず")
             return (-999,-999)
         else:
             dx = t_x-self.x#盤面上にいる最弱の味方キャラとの座標の差分を取る
@@ -400,16 +428,16 @@ class Character():
         #Csの味方の中で一番弱い、生きているキャラを探す
         #目的：敵が味方の一番弱いキャラを狙うため
         t_hp=9999
-        #steps=2
         t_id=-1#該当がない時
         for C in Cs:
-            #temp = abs(C.x-self.x)+abs(C.y-self.y)
-            if C.hp>0 and C.team=="味方" and t_hp>C.hp and(abs(C.x - self.x) + abs(C.y - self.y) <= C.steps):#(生きている)かつ(味方チーム)かつ（これまででたCの中で一番弱いよりも小さい）かつ（マンハッタン距離以内）か
-                t_hp=C.hp
-                t_x=C.x
-                t_y=C.y
-                t_id=C.id
-        #print(f"@274 {t_x=}  {t_y=} {t_id=}")       
+            if C.team=="味方":#味方, C.hp>0は今の非追尾バグには入っていない
+                if C.hp>0: 
+                    if t_hp>C.hp:  
+                        if (abs(C.x - self.x) + abs(C.y - self.y) <= self.steps):#(生きている)かつ(味方チーム)かつ（これまででたCの中で一番弱いよりも小さい）かつ（マンハッタン距離以内）か
+                            t_hp=C.hp                                     
+                            t_x=C.x
+                            t_y=C.y
+                            t_id=C.id       
         if t_id==-1:
             return -999,-999,t_id
         else:
