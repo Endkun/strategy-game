@@ -1,4 +1,42 @@
 
+●主題:ヒエラルキーグラフ
+日付	2024/08/24
+
+main()
+├── mainInit()
+│   └── Character()
+└── opening.opening2()
+    └── main loop
+        ├── Event.update()
+        ├── BackGround.draw_tile()
+        ├── BackGround.draw_text()
+        ├── BackGround.draw_tail()
+        ├── Character.update()
+        │   ├── Character.check_4directions()
+        │   │   └── Character.check_1direction()
+        │   ├── Character.teki_update()
+        │   │   ├── Character.useYakusou()
+        │   │   ├── Character.teki_kougeki()
+        │   │   │   ├── Character.easy_koteki()
+        │   │   │   │   └── Character.calc_target_delta()
+        │   │   │   │       └── Character.search_target()
+        │   │   │   └── Character.koteki() [未使用]
+        │   │   └── Character.teki_nigeru()
+        │   └── Character.mikata_update()
+        │       ├── Character.handle()
+        │       │   └── Character.handle_action()
+        │       └── Character.dmg_calc_show()
+        │           └── Character.dmg_calc()
+        ├── Character.draw()
+        │   └── Character.draw_point()
+        ├── Character.new_guide()
+        ├── Messenger.draw()
+        │   ├── Messenger.draw_head_line()
+        │   └── Messenger.draw_tail_line()
+        └── Judge.judge()
+            └── Messenger.append_tail_line()
+
+
 
 ●主題:SAR版
 副題:日付:本質:考察:疑問:詳細:感想:行動:症状:仮説:検証:結果:分類:検索:場所:参考:

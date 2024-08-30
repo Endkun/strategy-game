@@ -213,8 +213,8 @@ class Character():
         else:
             if self.team=="味方":#味敵味
                 for C in Cs:  # キャラクタースキャン
-                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら、以下でそいつが何者か調べる
-                        if C.team == "敵":
+                    if new_x == C.x and new_y == C.y and C.hp>0:#着目点にキャラが居て生きているなら、以下でそいつが何者か調べる
+                        if C.team == "敵":#キャラは敵？
                             C.dp=C.dpOrg#いったんdpを初期状態に戻しておく、dpは挟まれると1/3になるので
                             code = "敵"
                             self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
@@ -228,21 +228,20 @@ class Character():
                                     if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id and Ch.id!=self.id:
                                         if Ch.team=="味方":
                                             C.dp=int(C.dp/3)
-                                            mes1=f"挟み撃ち!!{C.name}の防御が{C.dp}に"
+                                            mes1=f"挟み撃ちアタック!!　{C.name}の防御が{C.dp}に"
                                             M.append_tail_line([mes1])#メッセージ追加
                                             #print(mes1)
-                        elif C.team == "味方":
-                            code = "味方"
-                            self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
+                        elif C.team == "味方":#キャラは味方なら
+                            self.shui[direction].append(C.team)#ここで目的のself.shui[direction]を作成　
                         else: #"モブ"はあとまわし
                             pass
             elif self.team=="敵":#敵味敵
                 for C in Cs:  # キャラクタースキャン
-                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
+                    if new_x == C.x and new_y == C.y and C.hp>0:#着目点にキャラが居るなら
                         if C.team == "味方" :#そいつが味方なら
                             C.dp=C.dpOrg#いったんdpを初期状態に戻しておく、dpは挟まれると1/3になるので
-                            code = "味方"
-                            self.shui[direction].append(code)
+                            #code = "味方"
+                            self.shui[direction].append(C.team)
                             #挟み撃ち攻撃のチェック（敵ー味方ー敵）
                             hasami_x = new_x + dx
                             hasami_y = new_y + dy
@@ -250,11 +249,11 @@ class Character():
                                 for Ch in Cs:  # キャラクターがいるかチェック
                                     if hasami_x == Ch.x and hasami_y == Ch.y and Ch.id!=C.id and Ch.id!=self.id:
                                         if Ch.team=="敵":
-                                            mes=f"やばい！！敵に挟まれた "
+                                            mes=f"やばい！やばい！！敵に挟まれた "
                                             M.append_tail_line([mes])#メッセージ追加
                         elif C.team == "敵":
-                            code = "敵"
-                            self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
+                            #code = "敵"
+                            self.shui[direction].append(C.team)#ここで目的のself.shui[direction]を作成　
 
     #全キャラ用、新ガイドを描画するだけ　#敵味方共通
     def new_guide(self,screen):
@@ -296,7 +295,7 @@ class Character():
         #print(f"@239ー{dmg=}")
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         if C.hp<=0:
-            print(f"@243ー{C.hp=}")
+            #print(f"@243ー{C.hp=}")
             mes1=mes1+"死んだ"
             time.sleep(1)
         M.append_tail_line([mes1]) 
@@ -315,7 +314,12 @@ class Character():
         #B:バック　Cs:キャラクターズ（敵、味方）
         self.tick+=1
         if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
+
+            if self.energy==self.energyOrg :
+                print("==================")
+            print(f"@318 {self.name=}  {self.energy=}")
             self.check_4directions(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
+            print(f"@320 {self.shui=}")
             # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
             if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
                 if "薬草" in self.pocket:#薬草を持っていたら
@@ -329,6 +333,7 @@ class Character():
     def teki_kougeki(self,B,Cs,M):#B:バック　Cs:キャラクターズ（敵、味方）
         #敵の攻撃　teki_updateから呼ばれる（３次受け）
         #接敵状況を把握する
+        # self.shui= {'up': ["味方"], 'down': ['壁'], 'right': ['モブ'], 'left': []}
         kogekiDir=[]    
         if "味方" in self.shui["up"] and self.y-1 >=0:
             kogekiDir.append("up")
@@ -540,12 +545,12 @@ class Judge():
         #print(f"@503:judge {mikata_dead=} {teki_dead=}")                    
         if mikata_num>0 and mikata_num==mikata_dead:
             mes = "味方全滅"
-            print(mes)
+            #print(mes)
             M.append_tail_line([mes])
             self.winner="teki"
         if teki_num>0 and teki_num==teki_dead:
             mes="敵全滅"
-            print(mes)
+            #print(mes)
             M.append_tail_line([mes])
             self.winner="mikata"
 
@@ -576,7 +581,7 @@ class Messenger():#draw()は毎フレーム呼ばれ、self.tail_txtをスクロ
         linput=len(txts)    #行数　例えばtxtsは２行で ["x","y"]とする
         tmp=self.tail_txt   #一時置場 ex.["a","b","c","d","e","f","g"]
         if linput>self.max_line:        #7行までで制限
-            print("err")
+            #print("err")
             import pdb;pdb.set_trace()
         il = self.max_line-linput           #linput=2ならil=7-2=5
         for i in range(il):                 #i=0,1,2
@@ -611,7 +616,7 @@ class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに�
         self.getEvent = pygame.event.get()    
 
 def mainInit(level): 
-    print (f"{level=}")
+    print (f"@616 {level=}")
     font30 = pygame.font.SysFont("yumincho", 30)       
     font60 = pygame.font.SysFont("yumincho", 60)                      
     font20 = pygame.font.SysFont("yumincho", 20)                      
