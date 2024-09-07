@@ -174,7 +174,7 @@ class Character():
             screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
 
 
-    def update(self,B,Cs,E,M):#更新（１次受け）#敵味方共通
+    def update(self,B,Cs,E,M,screen):#更新（１次受け）#敵味方共通
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
@@ -187,7 +187,7 @@ class Character():
         M.head_txt=mes
 
         if self.team=="味方":
-            self.mikata_update(B,Cs,E,M)  
+            self.mikata_update(B,Cs,E,M,screen)  
         elif self.team=="敵":
             self.teki_update(B,Cs,M)    
         elif self.team=="モブ":
@@ -490,9 +490,10 @@ class Character():
                
     #=================味方==========================================
     #モードなしダイレクト入力
-    def mikata_update(self,B,Cs,E,M):    
+    def mikata_update(self,B,Cs,E,M,screen):    
         self.check_4directions(B,Cs,M)#索敵
         self.handle(B,Cs,E,M)          #選択肢をチョイス
+        self.Button(screen)
 
     def handle(self,B,Cs,E,M):#移動モードでの入力
         for event in E.getEvent:  # イベントキューからキーボードやマウスの動きを取得
@@ -503,6 +504,9 @@ class Character():
                 x_pos, y_pos = event.pos
                 new_x=int(x_pos/SIZE)
                 new_y=int(y_pos/SIZE)
+                if self.x*100+70< x_pos and self.x*100+100 > x_pos:
+                    if self.y*100+70 < y_pos and self.y*100+100 > y_pos:
+                        Character.number=(Character.number+1)%len(Cs)
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
                     self.handle_action(Cs,B,directionSet,new_x,new_y,M)
@@ -530,7 +534,10 @@ class Character():
                 self.x += dx
                 self.y += dy
                 self.energy -= 1
-
+    def Button(self,screen):
+        self.Button1 = pygame.image.load("img/pass.png").convert_alpha()   #配置タイル 
+        self.Button1 = pygame.transform.scale(self.Button1, (30, 30)) 
+        screen.blit(self.Button1,Rect(self.x*100+70,self.y*100+70,50,50))#x,yは70から100
 class Judge():
     def __init__(self):
         self.winner=""
@@ -645,6 +652,7 @@ def mainInit(level):
     Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
     Man2 = pygame.image.load("img/goutou2.png").convert_alpha()       #強盗、スライムの支配主
     Man2 = pygame.transform.scale(Man2, (SIZE, SIZE)) 
+    level_Max=4
     if level==3:
         Db=[
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
@@ -671,6 +679,9 @@ def mainInit(level):
             (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,1,1),
             (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,2,2)
         ]
+    if level == level_Max:
+        print("コンプリート")
+        quit()
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(fonts[0])
     J1 = Judge()
@@ -698,7 +709,7 @@ def main():#-----------------------------------------------------------メイン
             B1.draw_tail(screen)#補足説明用の文字
             #---------更新と描画---------
             for ch in Cs:#キャラ全員の更新と描画
-                ch.update(B1,Cs,E1,M1)#ただし現在選択されているキャラ以外は即return
+                ch.update(B1,Cs,E1,M1,screen)#ただし現在選択されているキャラ以外は即return
                 ch.draw(screen)
             for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
                 ch.new_guide(screen)
