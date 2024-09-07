@@ -225,7 +225,7 @@ class Character():
         else:
             if self.team=="味方":#味敵味
                 for C in Cs:  # キャラクタースキャン
-                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら、以下でそいつが何者か調べる
+                    if new_x == C.x and new_y == C.y and C.hp>0:#着目点にキャラが居るなら、以下でそいつが何者か調べる
                         if C.team == "敵":
                             C.dp=C.dpOrg#いったんdpを初期状態に戻しておく、dpは挟まれると1/3になるので
                             code = "敵"
@@ -250,7 +250,7 @@ class Character():
                             pass
             elif self.team=="敵":#敵味敵
                 for C in Cs:  # キャラクタースキャン
-                    if new_x == C.x and new_y == C.y:#着目点にキャラが居るなら
+                    if new_x == C.x and new_y == C.y and C.hp>0:#着目点にキャラが居るなら
                         if C.team == "味方" :#そいつが味方なら
                             C.dp=C.dpOrg#いったんdpを初期状態に戻しておく、dpは挟まれると1/3になるので
                             code = "味方"
@@ -308,7 +308,7 @@ class Character():
         #print(f"@239ー{dmg=}")
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         if C.hp<=0:
-            print(f"@243ー{C.hp=}")
+            print(f"@311ー{C.hp=}")
             mes1=mes1+"死んだ"
             time.sleep(1)
         M.append_tail_line([mes1]) 
@@ -350,12 +350,11 @@ class Character():
             kogekiDir.append("left")
         elif "味方" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
             kogekiDir.append("right")
-
         if len(kogekiDir)>0:    #接敵数が１つ以上あるならランダムで選ぶ
             kogekiD=random.choice(kogekiDir)
             #実行    
-            #txt=""
-            for d in self.directions:
+            #txt="" 
+            for d in self.directions:#hpが0になったらshuiから消す
                 if kogekiD==d[0]:
                     dx=d[1]
                     dy=d[2]
@@ -556,6 +555,7 @@ class Judge():
                 teki_num+=1
                 if C.hp<=0:
                     teki_dead+=1
+
         #print(f"@503:judge {mikata_dead=} {teki_dead=}")                    
         if mikata_num>0 and mikata_num==mikata_dead:
             mes = "味方全滅"
@@ -610,7 +610,7 @@ class Messenger():#draw()は毎フレーム呼ばれ、self.tail_txtをスクロ
     def draw(self,screen):
         self.draw_head_line(screen)
         self.draw_tail_line(screen)
-
+        
     def draw_head_line(self,screen):
         g_txt = self.font30.render(self.head_txt, True, (0,0,0))   # 描画する文字列の設定
         screen.blit(g_txt, [self.head_x, self.head_y])# 文字列の表示位置
