@@ -54,7 +54,7 @@ import random
 import time
 import opening
 class BackGround():
-    def __init__(self,font):
+    def __init__(self,font,level):
         self.mess=[]
         self.mes_tail=""
         pt1 = pygame.image.load("img/PlotTile1.png").convert_alpha()   #配置タイル 
@@ -75,18 +75,51 @@ class BackGround():
         table = pygame.transform.scale(table, (SIZE, SIZE))
 
         self.tiles=[pt2,pt1,pt3,door,door2,pt1,chair1,chair2,table]
-        self.mapchip = [
+        self.mapchips = [[
             ["2","2","2","2","2","2","2","2","2","2"],
             ["1","1","1","1","1","1","1","1","1","1"],
             ["6","8","1","1","1","1","1","3","1","7"],
             ["1","1","8","6","8","7","1","1","1","1"],
             ["1","1","1","1","1","1","1","1","1","1"],
             ["1","1","1","1","1","1","8","1","7","1"],
+            ["0","0","0","0","0","0","0","0","4","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ],
+            [
+            ["2","2","2","2","2","2","2","2","2","2"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
             ["0","0","0","4","0","0","0","0","4","0"],
             ["0","0","0","0","0","0","0","0","0","0"],
             ["0","0","0","0","0","0","0","0","0","0"],
-            ]
-
+            ],
+            [
+            ["2","2","2","2","2","2","2","2","2","2"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["0","0","0","4","0","0","0","0","4","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ],
+            [
+            ["2","2","2","2","2","2","2","2","2","2"],
+            ["1","1","8","1","8","1","1","1","1","1"],
+            ["1","1","8","1","8","1","1","1","1","1"],
+            ["1","1","8","1","8","1","1","1","1","1"],
+            ["1","1","8","1","8","1","1","1","1","1"],
+            ["1","1","1","1","1","1","1","1","1","1"],
+            ["0","0","0","4","0","0","0","0","4","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ]]
+        self.mapchip = self.mapchips[level-1]
         self.font2=font
         self.w1 = 0 #マップの左端
         self.w2 = 10 #右端(実際の取る値は-1まで)
@@ -154,13 +187,13 @@ class Character():
             #hp表示
             self.draw_point(screen, self.hp,5,8)
             #energy表示
-            self.draw_point(screen, self.energy,48,8)
+            self.draw_point(screen, self.energy,75,8)
 
             #ap表示
             self.draw_point(screen, self.ap,5,48)
 
             #dp表示
-            self.draw_point(screen, self.dp,48,48)
+            self.draw_point(screen, self.dp,75,48)
 
             #黄色いガイドの表示
             if Character.number==self.id :
@@ -506,6 +539,7 @@ class Character():
                 if self.x*100+70< x_pos and self.x*100+100 > x_pos:
                     if self.y*100+70 < y_pos and self.y*100+100 > y_pos:
                         Character.number=(Character.number+1)%len(Cs)
+                        self.energy=self.energyOrg
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
                     self.handle_action(Cs,B,directionSet,new_x,new_y,M)
@@ -652,14 +686,24 @@ def mainInit(level):
     Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
     Man2 = pygame.image.load("img/goutou2.png").convert_alpha()       #強盗、スライムの支配主
     Man2 = pygame.transform.scale(Man2, (SIZE, SIZE)) 
-    level_Max=4
+    Man3 = pygame.image.load("img/goutou3.png").convert_alpha()       #強盗、スライムの支配主
+    Man3 = pygame.transform.scale(Man3, (SIZE, SIZE)) 
+    level_Max=5
+    if level==4:
+         Db=[
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
+            (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4),
+            (3,1,4,"Goutou3",Man3,"敵","Joruno",fonts,["拳","剣"],250,100,120,5,5),
+        ]       
     if level==3:
         Db=[
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
-            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,12),
+            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
             (3,3,3,"Animal",Cat,"味方","Cat",fonts,["拳"],20,50,50,5,2),
-            (3,2,4,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,5),
+            (3,2,4,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,4),
         ]
     elif level==2:
         Db=[#キャラのデータベース
@@ -668,7 +712,7 @@ def mainInit(level):
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
             (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
             (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
-            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,12),
+            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,5),
             (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
         ]
     elif level==1:
@@ -683,7 +727,7 @@ def mainInit(level):
         print("コンプリート")
         quit()
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
-    B1 = BackGround(fonts[0])
+    B1 = BackGround(fonts[0],level)
     J1 = Judge()
     E1 = Event()
     M1 = Messenger(fonts)
@@ -694,7 +738,7 @@ def main():#-----------------------------------------------------------メイン
     pygame.init()        
     screen = pygame.display.set_mode((1000, 800))  # 800
     ck = pygame.time.Clock()
-    level=3
+    level=1
     #opening.opening(screen,Cs,B1,M1)#本番用
     while True:
         Cs,B1,J1,ck,E1,M1 = mainInit(level)
