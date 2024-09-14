@@ -710,9 +710,9 @@ def mainInit(level):
             #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],120,50,50,4,3),
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
-            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
-            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,5),
+            (3,2,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,3,2),
+            (2,3,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,30,40,4,2),
+            (4,3,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,5),
             (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
         ]
     elif level==1:
@@ -720,8 +720,8 @@ def mainInit(level):
             #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3),
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,1,1),
-            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,2,2)
+            (5,1,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,2,1),
+            (4,2,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,50,40,2,2)
         ]
     if level == level_Max:
         print("コンプリート")
