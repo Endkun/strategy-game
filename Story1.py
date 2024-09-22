@@ -156,13 +156,10 @@ class Character():
             self.draw_point(screen, self.hp,5,8)
             #energy表示
             self.draw_point(screen, self.energy,48,8)
-
             #ap表示
             self.draw_point(screen, self.ap,5,48)
-
             #dp表示
             self.draw_point(screen, self.dp,48,48)
-
             #黄色いガイドの表示
             if Character.jyunban[Character.number]==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
@@ -174,16 +171,13 @@ class Character():
             txtg = self.fontm.render(txt, True, (255,255,255))  
             screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
 
-
     def update(self,B,Cs,E,M,screen):#更新（１次受け）#敵味方共通
-        print(f"@179 {Character.number=}")
-        print(f"@180 {Character.jyunban[Character.number]=} ")
         if self.id != Character.jyunban[Character.number]:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
             self.x=-10#どかしておかないと死んだあとでも残っているので
             self.y=-10
-            Character.number=(Character.number+1)%len(Cs)#つぎのキャラに送る
+            Character.number=(Character.number+1)%len(Character.jyunban)#つぎのキャラに送る
             return
 
         mes=f"{self.name}のターン 行動残：{self.energy}"
@@ -197,7 +191,7 @@ class Character():
             self.energy -=1
 
         if self.energy<=0:#キャラクターの交代
-            Character.number=(Character.number+1)%len(Cs)
+            Character.number=(Character.number+1)%len(Character.jyunban)
             #ここで次のキャラを初期化するべし！
             Cs[Character.jyunban[Character.number]].energy = Cs[Character.jyunban[Character.number]].energyOrg
             Cs[Character.jyunban[Character.number]].tick = 0
@@ -211,9 +205,6 @@ class Character():
         self.shui = {"up": [], "down": [], "right": [], "left": []}  # リセット
         for directionSet in self.directions:#上下左右をスキャン self.directions = [("up", 0, -1), ("down", 0, 1), ("right", 1, 0), ("left", -1, 0)]   
             self.check_1direction(directionSet, B, Cs, M)#directionSetはこんな形("up", 0, -1)
-        #if self.team=="敵":
-            #print(f"@150 self.team==敵のとき、{self.name=}  {self.shui=}")    
-
     def check_1direction(self, directionSet, B, Cs, M):#敵味方共通　#directionSetはこんな形("up", 0, -1)
         direction = directionSet[0]#directionSetはこんな形("up", 0, -1)
         dx = directionSet[1]    
@@ -508,7 +499,7 @@ class Character():
                 new_y=int(y_pos/SIZE)
                 if self.x*100+70< x_pos and self.x*100+100 > x_pos:
                     if self.y*100+70 < y_pos and self.y*100+100 > y_pos:
-                        Character.number=(Character.number+1)%len(Cs)
+                        Character.number=(Character.number+1)%len(Character.jyunban)
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
                     self.handle_action(Cs,B,directionSet,new_x,new_y,M)
@@ -705,7 +696,7 @@ def main():#-----------------------------------------------------------メイン
         opening.opening2(Cs)#初期配置
         Character.number=0#現在選択されているキャラ、クラス変数
         #battle 　
-        Character.jyunban=[4,2,1,0,3]#この順番でキャラが動く（１ターンあたり）中はid番号
+        Character.jyunban=[4,2,0,3]#この順番でキャラが動く（１ターンあたり）中はid番号
         while True:
             E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
             B1.draw_tile(screen)#壁面
@@ -714,8 +705,9 @@ def main():#-----------------------------------------------------------メイン
             #---------更新と描画---------
             for ch in Cs:#キャラ全員の更新と描画
                 ch.update(B1,Cs,E1,M1,screen)#ただし現在選択されているキャラ以外は即return
-                ch.draw(screen)
-            for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
+            for i in Character.jyunban:#描画はそのターンで登場するキャラ全員（選択されていないキャラも置いておく必要がある）
+                Cs[i].draw(screen)
+            for ch in Cs:#選択されているキャラのガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
                 ch.new_guide(screen)
             M1.draw(screen)    #メッセージくん
             J1.judge(Cs,M1)    #判定くん
