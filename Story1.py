@@ -302,7 +302,7 @@ class Character():
         #print(f"@239ー{dmg=}")
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         if C.hp<=0:
-            print(f"@311ー{C.hp=}")
+            #print(f"@311ー{C.hp=}")
             mes1=mes1+"死んだ"
             time.sleep(1)
         M.append_tail_line([mes1]) 
@@ -420,14 +420,14 @@ class Character():
                     delta=(0,1) #上                  
             return delta     
             """
-        selfが敵(e)、t_xは味方(p)の座標だとして、この位置関係
-        ..p.....  p(2,0)
-        ...e....  e(3,1)
-        ........
-        なら
-        dx=-1 dy=-1
-        de
-        """
+            selfが敵(e)、t_xは味方(p)の座標とする
+            この位置関係
+            ..p.....  p(2,0)
+            ...e....  e(3,1)
+            ........
+            なら
+            dx=-1 dy=-1
+            """
 
     def search_target(self,Cs):  #calc_target_deltaから呼ばれる（６次受け）
         #Csの味方の中で一番弱い、生きているキャラを探す
@@ -450,7 +450,7 @@ class Character():
 
     def koteki(self,B):
         pass
-        #以下は本格的な向敵
+        #以下は本格的な向敵、迷路でも最短経路を見つけて向かってくる
         #"味方チーム"から一番hpの小さいキャラを見つけ出す、そのキャラの座標をjx,jyとする
         #障害物マップを作成する（通路は0、それ以外はすべて1、地形でもキャラでも）
         #自分の位置（self.x,self.y）からjx,jyまでの迷路を幅優先探索（＝最短経路）で解く
@@ -540,7 +540,8 @@ class Judge():
         teki_num=0#敵の総数
         mikata_dead=0#死んだ数(味方)
         teki_dead=0
-        for C in Cs:
+        for id in Character.jyunban:
+            C=Cs[id]
             if C.team=="味方":
                 mikata_num+=1
                 if C.hp<=0:
@@ -550,7 +551,6 @@ class Judge():
                 if C.hp<=0:
                     teki_dead+=1
 
-        #print(f"@503:judge {mikata_dead=} {teki_dead=}")                    
         if mikata_num>0 and mikata_num==mikata_dead:
             mes = "味方全滅"
             print(mes)
@@ -623,14 +623,12 @@ class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに�
     def update(self):#毎フレーム呼ばれる
         self.getEvent = pygame.event.get()    
 
-def mainInit(level): 
-    print (f"{level=}")
+def mainInit(): 
     font30 = pygame.font.SysFont("yumincho", 30)       
     font60 = pygame.font.SysFont("yumincho", 60)                      
     font20 = pygame.font.SysFont("yumincho", 20)                      
     fonts=[font30,font60,font20] 
     ck = pygame.time.Clock()
-
     #image load
     Pl1 = pygame.image.load("img/player1.png").convert_alpha()       #プレイヤー
     Pl1 = pygame.transform.scale(Pl1, (SIZE, SIZE)) 
@@ -646,57 +644,46 @@ def mainInit(level):
     Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
     Man2 = pygame.image.load("img/goutou2.png").convert_alpha()       #強盗、スライムの支配主
     Man2 = pygame.transform.scale(Man2, (SIZE, SIZE)) 
-    level_Max=4
-    if level==3:
-        Db=[
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,12),
-            (3,3,3,"Animal",Cat,"味方","Cat",fonts,["拳"],20,50,50,5,2),
-            (3,2,4,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,5),
-        ]
-    elif level==2:
-        Db=[#キャラのデータベース
-            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],120,50,50,4,3),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
-            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
-            (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,12),
-            (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
-        ]
-    elif level==1:
-        Db=[#キャラのデータベース
-            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,1,1),
-            (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,2,2)
-        ]
-    if level == level_Max:
-        print("コンプリート")
-        quit()
-    Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     B1 = BackGround(fonts[0])
     J1 = Judge()
     E1 = Event()
     M1 = Messenger(fonts)
+    Db=[#キャラのデータベース
+        #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
+        (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],120,50,50,4,3),
+        (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
+        (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
+        (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,12),
+        (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
+        (3,2,6,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,5),
+    ]
+    Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     return Cs, B1, J1, ck, E1, M1
 
+def mainInit2(level): 
+    print (f"{level=}")
+    level_Max=4
+    if level==3:
+        Character.jyunban=[5,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+    elif level==2:
+        Character.jyunban=[4,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+    elif level==1:
+        Character.jyunban=[3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+    if level == level_Max:
+        print("コンプリート")
+        quit()
+
 def main():#-----------------------------------------------------------メイン
-    #init
     pygame.init()        
     screen = pygame.display.set_mode((1000, 800))  # 800
-    ck = pygame.time.Clock()
-    level=3
-    #opening.opening(screen,Cs,B1,M1)#本番用
+    Cs,B1,J1,ck,E1,M1 = mainInit()
+    level=1
+    mainInit2(level)
     while True:
-        Cs,B1,J1,ck,E1,M1 = mainInit(level)
-        #print(f"{len(Cs)=}")
         opening.opening2(Cs)#初期配置
         Character.number=0#現在選択されているキャラ、クラス変数
         #battle 　
-        Character.jyunban=[4,2,0,3]#この順番でキャラが動く（１ターンあたり）中はid番号
         while True:
             E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
             B1.draw_tile(screen)#壁面
@@ -717,8 +704,9 @@ def main():#-----------------------------------------------------------メイン
             ck.tick(60) #1秒間で60フレームになるように16msecのwait
         if J1.winner=="mikata":
             level+=1 
+            mainInit2(level)
         else:
             break           
-SIZE=100#画面での１マスの大きさ
 
+SIZE=100#画面での１マスの大きさ
 main()
