@@ -115,6 +115,7 @@ class BackGround():
 
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
+    jyunban=[]
     def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy,steps):#-----------------------------------------------------------初期化
         self.id = id
         self.name = name#名前
@@ -163,7 +164,7 @@ class Character():
             self.draw_point(screen, self.dp,48,48)
 
             #黄色いガイドの表示
-            if Character.number==self.id :
+            if Character.jyunban[Character.number]==self.id :
                 pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
 
     def draw_point(self, screen, point, pos_x, pos_y):#（２次）
@@ -175,7 +176,9 @@ class Character():
 
 
     def update(self,B,Cs,E,M,screen):#更新（１次受け）#敵味方共通
-        if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
+        print(f"@179 {Character.number=}")
+        print(f"@180 {Character.jyunban[Character.number]=} ")
+        if self.id != Character.jyunban[Character.number]:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
             self.x=-10#どかしておかないと死んだあとでも残っているので
@@ -196,8 +199,8 @@ class Character():
         if self.energy<=0:#キャラクターの交代
             Character.number=(Character.number+1)%len(Cs)
             #ここで次のキャラを初期化するべし！
-            Cs[Character.number].energy = Cs[Character.number].energyOrg
-            Cs[Character.number].tick = 0
+            Cs[Character.jyunban[Character.number]].energy = Cs[Character.jyunban[Character.number]].energyOrg
+            Cs[Character.jyunban[Character.number]].tick = 0
             self.energy=self.energyOrg#自分も戻しておく
 
     def check_4directions(self, B, Cs, M):#敵味方共通、四方周囲に何があるか探索
@@ -270,7 +273,7 @@ class Character():
 
     #全キャラ用、新ガイドを描画するだけ　#敵味方共通
     def new_guide(self,screen):
-        if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
+        if self.id != Character.jyunban[Character.number]:#Character.numberと一致したインスタンスだけupdateする
             return
         for k,v in self.shui.items():
             #位置の特定
@@ -656,8 +659,8 @@ def mainInit(level):
     if level==3:
         Db=[
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
-            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,12),
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,12),
             (3,3,3,"Animal",Cat,"味方","Cat",fonts,["拳"],20,50,50,5,2),
             (3,2,4,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,5),
         ]
@@ -702,6 +705,7 @@ def main():#-----------------------------------------------------------メイン
         opening.opening2(Cs)#初期配置
         Character.number=0#現在選択されているキャラ、クラス変数
         #battle 　
+        Character.jyunban=[4,2,1,0,3]#この順番でキャラが動く（１ターンあたり）中はid番号
         while True:
             E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
             B1.draw_tile(screen)#壁面
