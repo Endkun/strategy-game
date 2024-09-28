@@ -98,7 +98,7 @@ class Character():
         self.tick = 0#アニメ用 タイミング調節用
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
-
+        self.action=""
     #-------------------------------　敵味方共通----------
 
     def draw(self,screen):#--------描画（１次）
@@ -243,6 +243,7 @@ class Character():
                 #移動可能表示
 
     def useYakusou(self,B,M):#薬草を使う(3次)　#敵味方共通
+        self.action="Yakusou"
         self.hp+=30
         if self.hp>self.hpOrg:
             self.hp=self.hpOrg
@@ -270,18 +271,23 @@ class Character():
     def teki_update(self, B, Cs, M): 
         #updateから呼ばれる　（２次受け）
         #B:バック　Cs:キャラクターズ（敵、味方）
+        self.action=""
         self.tick+=1
         if self.tick % 60 == 30:#早く動きすぎないよう60フレーム中１回動かす
             self.check_4directions(B, Cs, M)        #上下左右の周囲を見渡して以下のようなデータを作成する
             # self.shui= {'up': [], 'down': ['壁'], 'right': ['モブ'], 'left': []}
             if self.hp/self.hpOrg < 0.5:#hpが50%を切ったら
                 if "薬草" in self.pocket:#薬草を持っていたら
+                    self.action="Yakusou"    
                     self.useYakusou(B,M)#薬草を使う
                 else:        #もってなかったら    
+                    self.action="Nige"    
                     self.teki_nigeru(B) #逃げるを実行
             else:#hpが50%以上なら
+                self.action="Kogeki"    
                 self.teki_kougeki(B,Cs,M)#攻撃する
             self.energy -=1#エネルギーをマイナス１
+            print(f"@290 {self.name=}  {self.action=}")
 
     def teki_kougeki(self,B,Cs,M):#B:バック　Cs:キャラクターズ（敵、味方）
         #敵の攻撃　teki_updateから呼ばれる（３次受け）
@@ -296,6 +302,7 @@ class Character():
         elif "味方" in self.shui["right"] and self.y-1 < len(B.mapchip[0]):
             kogekiDir.append("right")
         if len(kogekiDir)>0:    #接敵数が１つ以上あるならランダムで選ぶ
+            self.action += " Attack"
             kogekiD=random.choice(kogekiDir)
             #実行    
             #txt="" 
@@ -308,12 +315,14 @@ class Character():
                             self.dmg_calc_show(C,M)
 
         else:#接敵がないときの向敵アルゴリズム
+            self.action += " Move"
             self.easy_koteki(B,Cs)#とりあえずランダムで動く簡易化されたやつ
             #self.koteki(B)#本格的なやつ
 
     def easy_koteki(self,B,Cs):
         #teki_kougekiから呼ばれる　（４次受け）
         #向敵の最初の一歩を計算
+
 
         deltas=[]#動ける場所の集合（＝x,yの移動分(dx,dy)）を集めたもの deltas=[(0, -1),  (1, 0), (-1, 0)]だったら上、右、左みたいな感じ
 
@@ -331,7 +340,7 @@ class Character():
         if self.shui["left"] ==[] :
             if self.x+1 >= B.w1:
                 deltas.append((-1,0))
-        #print(f"@333 {deltas=}")#deltas=[(0, -1),  (1, 0), (-1, 0)]
+        print(f"@334{self.name=} {deltas=}")    #deltas=[(0, -1),  (1, 0), (-1, 0)]
     
         d = self.calc_target_delta(Cs)#ターゲットのdeltaを計算
 
@@ -343,11 +352,14 @@ class Character():
         self.y+=delta[1]
 
     def calc_target_delta(self,Cs):   #easy_koteki　から呼ばれる（５次受け）戻り値はデルタ
-        t_x,t_y,t_id = self.search_target(Cs)#盤面上にいる一番弱いやつを狙う
+        t_x,t_y,t_id,t_name = self.search_target(Cs)#盤面上にいる一番弱いやつを狙う
+        print(f"@356  {t_x=} {t_y=} {t_id=}")
         if t_id==-1:#該当がない時
-            print("@382　相手が見つからず")
+            print("@358　ターゲットが見つからず")
             return (-999,-999)
         else:
+            print(f"@361　ターゲットは{t_name}")
+
             dx = t_x-self.x#盤面上にいる最弱の味方キャラとの座標の差分を取る
             dy = t_y-self.y
             #傾き計算の前にdx=0の場合をやっておく
@@ -385,7 +397,8 @@ class Character():
         #目的：敵が味方の一番弱いキャラを狙うため
         t_hp=9999
         t_id=-1#該当がない時
-        for C in Cs:
+        for Cid in Character.jyunban: #[3,2,1,0]
+            C=Cs[Cid]
             if C.team=="味方":#味方, C.hp>0は今の非追尾バグには入っていない
                 if C.hp>0: 
                     if t_hp>C.hp:  
@@ -393,11 +406,12 @@ class Character():
                             t_hp=C.hp                                     
                             t_x=C.x
                             t_y=C.y
-                            t_id=C.id       
+                            t_id=C.id     
+                            t_name=C.name  
         if t_id==-1:
-            return -999,-999,t_id
+            return -999,-999,t_id,"--"
         else:
-            return t_x,t_y ,t_id       
+            return t_x,t_y ,t_id,t_name       
 
     def koteki(self,B):
         pass
@@ -617,6 +631,7 @@ def makeTeam(level,Cs): #チームの編成
     print (f"{level=}")
     if level==3:
         Character.jyunban=[5,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+
     elif level==2:
         Character.jyunban=[4,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
         for id in reversed(Character.jyunban):#しんでいたら編成から除去、後ろからチェック
@@ -626,11 +641,7 @@ def makeTeam(level,Cs): #チームの編成
             else:#生きていたらhpを30%アップ    
                 C.hpOrg *= 1.3 
                 C.hp =  C.hpOrg 
-                print(f"@629 {C.id=} {C.name=} {C.hpOrg=}  {C.hp=}")
         # print(f"@630 {Character.jyunban=}")
-        # for id in Character.jyunban:
-        #     C=Cs[id]
-        #     print(f"@633 {C.id=} {C.name=} {C.hpOrg=}{C.hp=}")
 
     elif level==1:
         Character.jyunban=[3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
@@ -640,7 +651,7 @@ def main():#-----------------------------------------------------------メイン
     pygame.init()        
     screen = pygame.display.set_mode((1000, 800))  # 800
     Cs,B1,J1,ck,E1,M1 = mainInit()
-    level=1
+    level=2
     level_Max=4
     makeTeam(level,Cs)#チームの編成
     while True:
