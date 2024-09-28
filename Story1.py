@@ -1,50 +1,4 @@
-"""8/18 1
-   「Goutouのstepsが5のはずなのに、2マス程度しか見えてない。」解決。
-   数える変数が、敵ではなくキャラクターだった。C.steps -> self.steps
-   8/18 2
-   症状
-   ・オーバーキル(味方が敵npc倒されてもまだ攻撃判定になる。)
-   仮説
-   ・攻撃して倒した後も、攻撃判定になっているかも
-   検証
-   ・倒したら倒した判定にして次に進ませる
-   8/17 1
-   ブランチをsarからmainに変更
-       青木さんが作ったsarから共同用のmainに反映させた。
-       sarでやった変更をmainに反映させるときの手順
-        1branchをmainに入れ替えた。 git checkout main
-        2sarブランチをマージする git merge sar
-        (マージをすると競合が起こる)
-        3競合が起きたとき、古いほう(選んで良いほう)の競合プログラムを削除する
-        4リモートリポジトリの変更をローカルに取り込む git pull origin main
-        (pullすると競合が起こる)
-        5再度コミットする git status -> git add . -> gid status -> git commit -m "入れたい奴"
-        6プッシュする git push
-   昔のコードをoldfileに入れて本来のコードを分かりやすくした。
-   8/17 2
-   Goutouのsteps(視認距離)が変数で指定した値より見えてないところを修正
-   症状
-   Goutouのstepsが5のはずなのに、2マス程度しか見えてない。
-   仮説
-   キャラクターx,キャラクターyの範囲がGoutouの視認距離と連動していない
 
-   8/10
-   仮説(miss)
-   t_hp>c_hpで
-
-   t_hp>c_hpで一番hpの低い奴が選ばれる
-   しかし、一番hpの低い奴が自分の範囲に居ないときに「相手が見つからず」になる
-   本当は範囲内でt_hp>c_hpをやって範囲内で一番体力が少ないやつを追いかけるようにする
-   来週やる事
-   ・検証
-     t_hp>c_hpで体力が一番低いキャラクターをprintで調べる
-     その一番低いキャラクターが範囲内にいるか調べる
-     範囲内に居なかった場合この仮説は合ってることになる
-    結果---------
-    仮説は間違いである
-    なぜなら、範囲内にいても体力の低いキャラクターが追いかけれること
-
-"""
 
 
 import pygame
@@ -52,7 +6,6 @@ from pygame.locals import *
 import sys
 import random
 import time
-import opening
 class BackGround():
     def __init__(self,font):
         self.mess=[]
@@ -299,7 +252,6 @@ class Character():
 
     def dmg_calc_show(self,C,M):#ダメージ計算と表示（4次）敵味方共通
         dmg=self.dmg_calc(C)
-        #print(f"@239ー{dmg=}")
         mes1=f"{self.name}は{C.name}を攻撃→{dmg}のダメージ"
         if C.hp<=0:
             #print(f"@311ー{C.hp=}")
@@ -313,7 +265,6 @@ class Character():
             dmg=0
         C.hp-=dmg  
         return dmg  
-
 
     #-----------------------------敵----------------------------------
     def teki_update(self, B, Cs, M): 
@@ -623,6 +574,7 @@ class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに�
     def update(self):#毎フレーム呼ばれる
         self.getEvent = pygame.event.get()    
 
+
 def mainInit(): 
     font30 = pygame.font.SysFont("yumincho", 30)       
     font60 = pygame.font.SysFont("yumincho", 60)                      
@@ -652,36 +604,47 @@ def mainInit():
         #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
         (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],120,50,50,4,3),
         (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-        (-1,0,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
-        (-1,0,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
-        (-1,0,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,12),
-        (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
+        (4,1,2,"Slime",Sl1,"敵","BlueSlime",fonts,["薬草"],90,50,30,3,2),
+        (4,3,3,"Slime",Sl2,"敵","YelloSlime",fonts,["薬草"],60,30,40,4,2),
+        (2,2,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,12),
+        (0,4,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
         (3,2,6,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,5),
     ]
     Cs = [Character(*Db[i]) for i in range(len(Db))]    #データベースからインスタンス化
     return Cs, B1, J1, ck, E1, M1
 
-def mainInit2(level): 
+def makeTeam(level,Cs): #チームの編成
     print (f"{level=}")
-    level_Max=4
     if level==3:
         Character.jyunban=[5,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
     elif level==2:
         Character.jyunban=[4,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+        for id in reversed(Character.jyunban):#しんでいたら編成から除去、後ろからチェック
+            C=Cs[id]
+            if C.hp<=0 and C.team=="味方":
+                Character.jyunban.remove(C.id)
+            else:#生きていたらhpを30%アップ    
+                C.hpOrg *= 1.3 
+                C.hp =  C.hpOrg 
+                print(f"@629 {C.id=} {C.name=} {C.hpOrg=}  {C.hp=}")
+        # print(f"@630 {Character.jyunban=}")
+        # for id in Character.jyunban:
+        #     C=Cs[id]
+        #     print(f"@633 {C.id=} {C.name=} {C.hpOrg=}{C.hp=}")
+
     elif level==1:
         Character.jyunban=[3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
-    if level == level_Max:
-        print("コンプリート")
-        quit()
+
 
 def main():#-----------------------------------------------------------メイン
     pygame.init()        
     screen = pygame.display.set_mode((1000, 800))  # 800
     Cs,B1,J1,ck,E1,M1 = mainInit()
     level=1
-    mainInit2(level)
+    level_Max=4
+    makeTeam(level,Cs)#チームの編成
     while True:
-        opening.opening2(Cs)#初期配置
+        #opening.opening2(Cs)#初期配置
         Character.number=0#現在選択されているキャラ、クラス変数
         #battle 　
         while True:
@@ -704,8 +667,13 @@ def main():#-----------------------------------------------------------メイン
             ck.tick(60) #1秒間で60フレームになるように16msecのwait
         if J1.winner=="mikata":
             level+=1 
-            mainInit2(level)
+            if level == level_Max:
+                print("コンプリート")
+                break
+            makeTeam(level,Cs)#チームの編成
+            J1.winner=""
         else:
+            print("負け")
             break           
 
 SIZE=100#画面での１マスの大きさ
