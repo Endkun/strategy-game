@@ -630,9 +630,20 @@ def mainInit():
 def makeTeam(level,Cs): #チームの編成
     print (f"{level=}")
     if level==3:
-        Character.jyunban=[5,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+        zahyo=[(2,5),(3,4),(4,1),(4,2),(2,2),(0,4),(3,2)]
+        Character.jyunban=[6,5,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
+        for id in reversed(Character.jyunban):#しんでいたら編成から除去、後ろからチェック
+            C=Cs[id]
+            if C.hp<=0 and C.team=="味方":
+                Character.jyunban.remove(C.id)
+            else:#生きていたらhpを30%アップ    
+                C.hpOrg *= 1.3 
+                C.hp =  C.hpOrg 
+                C.x, C.y = zahyo[id]
+        # print(f"@630 {Character.jyunban=}")
 
     elif level==2:
+        zahyo=[(2,5),(3,4),(4,1),(4,2),(2,2),(0,4),(3,2)]
         Character.jyunban=[4,3,2,1,0]#この順番でキャラが動く（１ターンあたり）中はid番号
         for id in reversed(Character.jyunban):#しんでいたら編成から除去、後ろからチェック
             C=Cs[id]
@@ -641,6 +652,7 @@ def makeTeam(level,Cs): #チームの編成
             else:#生きていたらhpを30%アップ    
                 C.hpOrg *= 1.3 
                 C.hp =  C.hpOrg 
+                C.x, C.y = zahyo[id]
         # print(f"@630 {Character.jyunban=}")
 
     elif level==1:
@@ -651,7 +663,7 @@ def main():#-----------------------------------------------------------メイン
     pygame.init()        
     screen = pygame.display.set_mode((1000, 800))  # 800
     Cs,B1,J1,ck,E1,M1 = mainInit()
-    level=2
+    level=3
     level_Max=4
     makeTeam(level,Cs)#チームの編成
     while True:
