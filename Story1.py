@@ -177,6 +177,16 @@ class Character():
         self.tick = 0#アニメ用 タイミング調節用
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
+    def death_check(self,deathplayers):
+        if self.name in deathplayers:
+            pass
+        else:
+            if self.hp <= 0:
+                if self.team == "味方":
+                    deathplayers.append(self.name)
+        if self.name in deathplayers:
+            self.hp = -50
+
 
     #-------------------------------　敵味方共通----------
 
@@ -689,6 +699,8 @@ def mainInit(level):
     Man3 = pygame.image.load("img/goutou3.png").convert_alpha()       #強盗、スライムの支配主
     Man3 = pygame.transform.scale(Man3, (SIZE, SIZE)) 
     level_Max=5
+    #死んだキャラクターリストを作ってキャラクターリストに次の出る人が入ってた場合消す
+    """例えばgirlが死んだら死んだキャラクターリストに入れて、次のステージからは死んだキャラクターリストで判別して消す"""
     if level==4:
          Db=[
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
@@ -740,6 +752,7 @@ def main():#-----------------------------------------------------------メイン
     ck = pygame.time.Clock()
     level=1
     #opening.opening(screen,Cs,B1,M1)#本番用
+    depl = []
     while True:
         Cs,B1,J1,ck,E1,M1 = mainInit(level)
         #print(f"{len(Cs)=}")
@@ -753,6 +766,7 @@ def main():#-----------------------------------------------------------メイン
             B1.draw_tail(screen)#補足説明用の文字
             #---------更新と描画---------
             for ch in Cs:#キャラ全員の更新と描画
+                ch.death_check(depl) 
                 ch.update(B1,Cs,E1,M1,screen)#ただし現在選択されているキャラ以外は即return
                 ch.draw(screen)
             for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
