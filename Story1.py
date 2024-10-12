@@ -556,8 +556,8 @@ class Character():
                 self.offset_y = B.scrolly - y_pos
                 new_x=int(x_pos/SIZE)
                 new_y=int(y_pos/SIZE)
-                if self.x*100+70< x_pos and self.x*100+100 > x_pos:
-                    if self.y*100+70 < y_pos and self.y*100+100 > y_pos:
+                if B.scrollx+self.x*100+70< x_pos and B.scrollx+self.x*100+100 > x_pos:
+                    if B.scrolly+self.y*100+70 < y_pos and B.scrolly+self.y*100+100 > y_pos:
                         Character.number=(Character.number+1)%len(Cs)
                         self.energy=self.energyOrg
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
@@ -567,16 +567,17 @@ class Character():
                 self.dragging = False  # ドラッグを終了
             elif event.type == pygame.MOUSEMOTION:
                 if self.dragging:  # ドラッグ中なら
-                    mouse_x, mouse_y = event.pos
-                    B.scrollx = mouse_x + self.offset_x
-                    B.scrolly = mouse_y + self.offset_y 
+                    x_pos, y_pos = event.pos
+                    B.scrollx = x_pos + self.offset_x
+                    B.scrolly = y_pos + self.offset_y 
                     print(B.scrollx,B.scrolly)
 
     def handle_action(self,Cs,B,directionSet,new_x,new_y,M):#移動モードでの入力
         direction=directionSet[0]
         dx=directionSet[1]    
         dy=directionSet[2]
-        if new_x-self.x== dx and new_y-self.y== dy  :#方向の特定
+        if new_x-self.x+int(B.scrollx/SIZE)== dx+int(B.scrollx/SIZE) and new_y-self.y+int(B.scrolly/SIZE) == dy+int(B.scrolly/SIZE):#方向の特定
+            #print(new_x-self.x,dx,new_y-self.y,dy)
             #敵がいるなら
             if "敵" in self.shui[direction]:
                 #敵の同定
