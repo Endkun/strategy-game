@@ -73,10 +73,14 @@ class BackGround():
         chair2 = pygame.transform.scale(chair2, (SIZE, SIZE))
         table = pygame.image.load("img/PlotTable.png").convert_alpha()   #裏口タイル
         table = pygame.transform.scale(table, (SIZE, SIZE))
+        self.scrollx = 2
+        self.scrolly = 2
+        self.width = 10
+        self.height = 8
 
         self.tiles=[pt2,pt1,pt3,door,door2,pt1,chair1,chair2,table]
         self.mapchips = [[
-            ["2","2","2","2","2","2","2","2","2","2"],
+            ["1","1","1","1","1","1","1","1","1","1"],#チュートリアル気質
             ["1","1","1","1","1","1","1","1","1","1"],
             ["6","8","1","1","1","1","1","3","1","7"],
             ["1","1","8","6","8","7","1","1","1","1"],
@@ -87,7 +91,7 @@ class BackGround():
             ["0","0","0","0","0","0","0","0","0","0"],
             ],
             [
-            ["2","2","2","2","2","2","2","2","2","2"],
+            ["2","2","2","2","2","2","2","2","2","2"],#こっからマップが広がる
             ["1","1","1","1","1","1","1","1","1","1"],
             ["1","1","1","1","1","1","1","1","1","1"],
             ["1","1","1","1","1","1","1","1","1","1"],
@@ -127,13 +131,11 @@ class BackGround():
         self.h2 = 6 #下(実際の取る値は-1まで)
 
     def draw_tile(self,screen):
-        tx = 0#タイル用x,y
-        ty = 0
         screen.fill((255,255,255))
-        for i in range(len(self.mapchip[0])):
-            for j in range(len(self.mapchip)):
+        for i in range(self.width):
+            for j in range(self.height):
                 mapnum = int(self.mapchip[j][i])            
-                screen.blit(self.tiles[mapnum] ,Rect(tx+i*SIZE,ty+j*SIZE,50,50))            
+                screen.blit(self.tiles[mapnum] ,Rect(self.scrollx+i*SIZE,self.scrolly+j*SIZE,50,50))            
     def draw_text(self,screen):
         y=20#文字の位置ｙ座標のみ
         for mes in self.mess:
@@ -144,6 +146,9 @@ class BackGround():
         y=860#文字の位置ｙ座標のみ
         txt = self.font2.render(self.mes_tail, True, (0,0,0))   # 描画する文字列の設定
         screen.blit(txt, [5, y])# 文字列の表示位置
+    def draw_scroll(self):
+        pass
+
 
 
 class Character():
@@ -173,7 +178,9 @@ class Character():
         self.font = fonts[0]
         self.fontb = fonts[1]
         self.fontm = fonts[2]
-
+        self.offset_x = 0
+        self.offset_y = 0
+        self.dragging = False
         self.tick = 0#アニメ用 タイミング調節用
         self.energyOrg = energy #1ターンでどれだけ動けるか　移動１歩や攻撃１回で１energy消費
         self.energy=self.energyOrg#実際のエネルギー量のカウンタ
@@ -190,31 +197,31 @@ class Character():
 
     #-------------------------------　敵味方共通----------
 
-    def draw(self,screen):#--------描画（１次）
+    def draw(self,screen,B):#--------描画（１次）
         if self.hp>0:
             #画像表示    
-            screen.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
+            screen.blit(self.image,Rect(B.scrollx+self.x*SIZE,B.scrolly+self.y*SIZE,50,50))
             #hp表示
-            self.draw_point(screen, self.hp,5,8)
+            self.draw_point(screen, self.hp,5,8,B)
             #energy表示
-            self.draw_point(screen, self.energy,75,8)
+            self.draw_point(screen, self.energy,75,8,B)
 
             #ap表示
-            self.draw_point(screen, self.ap,5,48)
+            self.draw_point(screen, self.ap,5,48,B)
 
             #dp表示
-            self.draw_point(screen, self.dp,75,48)
+            self.draw_point(screen, self.dp,75,48,B)
 
             #黄色いガイドの表示
             if Character.number==self.id :
-                pygame.draw.circle(screen,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
+                pygame.draw.circle(screen,(250,250,0),(B.scrollx+(self.x+0.5)*SIZE,B.scrolly+(self.y+0.5)*SIZE),50,2)
 
-    def draw_point(self, screen, point, pos_x, pos_y):#（２次）
+    def draw_point(self, screen, point, pos_x, pos_y,B):#（２次）
             txt = str(point)
             txtg = self.fontm.render(txt, True, (0,0,0))  
-            screen.blit(txtg, [self.x*SIZE+pos_x,self.y*SIZE+pos_y])
+            screen.blit(txtg, [B.scrollx+self.x*SIZE+pos_x,B.scrolly+self.y*SIZE+pos_y])
             txtg = self.fontm.render(txt, True, (255,255,255))  
-            screen.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
+            screen.blit(txtg, [B.scrollx+self.x*SIZE+pos_x+2,B.scrolly+self.y*SIZE+pos_y+2])
 
 
     def update(self,B,Cs,E,M,screen):#更新（１次受け）#敵味方共通
@@ -312,7 +319,7 @@ class Character():
                             self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
 
     #全キャラ用、新ガイドを描画するだけ　#敵味方共通
-    def new_guide(self,screen):
+    def new_guide(self,screen,B):
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         for k,v in self.shui.items():
@@ -329,13 +336,13 @@ class Character():
                 px-=1
             #敵がいるなら赤ガイド
             if "敵" in v:
-                pygame.draw.circle(screen,(250,0,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
+                pygame.draw.circle(screen,(250,0,0),(B.scrollx+(px+0.5)*SIZE,B.scrolly+(py+.5)*SIZE),10)
             #味方がいるなら黄ガイド
             elif "味方" in v:
-                pygame.draw.circle(screen,(250,255,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
+                pygame.draw.circle(screen,(250,255,0),(B.scrollx+(px+0.5)*SIZE,B.scrolly+(py+.5)*SIZE),10)
             #何もないなら青ガイド
             elif v==[]:
-                pygame.draw.circle(screen,(0,0,255),((px+0.5)*SIZE,(py+.5)*SIZE),10)
+                pygame.draw.circle(screen,(0,0,255),(B.scrollx+(px+0.5)*SIZE,B.scrolly+(py+.5)*SIZE),10)
                 #移動可能表示
 
     def useYakusou(self,B,M):#薬草を使う(3次)　#敵味方共通
@@ -535,7 +542,7 @@ class Character():
     def mikata_update(self,B,Cs,E,M,screen):    
         self.check_4directions(B,Cs,M)#索敵
         self.handle(B,Cs,E,M)          #選択肢をチョイス
-        self.Button(screen)
+        self.Button(screen,B)
 
     def handle(self,B,Cs,E,M):#移動モードでの入力
         for event in E.getEvent:  # イベントキューからキーボードやマウスの動きを取得
@@ -544,6 +551,9 @@ class Character():
                 sys.exit()                # 終了（ないとエラーで終了することになる）
             elif event.type == MOUSEBUTTONDOWN:
                 x_pos, y_pos = event.pos
+                self.dragging = True  # ドラッグ状態にする
+                self.offset_x = B.scrollx - x_pos
+                self.offset_y = B.scrolly - y_pos
                 new_x=int(x_pos/SIZE)
                 new_y=int(y_pos/SIZE)
                 if self.x*100+70< x_pos and self.x*100+100 > x_pos:
@@ -553,6 +563,14 @@ class Character():
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
                     self.handle_action(Cs,B,directionSet,new_x,new_y,M)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.dragging = False  # ドラッグを終了
+            elif event.type == pygame.MOUSEMOTION:
+                if self.dragging:  # ドラッグ中なら
+                    mouse_x, mouse_y = event.pos
+                    B.scrollx = mouse_x + self.offset_x
+                    B.scrolly = mouse_y + self.offset_y 
+                    print(B.scrollx,B.scrolly)
 
     def handle_action(self,Cs,B,directionSet,new_x,new_y,M):#移動モードでの入力
         direction=directionSet[0]
@@ -577,10 +595,10 @@ class Character():
                 self.x += dx
                 self.y += dy
                 self.energy -= 1
-    def Button(self,screen):
+    def Button(self,screen,B):
         self.Button1 = pygame.image.load("img/pass.png").convert_alpha()   #配置タイル 
         self.Button1 = pygame.transform.scale(self.Button1, (30, 30)) 
-        screen.blit(self.Button1,Rect(self.x*100+70,self.y*100+70,50,50))#x,yは70から100
+        screen.blit(self.Button1,Rect(B.scrollx+self.x*100+70,B.scrolly+self.y*100+70,50,50))#x,yは70から100
 class Judge():
     def __init__(self):
         self.winner=""
@@ -698,12 +716,20 @@ def mainInit(level):
     Man2 = pygame.transform.scale(Man2, (SIZE, SIZE)) 
     Man3 = pygame.image.load("img/goutou3.png").convert_alpha()       #強盗、スライムの支配主
     Man3 = pygame.transform.scale(Man3, (SIZE, SIZE)) 
-    level_Max=5
+    level_Max=8
     #死んだキャラクターリストを作ってキャラクターリストに次の出る人が入ってた場合消す
     """例えばgirlが死んだら死んだキャラクターリストに入れて、次のステージからは死んだキャラクターリストで判別して消す"""
+    if level==5:
+        Db=[
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7), 
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
+            (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4),
+            (3,1,4,"Goutou3",Man3,"敵","Joruno",fonts,["拳","剣"],250,100,120,5,5),
+        ]
     if level==4:
          Db=[
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7), 
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
             (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
             (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4),
@@ -748,7 +774,7 @@ def mainInit(level):
 def main():#-----------------------------------------------------------メイン
     #init
     pygame.init()        
-    screen = pygame.display.set_mode((1000, 800))  # 800
+    screen = pygame.display.set_mode((500, 500))  # 800
     ck = pygame.time.Clock()
     level=1
     #opening.opening(screen,Cs,B1,M1)#本番用
@@ -768,9 +794,9 @@ def main():#-----------------------------------------------------------メイン
             for ch in Cs:#キャラ全員の更新と描画
                 ch.death_check(depl) 
                 ch.update(B1,Cs,E1,M1,screen)#ただし現在選択されているキャラ以外は即return
-                ch.draw(screen)
+                ch.draw(screen,B1)
             for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
-                ch.new_guide(screen)
+                ch.new_guide(screen,B1)
             M1.draw(screen)    #メッセージくん
             J1.judge(Cs,M1)    #判定くん
             if J1.winner=="teki" or J1.winner=="mikata":
