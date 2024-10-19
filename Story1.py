@@ -53,6 +53,7 @@ import sys
 import random
 import time
 import opening
+from decimal import *
 class BackGround():
     def __init__(self,font,level):
         self.mess=[]
@@ -576,9 +577,12 @@ class Character():
         direction=directionSet[0]
         dx=directionSet[1]    
         dy=directionSet[2]
-        print(dx,dy)
-        if new_x-self.x== int(B.scrollx/SIZE)+dx and new_y-self.y == int(B.scrolly/SIZE)+dy:#方向の特定
-            #print(new_x-self.x,dx,new_y-self.y,dy)
+        dec = Decimal(str(B.scrollx/SIZE))
+        ans = dec.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        dec2 = Decimal(str(B.scrolly/SIZE))
+        ans2 = dec2.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        print(f"A{B.scrollx=} {B.scrolly=} {int(ans)=} {int(ans2)=}")
+        if new_x-self.x== int(ans)+dx and new_y-self.y == int(ans2)+dy:#方向の特定
             #敵がいるなら
             if "敵" in self.shui[direction]:
                 #敵の同定
