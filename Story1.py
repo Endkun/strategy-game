@@ -570,13 +570,14 @@ class Character():
                     x_pos, y_pos = event.pos
                     B.scrollx = x_pos + self.offset_x
                     B.scrolly = y_pos + self.offset_y 
-                    print(B.scrollx,B.scrolly)
+                    #print(B.scrollx,B.scrolly)
 
     def handle_action(self,Cs,B,directionSet,new_x,new_y,M):#移動モードでの入力
         direction=directionSet[0]
         dx=directionSet[1]    
         dy=directionSet[2]
-        if new_x-self.x+int(B.scrollx/SIZE)== dx+int(B.scrollx/SIZE) and new_y-self.y+int(B.scrolly/SIZE) == dy+int(B.scrolly/SIZE):#方向の特定
+        print(dx,dy)
+        if new_x-self.x== int(B.scrollx/SIZE)+dx and new_y-self.y == int(B.scrolly/SIZE)+dy:#方向の特定
             #print(new_x-self.x,dx,new_y-self.y,dy)
             #敵がいるなら
             if "敵" in self.shui[direction]:
