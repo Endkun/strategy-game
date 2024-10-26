@@ -74,62 +74,83 @@ class BackGround():
         chair2 = pygame.transform.scale(chair2, (SIZE, SIZE))
         table = pygame.image.load("img/PlotTable.png").convert_alpha()   #裏口タイル
         table = pygame.transform.scale(table, (SIZE, SIZE))
+        pt4 = pygame.image.load("img/PlotTile4.png").convert_alpha()   #モブタイル　
+        pt4 = pygame.transform.scale(pt4, (SIZE, SIZE)) 
+        pt5 = pygame.image.load("img/PlotTile5.png").convert_alpha()   #字幕タイル
+        pt5 = pygame.transform.scale(pt5, (SIZE, SIZE)) 
+        pt6 = pygame.image.load("img/PlotStone1.png").convert_alpha()   #字幕タイル
+        pt6 = pygame.transform.scale(pt6, (SIZE, SIZE)) 
+        pt7 = pygame.image.load("img/PlotTree1.png").convert_alpha()   #字幕タイル
+        pt7 = pygame.transform.scale(pt7, (SIZE, SIZE)) 
+        pt8 = pygame.image.load("img/PlotOcean1.png").convert_alpha()   #字幕タイル
+        pt8 = pygame.transform.scale(pt8, (SIZE, SIZE)) 
         self.scrollx = 2
         self.scrolly = 2
         self.width = 10
-        self.height = 8
+        self.height = 9
 
-        self.tiles=[pt2,pt1,pt3,door,door2,pt1,chair1,chair2,table]
+        self.tiles=[pt2,pt1,pt3,door,door2,pt1,chair1,chair2,table,pt4,pt5,pt6,pt7,pt8]
         self.mapchips = [[
-            ["1","1","1","1","1","1","1","1","1","1"],#チュートリアル気質
+            ["0","0","0","0","0","0","0","3","0","0"],#チュートリアル気質
+            ["0","7","1","1","1","1","1","1","1","0"],
+            ["0","8","1","1","1","1","1","1","1","0"],
+            ["0","6","1","6","8","7","1","1","1","0"],
+            ["0","1","1","7","1","1","1","1","1","0"],
+            ["0","1","1","1","1","0","0","1","0","0"],
+            ["0","1","7","1","1","0","1","1","1","0"],
+            ["0","1","1","7","1","0","1","1","1","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
+            ],
+            [
+            ["9","9","9","9","9","1","1","9","9","9"],#こっからマップが広がる
+            ["9","1","1","1","9","1","1","9","1","9"],
+            ["9","1","1","1","9","1","1","9","1","9"],
+            ["9","9","1","9","9","1","1","1","1","1"],
             ["1","1","1","1","1","1","1","1","1","1"],
-            ["6","8","1","1","1","1","1","3","1","7"],
-            ["1","1","8","6","8","7","1","1","1","1"],
+            ["1","1","1","1","1","1","10","10","1","10"],
+            ["1","1","1","1","1","1","10","1","1","10"],
+            ["1","1","1","1","1","1","10","1","1","10"],
+            ["1","1","1","1","1","1","10","10","10","10"],
+            ],
+            [
+            ["1","1","12","12","1","1","1","12","12","1"],
+            ["1","1","1","1","1","1","1","12","1","1"],
+            ["11","1","1","1","11","1","1","1","1","12"],
+            ["1","1","12","1","1","1","1","11","1","12"],
+            ["1","1","1","1","1","12","1","1","1","12"],
+            ["1","12","1","1","1","12","1","12","1","12"],
+            ["1","1","1","1","12","11","1","11","1","1"],
+            ["1","1","11","1","1","1","1","12","12","1"],
+            ["1","11","1","1","1","1","1","1","1","1"],
+            ],
+            [
+            ["13","13","13","13","13","13","13","13","13","13"],
+            ["13","13","13","1","13","13","13","13","13","13"],
+            ["1","1","13","1","13","13","1","13","13","13"],
+            ["1","1","1","1","13","13","1","1","1","13"],
+            ["1","1","8","1","8","1","1","1","1","1"],
             ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","8","1","7","1"],
-            ["0","0","0","0","0","0","0","0","4","0"],
+            ["0","0","0","0","0","0","0","0","0","0"],
             ["0","0","0","0","0","0","0","0","0","0"],
             ["0","0","0","0","0","0","0","0","0","0"],
             ],
             [
-            ["2","2","2","2","2","2","2","2","2","2"],#こっからマップが広がる
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["0","0","0","4","0","0","0","0","4","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
-            ],
-            [
-            ["2","2","2","2","2","2","2","2","2","2"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["0","0","0","4","0","0","0","0","4","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
-            ],
-            [
-            ["2","2","2","2","2","2","2","2","2","2"],
-            ["1","1","8","1","8","1","1","1","1","1"],
-            ["1","1","8","1","8","1","1","1","1","1"],
-            ["1","1","8","1","8","1","1","1","1","1"],
-            ["1","1","8","1","8","1","1","1","1","1"],
-            ["1","1","1","1","1","1","1","1","1","1"],
-            ["0","0","0","4","0","0","0","0","4","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
+            ["10","10","10","10","10","1","1","10","10","10"],#こっからマップが広がる
+            ["10","1","1","1","10","1","1","10","1","10"],
+            ["10","1","1","1","10","1","10","10","1","10"],
+            ["10","1","1","1","1","1","1","1","1","1"],
+            ["10","1","1","1","1","1","1","1","1","1"],
+            ["10","1","1","1","10","10","10","10","1","10"],
+            ["10","1","1","1","1","1","10","1","1","10"],
+            ["10","1","1","1","1","1","10","1","1","10"],
+            ["10","1","1","10","10","10","10","10","10","10"],
             ]]
         self.mapchip = self.mapchips[level-1]
         self.font2=font
         self.w1 = 0 #マップの左端
         self.w2 = 10 #右端(実際の取る値は-1まで)
-        self.h1 = 1 #上
-        self.h2 = 6 #下(実際の取る値は-1まで)
+        self.h1 = 0 #上
+        self.h2 = 9 #下(実際の取る値は-1まで)
 
     def draw_tile(self,screen):
         screen.fill((255,255,255))
@@ -154,20 +175,21 @@ class BackGround():
 
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
-    def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy,steps):#-----------------------------------------------------------初期化
+    def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy,steps,level):#-----------------------------------------------------------初期化
         self.id = id
+        self.lv = level
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
-        self.hp = hp
+        self.hp = int(hp*(self.lv*0.2))
         self.hpOrg = self.hp
-        self.ap = ap
+        self.ap = int(ap*(self.lv*0.2))
         if "剣" in pocket:
-            self.ap += 20
+            self.ap += 50
         if "拳" in pocket:
             self.ap += 50
             #～拳である拳は対人戦にて強い性質を持つようにする
-        self.dp = dp
+        self.dp = int(dp*(self.lv*0.15))
         self.dpOrg = dp
         self.steps = steps
         self.shui={"up":[],"down":[], "right":[],"left":[]}   #各方向になにがあるか　敵や岩、なにもないときは[]のまま、
@@ -208,10 +230,13 @@ class Character():
             self.draw_point(screen, self.energy,75,8,B)
 
             #ap表示
-            self.draw_point(screen, self.ap,5,48,B)
+            self.draw_point(screen, self.ap,5,38,B)
 
             #dp表示
             self.draw_point(screen, self.dp,75,48,B)
+
+            #level表示
+            self.draw_point(screen, self.lv,5,70,B)
 
             #黄色いガイドの表示
             if Character.number==self.id :
@@ -716,56 +741,71 @@ def mainInit(level):
     Sl1 = pygame.transform.scale(Sl1, (SIZE, SIZE)) 
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
     Sl2 = pygame.transform.scale(Sl2, (SIZE, SIZE)) 
-    Man = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
+    TMan = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
+    TMan = pygame.transform.scale(TMan, (SIZE, SIZE)) 
+    Man = pygame.image.load("img/goutou1m.png").convert_alpha()       #強盗、スライムの支配主
     Man = pygame.transform.scale(Man, (SIZE, SIZE)) 
-    Man2 = pygame.image.load("img/goutou2.png").convert_alpha()       #強盗、スライムの支配主
+    TMan2 = pygame.image.load("img/goutou2.png").convert_alpha()       #強盗、スライムの支配主
+    TMan2 = pygame.transform.scale(TMan2, (SIZE, SIZE)) 
+    Man2 = pygame.image.load("img/goutou2m.png").convert_alpha()       #強盗、スライムの支配主
     Man2 = pygame.transform.scale(Man2, (SIZE, SIZE)) 
     Man3 = pygame.image.load("img/goutou3.png").convert_alpha()       #強盗、スライムの支配主
     Man3 = pygame.transform.scale(Man3, (SIZE, SIZE)) 
-    level_Max=8
+    Man4 = pygame.image.load("img/YankeeSlime.png").convert_alpha()       #強盗、スライムの支配主
+    Man4 = pygame.transform.scale(Man4, (SIZE, SIZE)) 
+    Man5 = pygame.image.load("img/YankeeSlime3.png").convert_alpha()       #強盗、スライムの支配主
+    Man5 = pygame.transform.scale(Man5, (SIZE, SIZE)) 
+    Man6 = pygame.image.load("img/YankeeSlime2.png").convert_alpha()       #強盗、スライムの支配主
+    Man6 = pygame.transform.scale(Man6, (SIZE, SIZE)) 
+    Man7 = pygame.image.load("img/goutou4.png").convert_alpha()       #強盗、スライムの支配主
+    Man7 = pygame.transform.scale(Man7, (SIZE, SIZE)) 
+    level_Max=7
     #死んだキャラクターリストを作ってキャラクターリストに次の出る人が入ってた場合消す
     """例えばgirlが死んだら死んだキャラクターリストに入れて、次のステージからは死んだキャラクターリストで判別して消す"""
     if level==5:
         Db=[
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7), 
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
-            (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4),
-            (3,1,4,"Goutou3",Man3,"敵","Joruno",fonts,["拳","剣"],250,100,120,5,5),
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7,5), 
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3,4),
+            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5,5),
+            (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4,5),
+            (3,1,4,"Yankee",Man4,"敵","Yankee1",fonts,["拳"],200,50,120,2,2,2),
+            (5,2,5,"Yankee",Man5,"敵","Yankee2",fonts,["拳,スプレー"],150,50,120,3,4,4),#スプレーは敵が前面又は背面に来た場合敵の残りの行動力を0にする
+            (8,4,6,"Yankee",Man6,"敵","Yankee3",fonts,["拳","剣"],150,50,120,3,3,3),
+            (3,4,7,"Yankeeboss",Man7,"敵","Yankee4",fonts,["拳","スプレー"],180,80,120,3,4,5),
         ]
     if level==4:
          Db=[
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7), 
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7,4), 
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3,4),
             (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
-            (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4),
-            (3,1,4,"Goutou3",Man3,"敵","Joruno",fonts,["拳","剣"],250,100,120,5,5),
+            (3,2,3,"Goutou2",Man2,"味方","Ramen",fonts,["拳"],300,40,80,8,4,4),
+            (3,1,4,"Goutou3",Man3,"敵","Joruno",fonts,["拳","剣"],250,100,120,5,5,5),
         ]       
     if level==3:
         Db=[
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,4,7),
-            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (3,3,3,"Animal",Cat,"味方","Cat",fonts,["拳"],20,50,50,5,2),
-            (3,2,4,"Goutou2",Man2,"敵","Ramen",fonts,["拳"],300,60,80,8,4),
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],150,50,80,5,7,3),
+            (1,3,2,"Goutou",Man,"味方","Goutou",fonts,["剣","薬草"],80,80,50,5,5,3),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,50,30,5,3,3),
+            (3,3,3,"Animal",Cat,"味方","Cat",fonts,["拳"],20,80,50,5,2,2),
+            (3,2,4,"Goutou2",TMan2,"敵","Ramen",fonts,["拳"],300,60,80,8,4,3),
         ]
     elif level==2:
         Db=[#キャラのデータベース
-            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],120,50,50,4,3),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (3,2,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,3,2),
-            (2,3,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,30,40,4,2),
-            (4,3,4,"Goutou",Man,"敵","Yakuza",fonts,["剣","薬草"],100,80,50,5,5),
-            (3,3,5,"Animal",Cat,"味方","Cat",fonts,[],20,50,50,2,2),
+            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps,level)
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],120,50,50,4,3,2),
+            (3,5,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3,2),
+            (3,5,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,3,2,1),
+            (8,4,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,30,40,4,2,1),
+            (4,3,4,"Goutou",TMan,"敵","Yakuza",fonts,["剣","薬草"],80,80,50,5,5,2),
+            (3,3,5,"Animal",Cat,"味方","Cat",fonts,["拳"],20,50,50,3,2,1),
         ]
     elif level==1:
         Db=[#キャラのデータベース
-            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps)
-            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3),
-            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3),
-            (5,1,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,2,1),
-            (4,2,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,50,40,2,2)
+            #(初期位置x,y、id、タイプ、画像、チーム、名前、フォント、持ち物,hp,ap,dp,energy,steps,level)
+            (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3,1),
+            (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3,1),
+            (5,1,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,2,1,1),
+            (4,2,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,50,40,2,2,1)
         ]
     if level == level_Max:
         print("コンプリート")
