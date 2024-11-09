@@ -45,6 +45,28 @@
     なぜなら、範囲内にいても体力の低いキャラクターが追いかけれること
 
 """
+"""ストーリー
+Level 1: 喫茶店に強盗が侵入して戦う
+ある日、主人公（あなた）が行きつけの喫茶店でコーヒーを楽しんでいると、突然、数人の強盗が店内に乱入！「金を出せ！」と騒ぎ、他の客も怯えている。だが、あなたは逃げずに立ち上がり、店内の椅子やトレイを使って応戦する。
+一瞬の隙を突き、強盗を次々に倒していくものの、最後の一人が背後から襲いかかり、あなたは気を失ってしまう――。
+--3人準備し、2人を倒せばクリア。最後の1人は裏口から入り背後に回って殴り倒すアニメーションで次のレベルへ
+
+Level 2: 強盗のボスに連れてかれ戦わせられる
+気がつくと、あなたは薄暗い倉庫の中にいた。目の前には強盗団のボスが不敵に笑って立っている。「うちの部下を倒してくれた礼だ。今度はここで本気の戦いを見せてもらうぞ」と、格闘試合に参加させられることに！
+対戦相手は無骨な大男。あなたは相手の攻撃をギリギリでかわし、倉庫内に落ちている金属パイプを使って反撃する。必死の戦いの末、勝利を掴んだあなたは、なんとかボスたちの隙を突いて逃げ出す。
+--ヤクザと強盗団(チンピラ)2人をを倒してクリア
+Level 3: 山へ行き、ラーメンマンと対峙し、戦う
+ボスとの戦いを終えたあなたは、しばし都会を離れ、山奥でのんびり過ごそうと考える。しかし、そこで出会ったのは、伝説の格闘家 ラーメンマン。彼はかつて財宝にまつわる情報を持っていた強盗団を調査しており、あなたの前に立ちはだかる。
+「君がその一味と関わった人物か。ここで私を倒せるか、試させてもらう！」と宣戦布告され、否応なしに戦いが始まる。ラーメンマンの華麗な動きと鋭い蹴り技に苦戦するも、必死に食らいつくあなた。最後はなんとか一太刀を入れ、ラーメンマンから「なかなかやるな」と認められる。
+Level 4: 海近くでジョルノの財宝を盗みに行き、ラーメンマンが助っ人に入り勝利する
+山での戦いを経て、あなたはジョルノという名の謎の人物が財宝を隠しているという噂を耳にする。その財宝を手に入れれば、強盗団の脅威を完全に断つ手がかりになると考え、海辺にある彼のアジトに潜入する。
+しかし、ジョルノはただの少年ではなく、驚異的な力を持つ相手だった。戦闘の最中、絶体絶命のピンチに追い込まれたその時、ラーメンマンが駆けつけて助けに入る！
+「ここからは私も一緒だ！」と共闘し、ジョルノを追い詰めることに成功。財宝を手に入れ、ジョルノは「君の実力は認めよう」と不敵に笑いながら姿を消す。
+
+Level 5: 学校付近でヤンキーに絡まれる
+一連の戦いが終わり、ようやく平穏を取り戻したかに思えたある日。あなたが学校の近くを歩いていると、不良のヤンキー集団が近寄ってくる。「おい、財宝の噂は聞いてんだぞ。持ってるもん全部出しな！」
+疲れているあなたをヤンキーたちが取り囲むが、ラーメンマンが再び登場。「ここも私に任せなさい」と言い、二人で協力してヤンキーを一蹴する。最後は「次は自分で何とかしろよ」とラーメンマンにからかわれ、笑いながら見送られる。
+"""
 
 
 import pygame
@@ -84,8 +106,6 @@ class BackGround():
         pt7 = pygame.transform.scale(pt7, (SIZE, SIZE)) 
         pt8 = pygame.image.load("img/PlotOcean1.png").convert_alpha()   #字幕タイル
         pt8 = pygame.transform.scale(pt8, (SIZE, SIZE)) 
-        self.scrollx = 2
-        self.scrolly = 2
         self.width = 10
         self.height = 9
 
@@ -99,7 +119,7 @@ class BackGround():
             ["0","1","1","1","1","0","0","1","0","0"],
             ["0","1","7","1","1","0","1","1","1","0"],
             ["0","1","1","7","1","0","1","1","1","0"],
-            ["0","0","0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","4","0","0"],
             ],
             [
             ["9","9","9","9","9","1","1","9","9","9"],#こっからマップが広がる
@@ -152,22 +172,22 @@ class BackGround():
         self.h1 = 0 #上
         self.h2 = 9 #下(実際の取る値は-1まで)
 
-    def draw_tile(self,screen):
-        screen.fill((255,255,255))
+    def draw_tile(self,surface):
+        surface.fill((255,255,255))
         for i in range(self.width):
             for j in range(self.height):
                 mapnum = int(self.mapchip[j][i])            
-                screen.blit(self.tiles[mapnum] ,Rect(self.scrollx+i*SIZE,self.scrolly+j*SIZE,50,50))            
-    def draw_text(self,screen):
+                surface.blit(self.tiles[mapnum] ,Rect(i*SIZE,j*SIZE,50,50))            
+    def draw_text(self,surface):
         y=20#文字の位置ｙ座標のみ
         for mes in self.mess:
             txt = self.font2.render(mes, True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(txt, [5, y])# 文字列の表示位置
+            surface.blit(txt, [5, y])# 文字列の表示位置
             y+=40
-    def draw_tail(self,screen):
+    def draw_tail(self,surface):
         y=860#文字の位置ｙ座標のみ
         txt = self.font2.render(self.mes_tail, True, (0,0,0))   # 描画する文字列の設定
-        screen.blit(txt, [5, y])# 文字列の表示位置
+        surface.blit(txt, [5, y])# 文字列の表示位置
     def draw_scroll(self):
         pass
 
@@ -220,37 +240,37 @@ class Character():
 
     #-------------------------------　敵味方共通----------
 
-    def draw(self,screen,B):#--------描画（１次）
+    def draw(self,surface,B):#--------描画（１次）
         if self.hp>0:
             #画像表示    
-            screen.blit(self.image,Rect(B.scrollx+self.x*SIZE,B.scrolly+self.y*SIZE,50,50))
+            surface.blit(self.image,Rect(self.x*SIZE,self.y*SIZE,50,50))
             #hp表示
-            self.draw_point(screen, self.hp,5,8,B)
+            self.draw_point(surface, self.hp,5,8,B)
             #energy表示
-            self.draw_point(screen, self.energy,75,8,B)
+            self.draw_point(surface, self.energy,75,8,B)
 
             #ap表示
-            self.draw_point(screen, self.ap,5,38,B)
+            self.draw_point(surface, self.ap,5,38,B)
 
             #dp表示
-            self.draw_point(screen, self.dp,75,48,B)
+            self.draw_point(surface, self.dp,75,48,B)
 
             #level表示
-            self.draw_point(screen, self.lv,5,70,B)
+            self.draw_point(surface, self.lv,5,70,B)
 
             #黄色いガイドの表示
             if Character.number==self.id :
-                pygame.draw.circle(screen,(250,250,0),(B.scrollx+(self.x+0.5)*SIZE,B.scrolly+(self.y+0.5)*SIZE),50,2)
+                pygame.draw.circle(surface,(250,250,0),((self.x+0.5)*SIZE,(self.y+0.5)*SIZE),50,2)
 
-    def draw_point(self, screen, point, pos_x, pos_y,B):#（２次）
+    def draw_point(self, surface, point, pos_x, pos_y,B):#（２次）
             txt = str(point)
             txtg = self.fontm.render(txt, True, (0,0,0))  
-            screen.blit(txtg, [B.scrollx+self.x*SIZE+pos_x,B.scrolly+self.y*SIZE+pos_y])
+            surface.blit(txtg, [self.x*SIZE+pos_x,self.y*SIZE+pos_y])
             txtg = self.fontm.render(txt, True, (255,255,255))  
-            screen.blit(txtg, [B.scrollx+self.x*SIZE+pos_x+2,B.scrolly+self.y*SIZE+pos_y+2])
+            surface.blit(txtg, [self.x*SIZE+pos_x+2,self.y*SIZE+pos_y+2])
 
 
-    def update(self,B,Cs,E,M,screen):#更新（１次受け）#敵味方共通
+    def update(self,B,Cs,E,M,surface,Ca):#更新（１次受け）#敵味方共通
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         if self.hp<=0:#死んでいたら何もしないで次に送る
@@ -263,7 +283,7 @@ class Character():
         M.head_txt=mes
 
         if self.team=="味方":
-            self.mikata_update(B,Cs,E,M,screen)  
+            self.mikata_update(B,Cs,E,M,surface,Ca)  
         elif self.team=="敵":
             self.teki_update(B,Cs,M)    
         elif self.team=="モブ":
@@ -345,7 +365,7 @@ class Character():
                             self.shui[direction].append(code)#ここで目的のself.shui[direction]を作成　
 
     #全キャラ用、新ガイドを描画するだけ　#敵味方共通
-    def new_guide(self,screen,B):
+    def new_guide(self,surface,B):
         if self.id != Character.number:#Character.numberと一致したインスタンスだけupdateする
             return
         for k,v in self.shui.items():
@@ -362,13 +382,13 @@ class Character():
                 px-=1
             #敵がいるなら赤ガイド
             if "敵" in v:
-                pygame.draw.circle(screen,(250,0,0),(B.scrollx+(px+0.5)*SIZE,B.scrolly+(py+.5)*SIZE),10)
+                pygame.draw.circle(surface,(250,0,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
             #味方がいるなら黄ガイド
             elif "味方" in v:
-                pygame.draw.circle(screen,(250,255,0),(B.scrollx+(px+0.5)*SIZE,B.scrolly+(py+.5)*SIZE),10)
+                pygame.draw.circle(surface,(250,255,0),((px+0.5)*SIZE,(py+.5)*SIZE),10)
             #何もないなら青ガイド
             elif v==[]:
-                pygame.draw.circle(screen,(0,0,255),(B.scrollx+(px+0.5)*SIZE,B.scrolly+(py+.5)*SIZE),10)
+                pygame.draw.circle(surface,(0,0,255),((px+0.5)*SIZE,(py+.5)*SIZE),10)
                 #移動可能表示
 
     def useYakusou(self,B,M):#薬草を使う(3次)　#敵味方共通
@@ -562,52 +582,55 @@ class Character():
             self.x+=1
         elif nigeD=="left":
             self.x-=1
-               
     #=================味方==========================================
     #モードなしダイレクト入力
-    def mikata_update(self,B,Cs,E,M,screen):    
+    def mikata_update(self,B,Cs,E,M,surface,Ca):    
         self.check_4directions(B,Cs,M)#索敵
-        self.handle(B,Cs,E,M)          #選択肢をチョイス
-        self.Button(screen,B)
+        self.handle(B,Cs,E,M,Ca)          #選択肢をチョイス
+        self.Button(surface,B)
 
-    def handle(self,B,Cs,E,M):#移動モードでの入力
+    def handle(self,B,Cs,E,M,Ca):#移動モードでの入力
+        #print(camerax,cameray)
+        x_pos = 0
+        y_pos = 0
         for event in E.getEvent:  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
                 sys.exit()                # 終了（ないとエラーで終了することになる）
-            elif event.type == MOUSEBUTTONDOWN:
-                x_pos, y_pos = event.pos
-                self.dragging = True  # ドラッグ状態にする
-                self.offset_x = B.scrollx - x_pos
-                self.offset_y = B.scrolly - y_pos
+            if event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:  # 左クリック
+                    self.dragging = True  # ドラッグ状態にする
+                    x_pos, y_pos = event.pos
+                #self.offset_x = Ca.camerax - x_pos
+                #self.offset_y = Ca.cameray - y_pos
+                
                 new_x=int(x_pos/SIZE)
                 new_y=int(y_pos/SIZE)
-                if B.scrollx+self.x*100+70< x_pos and B.scrollx+self.x*100+100 > x_pos:
-                    if B.scrolly+self.y*100+70 < y_pos and B.scrolly+self.y*100+100 > y_pos:
+                if self.x*100+70< x_pos and self.x*100+100 > x_pos:
+                    if self.y*100+70 < y_pos and self.y*100+100 > y_pos:
                         Character.number=(Character.number+1)%len(Cs)
                         self.energy=self.energyOrg
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
                     self.handle_action(Cs,B,directionSet,new_x,new_y,M)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self.dragging = False  # ドラッグを終了
-            elif event.type == pygame.MOUSEMOTION:
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:  # 左クリック
+                    self.dragging = False  # ドラッグを終了
+            if event.type == pygame.MOUSEMOTION:
                 if self.dragging:  # ドラッグ中なら
+                    dx = event.pos[0] - x_pos
+                    dy = event.pos[1] - y_pos
+                    Ca.camerax -= dx
+                    Ca.cameray -= dy
                     x_pos, y_pos = event.pos
-                    B.scrollx = x_pos + self.offset_x
-                    B.scrolly = y_pos + self.offset_y 
                     #print(B.scrollx,B.scrolly)
 
     def handle_action(self,Cs,B,directionSet,new_x,new_y,M):#移動モードでの入力
         direction=directionSet[0]
         dx=directionSet[1]    
         dy=directionSet[2]
-        dec = Decimal(str(B.scrollx/SIZE))
-        ans = dec.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-        dec2 = Decimal(str(B.scrolly/SIZE))
-        ans2 = dec2.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-        print(f"A{B.scrollx=} {B.scrolly=} {int(ans)=} {int(ans2)=}")
-        if new_x-self.x== int(ans)+dx and new_y-self.y == int(ans2)+dy:#方向の特定
+        #print(f"A{B.scrollx=} {B.scrolly=} {int(ans)=} {int(ans2)=}")
+        if new_x-self.x == dx and new_y-self.y == dy:#方向の特定
             #敵がいるなら
             if "敵" in self.shui[direction]:
                 #敵の同定
@@ -626,41 +649,47 @@ class Character():
                 self.x += dx
                 self.y += dy
                 self.energy -= 1
-    def Button(self,screen,B):
+    def Button(self,surface,B):
         self.Button1 = pygame.image.load("img/pass.png").convert_alpha()   #配置タイル 
         self.Button1 = pygame.transform.scale(self.Button1, (30, 30)) 
-        screen.blit(self.Button1,Rect(B.scrollx+self.x*100+70,B.scrolly+self.y*100+70,50,50))#x,yは70から100
+        surface.blit(self.Button1,Rect(self.x*100+70,self.y*100+70,50,50))#x,yは70から100
 class Judge():
     def __init__(self):
         self.winner=""
 
     def judge(self,Cs,M):
-        mikata_num=0#味方の総数
-        teki_num=0#敵の総数
-        mikata_dead=0#死んだ数(味方)
-        teki_dead=0
+        self.mikata_num=0#味方の総数
+        self.teki_num=0#敵の総数
+        self.mikata_dead=0#死んだ数(味方)
+        self.teki_dead=0
         for C in Cs:
             if C.team=="味方":
-                mikata_num+=1
+                self.mikata_num+=1
                 if C.hp<=0:
-                    mikata_dead+=1
+                    self.mikata_dead+=1
             elif C.team=="敵":
-                teki_num+=1
+                self.teki_num+=1
                 if C.hp<=0:
-                    teki_dead+=1
+                    self.teki_dead+=1
 
         #print(f"@503:judge {mikata_dead=} {teki_dead=}")                    
-        if mikata_num>0 and mikata_num==mikata_dead:
+        if self.mikata_num>0 and self.mikata_num==self.mikata_dead:
             mes = "味方全滅"
             print(mes)
             M.append_tail_line([mes])
             self.winner="teki"
-        if teki_num>0 and teki_num==teki_dead:
+        if self.teki_num>0 and self.teki_num==self.teki_dead:
             mes="敵全滅"
             print(mes)
             M.append_tail_line([mes])
             self.winner="mikata"
-
+    def lv1_animation(self,level,Cs):
+        if level == 1:
+            if self.teki_num==self.teki_dead+1:
+                for c in Cs:
+                    if c.id == 4:
+                        c.energy = 0
+                        c.energyOrg = 0
 class Messenger():#draw()は毎フレーム呼ばれ、self.tail_txtをスクロール表示
     def __init__(self,fonts):
         self.font30 = fonts[0]
@@ -700,20 +729,20 @@ class Messenger():#draw()は毎フレーム呼ばれ、self.tail_txtをスクロ
         self.tal_txt=tmp
 
     #実際の描画
-    def draw(self,screen):
-        self.draw_head_line(screen)
-        self.draw_tail_line(screen)
+    def draw(self,surface):
+        self.draw_head_line(surface)
+        self.draw_tail_line(surface)
         
-    def draw_head_line(self,screen):
+    def draw_head_line(self,surface):
         g_txt = self.font30.render(self.head_txt, True, (0,0,0))   # 描画する文字列の設定
-        screen.blit(g_txt, [self.head_x, self.head_y])# 文字列の表示位置
+        surface.blit(g_txt, [self.head_x, self.head_y])# 文字列の表示位置
 
-    def draw_tail_line(self,screen):
+    def draw_tail_line(self,surface):
         #描画
         dy=0
         for t in self.tail_txt:
             g_txt = self.font20.render(t, True, (0,0,0))   # 描画する文字列の設定
-            screen.blit(g_txt, [self.tail_x, self.tail_y+dy])# 文字列の表示位置
+            surface.blit(g_txt, [self.tail_x, self.tail_y+dy])# 文字列の表示位置
             dy+=30
 
 class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに入れる
@@ -721,6 +750,12 @@ class Event():#毎フレーム呼ばれ、取得したeventをself.getEventに�
         self.getEvent = pygame.event.get() 
     def update(self):#毎フレーム呼ばれる
         self.getEvent = pygame.event.get()    
+class OnCamera():
+    def __init__(self):
+        self.camerax = 0
+        self.cameray = 0
+    def update(self):
+        pass
 
 def mainInit(level): 
     print (f"{level=}")
@@ -741,6 +776,8 @@ def mainInit(level):
     Sl1 = pygame.transform.scale(Sl1, (SIZE, SIZE)) 
     Sl2 = pygame.image.load("img/Slime2.png").convert_alpha()       #雑魚スライム
     Sl2 = pygame.transform.scale(Sl2, (SIZE, SIZE)) 
+    Sl4 = pygame.image.load("img/Slime4.png").convert_alpha()       #雑魚スライム
+    Sl4 = pygame.transform.scale(Sl4, (SIZE, SIZE)) 
     TMan = pygame.image.load("img/goutou1.png").convert_alpha()       #強盗、スライムの支配主
     TMan = pygame.transform.scale(TMan, (SIZE, SIZE)) 
     Man = pygame.image.load("img/goutou1m.png").convert_alpha()       #強盗、スライムの支配主
@@ -759,6 +796,8 @@ def mainInit(level):
     Man6 = pygame.transform.scale(Man6, (SIZE, SIZE)) 
     Man7 = pygame.image.load("img/goutou4.png").convert_alpha()       #強盗、スライムの支配主
     Man7 = pygame.transform.scale(Man7, (SIZE, SIZE)) 
+    Unk = pygame.image.load("img/Slime3.png").convert_alpha()       #雑魚スライム
+    Unk = pygame.transform.scale(Unk, (SIZE, SIZE)) 
     level_Max=7
     #死んだキャラクターリストを作ってキャラクターリストに次の出る人が入ってた場合消す
     """例えばgirlが死んだら死んだキャラクターリストに入れて、次のステージからは死んだキャラクターリストで判別して消す"""
@@ -805,7 +844,8 @@ def mainInit(level):
             (2,5,0,"Player",Pl1,"味方","Player",fonts,["剣","薬草"],100,50,50,4,3,1),
             (3,4,1,"Player",Pl2,"味方","girl",fonts,["薬草"],50,30,30,5,3,1),
             (5,1,2,"Goutou4",Sl1,"敵","BlueSlime",fonts,["薬草"],120,50,30,2,1,1),
-            (4,2,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,50,40,2,2,1)
+            (4,2,3,"Goutou5",Sl2,"敵","YelloSlime",fonts,["薬草"],120,50,40,2,2,1),
+            (7,7,4,"Unknown",Unk,"敵","Unknown",fonts,["薬草"],1000,25000,50000,0,999,1),
         ]
     if level == level_Max:
         print("コンプリート")
@@ -814,39 +854,44 @@ def mainInit(level):
     B1 = BackGround(fonts[0],level)
     J1 = Judge()
     E1 = Event()
+    Ca = OnCamera()
     M1 = Messenger(fonts)
-    return Cs, B1, J1, ck, E1, M1
-
+    return Cs, B1, J1, ck, E1, M1, Ca
 def main():#-----------------------------------------------------------メイン
     #init
     pygame.init()        
     screen = pygame.display.set_mode((500, 500))  # 800
+    surface = pygame.Surface((1000,900))
     ck = pygame.time.Clock()
     level=1
-    #opening.opening(screen,Cs,B1,M1)#本番用
+    #opening.opening(surface,Cs,B1,M1)#本番用
     depl = []
     while True:
-        Cs,B1,J1,ck,E1,M1 = mainInit(level)
+        Cs,B1,J1,ck,E1,M1,Ca = mainInit(level)
         #print(f"{len(Cs)=}")
         opening.opening2(Cs)#初期配置
         Character.number=0#現在選択されているキャラ、クラス変数
         #battle 　
         while True:
+            screen.fill((255,255,255))
+            surface.fill((255,255,255))
             E1.update()#1フレームに１回だけeventを取得し、getEventにいれる
-            B1.draw_tile(screen)#壁面
-            B1.draw_text(screen)#メイン文字
-            B1.draw_tail(screen)#補足説明用の文字
+            B1.draw_tile(surface)#壁面
+            B1.draw_text(surface)#メイン文字
+            B1.draw_tail(surface)#補足説明用の文字
             #---------更新と描画---------
             for ch in Cs:#キャラ全員の更新と描画
                 ch.death_check(depl) 
-                ch.update(B1,Cs,E1,M1,screen)#ただし現在選択されているキャラ以外は即return
-                ch.draw(screen,B1)
+                ch.update(B1,Cs,E1,M1,surface,Ca)#ただし現在選択されているキャラ以外は即return
+                ch.draw(surface,B1)
             for ch in Cs:#ガイドの表示（一旦すべて描画したあとじゃないと埋もれてしまうので）
-                ch.new_guide(screen,B1)
-            M1.draw(screen)    #メッセージくん
+                ch.new_guide(surface,B1)
+            M1.draw(surface)    #メッセージくん
             J1.judge(Cs,M1)    #判定くん
+            J1.lv1_animation(level,Cs)
             if J1.winner=="teki" or J1.winner=="mikata":
                 break
+            screen.blit(surface, (0, 0), (Ca.camerax, Ca.cameray, 500, 500))
             pygame.display.update() #画面更新、こいつは引数がない        
             ck.tick(60) #1秒間で60フレームになるように16msecのwait
         if J1.winner=="mikata":
