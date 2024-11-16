@@ -192,7 +192,6 @@ class BackGround():
         pass
 
 
-
 class Character():
     number=0#リアルタイムでキャラの切り替えができるようにするためのid番号、numberと一致したidを持つインスタンスだけが更新される
     def __init__(self,x,y,id,type,image,team,name,fonts,pocket,hp,ap,dp,energy,steps,level):#-----------------------------------------------------------初期化
@@ -201,6 +200,8 @@ class Character():
         self.name = name#名前
         self.x = x      #キャラの座標
         self.y = y
+        self.x_pos = 0
+        self.y_pos = 0
         self.hp = int(hp*(self.lv*0.2))
         self.hpOrg = self.hp
         self.ap = int(ap*(self.lv*0.2))
@@ -591,8 +592,6 @@ class Character():
 
     def handle(self,B,Cs,E,M,Ca):#移動モードでの入力
         #print(camerax,cameray)
-        x_pos = 0
-        y_pos = 0
         for event in E.getEvent:  # イベントキューからキーボードやマウスの動きを取得
             if event.type == QUIT:        # 閉じるボタンが押されたら終了
                 pygame.quit()             # Pygameの終了(ないと終われない)
@@ -600,37 +599,40 @@ class Character():
             if event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:  # 左クリック
                     self.dragging = True  # ドラッグ状態にする
-                    x_pos, y_pos = event.pos
-                #self.offset_x = Ca.camerax - x_pos
-                #self.offset_y = Ca.cameray - y_pos
+                    self.x_pos, self.y_pos = event.pos
+                #self.offset_x = Ca.camerax - self.x_pos
+                #self.offset_y = Ca.cameray - self.y_pos
                 
-                new_x=int(x_pos/SIZE)
-                new_y=int(y_pos/SIZE)
-                if self.x*100+70< x_pos and self.x*100+100 > x_pos:
-                    if self.y*100+70 < y_pos and self.y*100+100 > y_pos:
+                new_x=self.x_pos
+                new_y=self.y_pos
+                if self.x*100+70< self.x_pos and self.x*100+100 > self.x_pos:
+                    if self.y*100+70 < self.y_pos and self.y*100+100 > self.y_pos:
                         Character.number=(Character.number+1)%len(Cs)
                         self.energy=self.energyOrg
                 #dfs=[(0,-1,"up"),(0,1,"down"),(1,0,"right"),(-1,0,"left")]#udrl上下左右の四方との差分
                 for directionSet in self.directions:#上下左右の四方のアクションを実行
-                    self.handle_action(Cs,B,directionSet,new_x,new_y,M)
+                    self.handle_action(Cs,B,directionSet,new_x,new_y,M,Ca)
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:  # 左クリック
                     self.dragging = False  # ドラッグを終了
             if event.type == pygame.MOUSEMOTION:
                 if self.dragging:  # ドラッグ中なら
-                    dx = event.pos[0] - x_pos
-                    dy = event.pos[1] - y_pos
+                    dx = event.pos[0] - self.x_pos
+                    dy = event.pos[1] - self.y_pos
                     Ca.camerax -= dx
                     Ca.cameray -= dy
-                    x_pos, y_pos = event.pos
+                    self.x_pos, self.y_pos = event.pos
                     #print(B.scrollx,B.scrolly)
 
-    def handle_action(self,Cs,B,directionSet,new_x,new_y,M):#移動モードでの入力
+    def handle_action(self,Cs,B,directionSet,new_x,new_y,M,Ca):#移動モードでの入力
         direction=directionSet[0]
         dx=directionSet[1]    
         dy=directionSet[2]
-        #print(f"A{B.scrollx=} {B.scrolly=} {int(ans)=} {int(ans2)=}")
-        if new_x-self.x == dx and new_y-self.y == dy:#方向の特定
+        new_x = int(new_x/SIZE)
+        new_y = int(new_y/SIZE)
+        print(Ca.camerax,Ca.cameray)
+        if new_x-self.x == dx and new_y-self.y == dy :#方向の特定
+            print(f"{new_x-self.x=} {dx=} {new_y-self.y=} {dy=}")
             #敵がいるなら
             if "敵" in self.shui[direction]:
                 #敵の同定
